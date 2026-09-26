@@ -3,20 +3,25 @@ import type { RewardConfig } from './types';
 /**
  * REWARD CONFIGURATION
  * ====================
- * The single place reward amounts live. Every value is a PLACEHOLDER of 0 on
- * purpose: the amounts are a product decision, not a code decision.
+ * The single place reward amounts live. Every $GOLD payout reads from here and
+ * from nowhere else - changing a number below is the only edit needed to
+ * re-price the game.
  *
- * Changing a number here is the only edit needed to price the game - no logic
- * anywhere reads or hardcodes an amount. $BWAR is deliberately absent.
+ *   vsBot.victory / pvp.victory -> 1000  (a win is worth 1000 GOLD)
+ *   defeat / draw               -> 0     (not priced yet)
+ *
+ * Losing or drawing currently pays nothing. That is a deliberate placeholder,
+ * not a rule: set a number here and the game pays it with no code change.
+ * $BWAR is deliberately absent.
  */
 export const rewardConfig: RewardConfig = {
   vsBot: {
-    victory: 0,
+    victory: 1000,
     defeat: 0,
     draw: 0,
   },
   pvp: {
-    victory: 0,
+    victory: 1000,
     defeat: 0,
     draw: 0,
   },

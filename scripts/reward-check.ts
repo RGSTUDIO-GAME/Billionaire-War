@@ -9,6 +9,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { STARTING_GOLD } from '../src/data/balance';
 import { DUROV } from '../src/data/heroes/durov';
 import { BATTLE_STATUS } from '../src/engine/types';
 import type { BattleState } from '../src/engine/types';
@@ -65,13 +66,19 @@ const settleAs = (battleId: string, mode: 'bot' | 'pvp', result: RewardResult, c
 
 /* ------------------------------------------------------- 1. configuration */
 
-check('config: VS BOT victory is a placeholder', rewardConfig.vsBot.victory === 0, String(rewardConfig.vsBot.victory));
-check('config: VS BOT defeat is a placeholder', rewardConfig.vsBot.defeat === 0, String(rewardConfig.vsBot.defeat));
-check('config: VS BOT draw is a placeholder', rewardConfig.vsBot.draw === 0, String(rewardConfig.vsBot.draw));
-check('config: PVP victory is a placeholder', rewardConfig.pvp.victory === 0, String(rewardConfig.pvp.victory));
-check('config: PVP defeat is a placeholder', rewardConfig.pvp.defeat === 0, String(rewardConfig.pvp.defeat));
-check('config: PVP draw is a placeholder', rewardConfig.pvp.draw === 0, String(rewardConfig.pvp.draw));
+check('config: winning vs bot pays 1000 GOLD', rewardConfig.vsBot.victory === 1000, String(rewardConfig.vsBot.victory));
+check('config: winning in pvp pays 1000 GOLD', rewardConfig.pvp.victory === 1000, String(rewardConfig.pvp.victory));
+check('config: losing vs bot is not priced yet', rewardConfig.vsBot.defeat === 0, String(rewardConfig.vsBot.defeat));
+check('config: losing in pvp is not priced yet', rewardConfig.pvp.defeat === 0, String(rewardConfig.pvp.defeat));
+check('config: drawing vs bot is not priced yet', rewardConfig.vsBot.draw === 0, String(rewardConfig.vsBot.draw));
+check('config: drawing in pvp is not priced yet', rewardConfig.pvp.draw === 0, String(rewardConfig.pvp.draw));
 check('config: the two modes are priced separately', MODES[0].table !== MODES[1].table);
+check('config: every amount is a whole number of GOLD',
+  [...MODES.flatMap(({ table }) => Object.values(rewardConfig[table])), ...Object.values(TEST_CONFIG).flatMap(Object.values)]
+    .every((amount) => Number.isInteger(amount) && amount >= 0));
+check('config: the config holds exactly six amounts',
+  Object.keys(rewardConfig).length === 2 &&
+  Object.values(rewardConfig).every((table) => Object.keys(table).length === 3));
 
 check('engine: a bot battle reads the vsBot table', RewardEngine.modeFor('bot') === 'vsBot');
 check('engine: a pvp battle reads the pvp table', RewardEngine.modeFor('pvp') === 'pvp');
@@ -107,13 +114,15 @@ for (const { mode, table } of MODES) {
     check(`${label}: the payout is recorded in the ledger`, player().goldTransactions.length === 1);
     check(`${label}: the latest transaction is the reward`, player().goldTransactions[0]?.transactionId === outcome.transaction.transactionId);
 
-    // The same request against the real configuration is a +0 GOLD reward.
+    // The same request against the shipped configuration must agree with it.
     const live = settleAs(`btl-live-${table}-${result}`, mode, result);
-    check(`${label}: the shipped configuration pays 0 for now`, live.amount === 0, String(live.amount));
+    check(`${label}: the shipped configuration pays what it declares`,
+      live.amount === rewardConfig[table][key], `${live.amount} vs ${rewardConfig[table][key]}`);
   }
 }
 
-check('config: injecting a test config never mutates the real one', rewardConfig.vsBot.victory === 0 && rewardConfig.pvp.victory === 0);
+check('config: injecting a test config never mutates the real one',
+  rewardConfig.vsBot.victory === 1000 && rewardConfig.pvp.victory === 1000);
 
 /* -------------------------------------------------- 3. duplicate settlement */
 
@@ -246,6 +255,32 @@ for (const { mode, table } of MODES) {
   check(`${table}: the transaction points at the finished battle`,
     player().goldTransactions[0]?.battleId === finished?.battleId);
 }
+
+/* ------------------------------------- 5b. a real battle that is WON */
+
+/**
+ * In PvP the opponent never confirms, so it times out every round and the
+ * player wins for certain. This is the direct end-to-end proof that a win
+ * really moves $GOLD - with a zero config it would have passed for free.
+ */
+player().resetProgress();
+const goldBeforeWin = player().gold;
+check('win: the balance starts from player data, not a literal', goldBeforeWin === STARTING_GOLD, String(goldBeforeWin));
+
+const wonBattle = playWholeBattle('pvp', 55555);
+const winPayout = settleBattleReward();
+
+check('win: the battle was genuinely won', wonBattle?.winner === 'A', String(wonBattle?.winner));
+check('win: a win is paid', winPayout?.status === 'GRANTED', String(winPayout?.status));
+check('win: the payout is recorded as a VICTORY', winPayout?.transaction.result === 'VICTORY', String(winPayout?.transaction.result));
+check('win: the amount is the configured victory reward',
+  winPayout?.amount === rewardConfig.pvp.victory, `${String(winPayout?.amount)} vs ${rewardConfig.pvp.victory}`);
+check('win: the balance grew by exactly the reward',
+  player().gold === goldBeforeWin + rewardConfig.pvp.victory,
+  `${player().gold} vs ${goldBeforeWin + rewardConfig.pvp.victory}`);
+check('win: the ledger holds the payout', player().goldTransactions[0]?.amount === rewardConfig.pvp.victory);
+check('win: the player can see the new balance', player().gold === goldBeforeWin + rewardConfig.pvp.victory);
+check('win: $BWAR did not move', player().bwar === 0, String(player().bwar));
 
 /* --------------------------------------------- 6. rematch gets a new battle */
 

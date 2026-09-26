@@ -96,7 +96,7 @@ export const BattleResultOverlay = ({
               </span>
             </div>
             <div className="battle-result__amount">
-              +{reward.amount} <span className="gold">GOLD</span>
+              +{reward.amount.toLocaleString('en-US')} <span className="gold">GOLD</span>
             </div>
             <div className="muted" style={{ fontSize: 11 }}>
               Balance {goldBalance.toLocaleString('en-US')} GOLD

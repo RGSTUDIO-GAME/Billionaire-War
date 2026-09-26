@@ -191,7 +191,9 @@ check('screen: damage taken is reported', result.words.includes('Damage taken'))
 check('screen: the round count is reported', result.words.includes('Rounds'));
 check('screen: the reward is granted for the finished battle', settled?.status === 'GRANTED', String(settled?.status));
 check('screen: the reward is shown', result.words.includes('REWARD'));
-check('screen: the shipped configuration pays +0 GOLD', result.words.includes('+0 GOLD'), result.words.slice(-200));
+const rewardAmount = usePlayerStore.getState().lastReward?.amount ?? 0;
+check('screen: the reward amount comes from configuration',
+  result.words.includes(`+${rewardAmount.toLocaleString('en-US')} GOLD`), result.words.slice(-200));
 check('screen: the resulting balance is shown', result.words.includes(`Balance ${goldAfterReward.toLocaleString('en-US')} GOLD`));
 check('screen: the mode is named on the reward', result.words.includes('VS BOT'));
 check('screen: battle again is offered', result.words.includes('Battle again'));

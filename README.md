@@ -83,7 +83,7 @@ src/
     audioEvents.ts      Engine event -> which sound plays
   rewards/              $GOLD only. No wallet, no chain, no token
     types.ts            Reward request / transaction / outcome
-    rewardConfig.ts     THE amounts. Every value is a 0 placeholder
+    rewardConfig.ts     THE amounts. A win is 1000 $GOLD; defeat/draw unpriced
     RewardEngine.ts     mode + result -> configured amount -> transaction
     settleBattleReward.ts  The only bridge from a finished battle to a balance
   state/                Zustand stores: player, ui/navigation, battle runtime
@@ -190,7 +190,7 @@ BATTLE_RESULT → Reward Engine → amount from config → $GOLD → ledger → 
 | Rule | How it is enforced |
 | --- | --- |
 | Priced per mode | `rewardConfig.vsBot` and `rewardConfig.pvp` are separate tables; one engine, two prices |
-| Amounts live in config only | every value is a `0` placeholder — change the number, change nothing else |
+| Amounts live in config only | a win pays **1000 $GOLD**; losing and drawing are still unpriced `0` placeholders — change the number, change nothing else |
 | Paid only after the battle | `settleBattleReward` returns `null` for all nine non-final engine states |
 | Never twice | settlement key is `battleId::playerId`, stored permanently; a replay resolves to `ALREADY_SETTLED` |
 | Recorded | every payout appends a `GoldTransaction` to a persisted ledger |
