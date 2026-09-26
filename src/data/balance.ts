@@ -38,8 +38,11 @@ export const STARTING_GOLD = 1000;
 export const STARTING_BWAR = 0;
 
 /**
- * How long a single attack / block animation is shown before the next
- * combatant acts. Presentation timing only, never affects the result.
+ * Presentation timing only - none of these can change a result. They exist so
+ * each beat of the battle is readable rather than instant.
  */
 export const EXECUTION_BEAT_MS = 1400;
+/** How long the round summary is held before the battle moves on. */
 export const ROUND_SUMMARY_MS = 1800;
+/** How long the "ROUND n / 3" banner is held before the pickers return. */
+export const ROUND_BANNER_MS = 1400;

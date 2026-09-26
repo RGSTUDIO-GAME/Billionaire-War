@@ -17,6 +17,8 @@ import { BATTLE_STATUS } from '../src/engine/types';
 import { BattleScreen } from '../src/screens/BattleScreen';
 import { TopBar } from '../src/components/layout/TopBar';
 import { settleBattleReward } from '../src/rewards/settleBattleReward';
+import { isSelectionPhase, nextFlowStep } from '../src/presentation/flowPlan';
+import { runFlowStep } from '../src/hooks/useBattleFlow';
 import { useBattleStore } from '../src/state/battleStore';
 import { usePlayerStore } from '../src/state/playerStore';
 
@@ -139,21 +141,33 @@ check('screen: the previous picks are cleared', reopened.words.includes('Attack 
 
 /* ------------------------------------------------------------- 6. the end */
 
+/**
+ * Rounds two and three are advanced by the same flow plan the UI uses, so a
+ * phase that loses its scheduled step fails this check too - the screen would
+ * simply never show the next round's pickers.
+ */
 let guard = 0;
-while (battle()?.status !== BATTLE_STATUS.BATTLE_RESULT && guard < 40) {
-  const actions = store();
-  actions.selectAttack('head');
-  actions.selectDefense('leg');
-  actions.confirmPlayer();
-  for (let tick = 0; tick < 6 && battle()?.status === BATTLE_STATUS.COUNTDOWN; tick += 1) {
-    store().tickCountdown();
-  }
-  store().applyPlayerAAttack();
-  store().applyPlayerBAttack();
-  store().finishRound();
-  store().openNextRound();
+while (battle()?.status !== BATTLE_STATUS.BATTLE_RESULT && guard < 400) {
   guard += 1;
+  const current = battle();
+  if (!current) break;
+
+  if (isSelectionPhase(current.status)) {
+    const actions = store();
+    if (current.playerA.attackTarget === null) actions.selectAttack('head');
+    if (current.playerA.defenseTarget === null) actions.selectDefense('leg');
+    if (current.playerA.confirmed) store().tickSecond();
+    else store().confirmPlayer();
+    continue;
+  }
+
+  const step = nextFlowStep(current.status);
+  if (step.kind === 'HOLD') continue;
+  runFlowStep(step);
 }
+
+check('screen: the battle runs its remaining rounds unattended', battle()?.status === BATTLE_STATUS.BATTLE_RESULT, `status=${battle()?.status}`);
+check('screen: it got there in a sane number of steps', guard < 400, String(guard));
 
 const finished = battle();
 
