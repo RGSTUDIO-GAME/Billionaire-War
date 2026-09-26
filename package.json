@@ -11,7 +11,8 @@
     "typecheck": "tsc -b --force",
     "verify": "node scripts/verify.mjs",
     "assets:placeholder": "node scripts/generate-placeholder-assets.mjs",
-    "assets:check": "node scripts/check-assets.mjs"
+    "assets:check": "node scripts/check-assets.mjs",
+    "deploy": "node scripts/deploy-pages.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",

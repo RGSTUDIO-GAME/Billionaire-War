@@ -36,10 +36,28 @@ npm run dev        # http://localhost:5173
 | `npm run assets:check` | Report which registered assets exist on disk |
 | `npm run assets:placeholder` | Regenerate the bundled placeholder art/audio |
 | `npm run lint` | oxlint |
+| `npm run deploy` | Build and publish `dist/` to the `gh-pages` branch |
 
 Deploy `dist/` to any static host. To run inside Telegram, point the BotFather
 Web App URL at the deployed host; outside Telegram the app runs in a plain
 browser with no Telegram dependency.
+
+### Live build
+
+**https://rgstudio-game.github.io/Billionaire-War/**
+
+Source lives on `main`; the published site is the `gh-pages` branch, so the two
+never interfere. Asset URLs are relative, which is why the same build works on
+a project path, a custom domain, or a local server.
+
+```bash
+npm run deploy          # build + force-push dist/ to gh-pages
+```
+
+The script authenticates with whatever git already has — a `gh` credential
+helper, an SSH remote, or `GH_TOKEN` in the environment. It stages the build in
+a temporary directory, so a deployment never dirties the working tree or leaks a
+build artefact into the source history.
 
 ---
 
