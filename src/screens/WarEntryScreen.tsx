@@ -1,16 +1,19 @@
-import { useState } from 'react';
-import { backgroundIds, iconIds } from '../assets/manifest';
+import { useMemo, useState } from 'react';
+import { AssetImg } from '../assets/AssetImg';
+import { backgroundIds, heroPortraitIds, iconIds } from '../assets/manifest';
 import { getHeroById } from '../data/heroes';
 import { usePlayerStore } from '../state/playerStore';
 import { useBattleStore } from '../state/battleStore';
+import { runtime } from '../state/runtime';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { SceneCard } from '../components/ui/SceneCard';
 import { ComingSoon } from '../components/ui/ComingSoon';
-import { HeroAvatar } from '../components/hero/HeroAvatar';
+import { Icon } from '../components/ui/Icon';
 import { Modal } from '../components/ui/Modal';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
+import { StatBar } from '../components/ui/StatBar';
 
 type WarEntryScreenProps = {
   onBack: () => void;
@@ -24,9 +27,11 @@ type WarEntryScreenProps = {
  */
 export const WarEntryScreen = ({ onBack, onBattleStart }: WarEntryScreenProps) => {
   const [pvpOpen, setPvpOpen] = useState(false);
+  const [botOpen, setBotOpen] = useState(false);
 
   const equippedHeroId = usePlayerStore((state) => state.equippedHeroId);
   const ownedHeroIds = usePlayerStore((state) => state.ownedHeroIds);
+  const playerId = usePlayerStore((state) => state.playerId);
   const startBattle = useBattleStore((state) => state.start);
 
   const playerHero = getHeroById(equippedHeroId);
@@ -35,7 +40,15 @@ export const WarEntryScreen = ({ onBack, onBattleStart }: WarEntryScreenProps) =
   const opponentHeroId =
     ownedHeroIds.find((id) => id !== equippedHeroId) ?? equippedHeroId;
   const opponentHero = getHeroById(opponentHeroId);
-  const isMirror = opponentHeroId === equippedHeroId;
+
+  const record = useMemo(() => {
+    const history = runtime.battleService.history.list(playerId || undefined);
+    return {
+      wins: history.filter((entry) => entry.result === 'VICTORY').length,
+      losses: history.filter((entry) => entry.result === 'DEFEAT').length,
+      draws: history.filter((entry) => entry.result === 'DRAW').length,
+    };
+  }, [playerId]);
 
   if (!playerHero || !opponentHero) return null;
 
@@ -50,29 +63,29 @@ export const WarEntryScreen = ({ onBack, onBattleStart }: WarEntryScreenProps) =
 
       <div className="stack-lg" style={{ gap: 'var(--s-4)' }}>
         <SceneCard background={backgroundIds.battleArena}>
-          <div className="row" style={{ alignItems: 'center' }}>
-            <div className="center stack grow" style={{ gap: 'var(--s-2)' }}>
-              <HeroAvatar hero={playerHero} size="md" />
-              <div className="display" style={{ fontSize: 14 }}>
-                {playerHero.name}
-              </div>
+          <div className="row" style={{ alignItems: 'flex-start' }}>
+            <div className="home-portrait">
+              <AssetImg
+                assetId={heroPortraitIds[playerHero.id] ?? heroPortraitIds.durov}
+                alt={playerHero.name}
+              />
             </div>
-            <span className="battle__versus" style={{ paddingBottom: 0 }}>
-              VS
-            </span>
-            <div className="center stack grow" style={{ gap: 'var(--s-2)' }}>
-              <HeroAvatar hero={opponentHero} size="md" />
-              <div className="display" style={{ fontSize: 14 }}>
-                {opponentHero.name}
+            <div className="stack grow" style={{ minWidth: 0 }}>
+              <Badge tone="gold">Your fighter</Badge>
+              <h2 className="display" style={{ fontSize: 24, color: 'var(--gold)' }}>
+                {playerHero.name}
+              </h2>
+              <div className="muted" style={{ fontSize: 12 }}>
+                {playerHero.title}
+              </div>
+              <div style={{ marginTop: 'var(--s-2)' }}>
+                <StatBar value={playerHero.hp} max={playerHero.hp} label="Base HP" />
+              </div>
+              <div className="muted" style={{ fontSize: 12 }}>
+                W {record.wins} &middot; L {record.losses} &middot; D {record.draws}
               </div>
             </div>
           </div>
-
-          {isMirror ? (
-            <p className="muted center" style={{ fontSize: 12, marginTop: 'var(--s-3)' }}>
-              Mirror match - only one hero is available so far. Adding a hero needs data + assets only.
-            </p>
-          ) : null}
         </SceneCard>
 
         <div className="stack">
@@ -89,9 +102,43 @@ export const WarEntryScreen = ({ onBack, onBattleStart }: WarEntryScreenProps) =
             <Badge tone="muted">Soon</Badge>
           </button>
 
-          <Button variant="primary" size="lg" block icon={iconIds.robot} onClick={startBotBattle}>
-            Vs Bot
-          </Button>
+          {!botOpen ? (
+            <Button variant="primary" size="lg" block icon={iconIds.robot} onClick={() => setBotOpen(true)}>
+              Vs Bot
+            </Button>
+          ) : (
+            <Card>
+              <div className="row" style={{ alignItems: 'center' }}>
+                <div className="center stack grow" style={{ gap: 'var(--s-2)' }}>
+                  <div className="home-portrait" style={{ width: 96, height: 122 }}>
+                    <AssetImg
+                      assetId={heroPortraitIds[playerHero.id] ?? heroPortraitIds.durov}
+                      alt={playerHero.name}
+                    />
+                  </div>
+                  <div className="display" style={{ fontSize: 13 }}>
+                    {playerHero.name}
+                  </div>
+                </div>
+                <span className="battle__versus" style={{ paddingBottom: 0 }}>
+                  VS
+                </span>
+                <div className="center stack grow" style={{ gap: 'var(--s-2)' }}>
+                  <div className="avatar avatar--md">
+                    <Icon assetId={iconIds.robot} alt="Bot" />
+                  </div>
+                  <div className="display" style={{ fontSize: 13 }}>
+                    BOT
+                  </div>
+                </div>
+              </div>
+              <div style={{ marginTop: 'var(--s-3)' }}>
+                <Button variant="primary" size="lg" block icon={iconIds.swords} onClick={startBotBattle}>
+                  Fight
+                </Button>
+              </div>
+            </Card>
+          )}
         </div>
 
         <Card flat>

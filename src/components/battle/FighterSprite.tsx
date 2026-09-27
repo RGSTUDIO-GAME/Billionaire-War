@@ -19,8 +19,10 @@ type FighterSpriteProps = {
  */
 export const FighterSprite = ({ fighter, hero }: FighterSpriteProps) => {
   const cue = fighter.event ? resolveCue(hero, fighter.event) : idleCue(hero);
-  const isBlock = cue.motion === 'block';
+  const popupCue = fighter.resultEvent ? resolveCue(hero, fighter.resultEvent) : cue;
   const isHit = cue.motion === 'hit';
+  const isBlocking = cue.motion === 'block';
+  const isBlockPopup = popupCue.motion === 'block';
   const isIdleOutcome = fighter.event?.type === 'NO_ACTION';
 
   return (
@@ -30,7 +32,7 @@ export const FighterSprite = ({ fighter, hero }: FighterSpriteProps) => {
         fighter.id === 'A' ? 'sprite--left' : 'sprite--right',
         cue.motion === 'attack' ? 'is-attacking' : '',
         isHit ? 'is-hit' : '',
-        isBlock ? 'is-blocking' : '',
+        isBlocking ? 'is-blocking' : '',
       ]
         .filter(Boolean)
         .join(' ')}
@@ -43,14 +45,14 @@ export const FighterSprite = ({ fighter, hero }: FighterSpriteProps) => {
         alt={fighter.name}
       />
 
-      {cue.label ? (
-        <span className={`popup ${isBlock || isIdleOutcome || cue.label === 'HIT 0' ? 'popup--block' : ''}`}>
-          {cue.label}
+      {popupCue.label ? (
+        <span className={`popup ${isBlockPopup || isIdleOutcome || popupCue.label === 'HIT 0' ? 'popup--block' : ''}`}>
+          {popupCue.label}
         </span>
       ) : null}
 
       {cue.effect ? (
-        <span className={`sprite__effect sprite__effect--${isBlock ? 'block' : 'hit'}`}>
+        <span className={`sprite__effect sprite__effect--${popupCue.motion === 'block' ? 'block' : 'hit'}`}>
           <AssetImg assetId={cue.effect} alt="" />
         </span>
       ) : null}

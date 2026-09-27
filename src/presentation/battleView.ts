@@ -106,6 +106,8 @@ export type FighterView = {
   defense: CombatantState['defenseTarget'];
   /** What is animating on this fighter right now. */
   event: BattleEvent | null;
+  /** A landed result whose popup stays up even while this fighter swings. */
+  resultEvent: BattleEvent | null;
   attacking: boolean;
 };
 
@@ -149,8 +151,9 @@ const ATTACKING: Partial<Record<BattleStatus, CombatantId>> = {
 };
 
 /**
- * The states in which each attack's result stays on screen. A's hit shows
- * while B acts and through the round summary; B's hit shows on the summary.
+ * The states in which each attack's result stays on screen. A result never
+ * steals the attacker's own beat - the attacker always swings visibly - so
+ * results persist into the round summary instead.
  */
 const RESULT_VISIBLE: Record<1 | 2, readonly BattleStatus[]> = {
   1: [BATTLE_STATUS.EXECUTION_PLAYER_B, BATTLE_STATUS.ROUND_RESULT],
@@ -164,30 +167,36 @@ const RESULT_VISIBLE: Record<1 | 2, readonly BattleStatus[]> = {
  * that attack has resolved. Both are read from the plans the engine resolved
  * before the first animation frame - nothing is decided here.
  */
+/**
+ * The attack that has already landed on this fighter, if its result is still
+ * on screen. The popup keeps showing it even while the fighter swings its own
+ * attack, so no damage number ever blinks away unseen.
+ */
+const resultEventFor = (battle: BattleState, id: CombatantId): BattleEvent | null => {
+  const record = battle.currentRoundRecord;
+  const landed = record?.attacks.find(
+    (attack) => attack.target === id && RESULT_VISIBLE[attack.order].includes(battle.status),
+  );
+  if (!landed) return null;
+  // ATTACK_* -> HIT / BLOCK_* for a real attack, NO_ACTION for a timeout.
+  const events = eventsForAttack(landed);
+  return events[events.length - 1] ?? null;
+};
+
 const eventFor = (battle: BattleState, id: CombatantId): BattleEvent | null => {
   const plans = battle.currentPlans;
   if (!plans) return null;
 
   const plan = id === 'A' ? plans[0] : plans[1];
-  const record = battle.currentRoundRecord;
   const attacker = ATTACKING[battle.status];
 
-  // The attack that has already landed on this fighter. A result stays on
-  // screen from the moment it resolves until the round closes, so the last
-  // beat of the round does not blink the second hit away.
-  const landed = record?.attacks.find(
-    (attack) => attack.target === id && RESULT_VISIBLE[attack.order].includes(battle.status),
-  );
-  if (landed) {
-    // ATTACK_* -> HIT / BLOCK_* for a real attack, NO_ACTION for a timeout.
-    const events = eventsForAttack(landed);
-    return events[events.length - 1] ?? null;
-  }
-
-  // This fighter's own attack.
+  // This fighter's own attack. It wins over any landed result, so the enemy
+  // visibly swings every round instead of freezing on the previous hit.
   if (attacker === id) return eventsForAttack(plan)[0] ?? null;
 
-  return null;
+  // A result stays on screen from the moment it resolves until the round
+  // closes, so the last beat of the round does not blink the second hit away.
+  return resultEventFor(battle, id);
 };
 
 const fighterView = (battle: BattleState, id: CombatantId): FighterView => {
@@ -211,6 +220,7 @@ const fighterView = (battle: BattleState, id: CombatantId): FighterView => {
     // pre-execution choice unreadable.
     defense: incoming ? incoming.targetDefense : null,
     event: eventFor(battle, id),
+    resultEvent: resultEventFor(battle, id),
     attacking: ATTACKING[battle.status] === id,
   };
 };

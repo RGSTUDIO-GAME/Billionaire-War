@@ -184,7 +184,7 @@ const openNextSelection = (state: BattleState): BattleState => BattleEngine.begi
   );
   const view = buildBattleView(afterA);
   check('execution: B is up next', view.attacker === 'B', String(view.attacker));
-  check('execution: the landed hit shows on the target', view.fighters.B.event?.type === 'HIT', String(view.fighters.B.event?.type));
+  check('execution: the next attacker plays its own swing', view.fighters.B.event?.type === 'ATTACK_BODY', String(view.fighters.B.event?.type));
   check('execution: the fighter waiting its turn shows nothing', view.fighters.A.event === null, String(view.fighters.A.event?.type));
   check('execution: the incoming attack is already known', view.fighters.B.attack === 'body', String(view.fighters.B.attack));
   check('execution: the round log records the first attack', view.log.length === 1);
@@ -215,7 +215,7 @@ const openNextSelection = (state: BattleState): BattleState => BattleEngine.begi
   const view = buildBattleView(afterA);
   check('block: a defended target blocks', view.log[0]?.outcome === 'BLOCK', String(view.log[0]?.outcome));
   check('block: a blocked attack deals 0 damage', view.log[0]?.damage === 0, String(view.log[0]?.damage));
-  check('block: the block event names the part', view.fighters.B.event?.type === 'BLOCK_HEAD', String(view.fighters.B.event?.type));
+  check('block: the next attacker still swings its attack', view.fighters.B.event?.type === 'ATTACK_LEG', String(view.fighters.B.event?.type));
 }
 
 {
