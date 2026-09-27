@@ -131,7 +131,6 @@ export const BattleScreen = ({ onExit, onRematch }: BattleScreenProps) => {
         {fxAttacker && fxHero && hasAttackFx(fxHero) ? (
           <AttackFx key={beatKey} hero={fxHero} attacker={fxAttacker} beatKey={beatKey} />
         ) : null}
-        <span className="battle__versus">VS</span>
         <FighterSprite fighter={view.fighters.B} hero={opponentHero} beatKey={beatKey} />
       </div>
 
