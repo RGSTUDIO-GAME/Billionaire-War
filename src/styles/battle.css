@@ -2,9 +2,12 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
   background: var(--bg) center / cover no-repeat;
   overflow: hidden;
+  overscroll-behavior: none;
 }
 
 .battle::after {
@@ -17,6 +20,7 @@
 
 .battle__top {
   position: relative;
+  flex-shrink: 0;
   z-index: 3;
   display: flex;
   align-items: center;
@@ -123,19 +127,21 @@
 .battle__arena {
   position: relative;
   z-index: 2;
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: end;
   gap: var(--s-2);
   padding: var(--s-2) var(--s-4) var(--s-4);
+  overflow: hidden;
 }
 
 /* ------------------------------------------------------------ fighter cards */
 
 .battle__cards {
   position: relative;
+  flex-shrink: 0;
   z-index: 3;
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -432,13 +438,18 @@
   position: relative;
   z-index: 3;
   display: flex;
+  flex-wrap: nowrap;
   gap: var(--s-2);
   padding: 0 var(--s-4) var(--s-3);
   min-height: 26px;
+  max-width: 100%;
   justify-content: center;
+  overflow-x: clip;
+  white-space: nowrap;
 }
 
 .battle__log-item {
+  flex-shrink: 0;
   padding: 3px 10px;
   border-radius: var(--r-pill);
   font-size: 10px;
@@ -470,6 +481,8 @@
 .battle__panel {
   position: relative;
   z-index: 4;
+  flex-shrink: 0;
+  min-height: 0;
   padding: var(--s-4) var(--s-4) calc(var(--safe-bottom) + var(--s-5));
   border-radius: var(--r-lg) var(--r-lg) 0 0;
   background: linear-gradient(180deg, rgba(20, 26, 40, 0.96), rgba(8, 11, 18, 0.99));
@@ -780,12 +793,25 @@
   color: var(--gold);
 }
 
-@media (max-height: 680px) {
+@media (max-height: 760px) {
   .sprite {
     width: clamp(78px, 24vw, 110px);
   }
   .battle__panel {
     padding-top: var(--s-3);
+    padding-bottom: calc(var(--safe-bottom) + var(--s-3));
+  }
+  .battle__locked {
+    padding: var(--s-3) 0;
+  }
+  .round-banner {
+    padding: var(--s-3) 0;
+  }
+  .selector__btn {
+    padding: 7px 4px;
+  }
+  .battle__prompt {
+    margin-bottom: var(--s-2);
   }
 }
 

@@ -61,6 +61,10 @@ export const BattleScreen = ({ onExit, onRematch }: BattleScreenProps) => {
 
   if (!battle || !view) return null;
 
+  // New key on every battle, phase and resolved attack, so both fighters -
+  // player and enemy - always restart their frame strip at frame 1.
+  const beatKey = `${view.battleId}:${view.status}:${view.log.length}`;
+
   const playerHero = getHeroById(battle.playerA.heroId);
   const opponentHero = getHeroById(battle.playerB.heroId);
   if (!playerHero || !opponentHero) return null;
@@ -109,9 +113,9 @@ export const BattleScreen = ({ onExit, onRematch }: BattleScreenProps) => {
       </div>
 
       <div className="battle__arena">
-        <FighterSprite fighter={view.fighters.A} hero={playerHero} />
+        <FighterSprite fighter={view.fighters.A} hero={playerHero} beatKey={beatKey} />
         <span className="battle__versus">VS</span>
-        <FighterSprite fighter={view.fighters.B} hero={opponentHero} />
+        <FighterSprite fighter={view.fighters.B} hero={opponentHero} beatKey={beatKey} />
       </div>
 
       <div className="battle__log">

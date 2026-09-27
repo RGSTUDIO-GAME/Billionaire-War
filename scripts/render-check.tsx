@@ -112,7 +112,11 @@ check('screen: the choices are revealed at last', swinging.html.includes('chip--
 check('screen: the selection panel stays hidden', !swinging.words.includes('Pick attack'));
 
 store().applyPlayerAAttack();
-const firstLanded = shot();
+const enemySwing = shot();
+check('screen: the enemy lunges on its own beat', enemySwing.html.includes('sprite--right is-attacking'), enemySwing.html.slice(0, 120));
+check('screen: the enemy swings an attack frame', /sprite--right is-attacking.*?attack_\w+\/frame_01/s.test(enemySwing.html));
+check('screen: the player rests while the enemy swings', !enemySwing.html.includes('sprite--left is-attacking'));
+const firstLanded = enemySwing;
 const firstAttack = battle()?.currentRoundRecord?.attacks[0];
 check('screen: the log reports the player attack', firstLanded.words.includes('YOU:'), firstLanded.words.slice(0, 120));
 check(

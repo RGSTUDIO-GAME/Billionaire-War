@@ -8,6 +8,12 @@ import type { FighterView } from '../../presentation/battleView';
 type FighterSpriteProps = {
   fighter: FighterView;
   hero: Hero;
+  /**
+   * Battle beat identity (battle + phase + resolved attacks). Included in the
+   * sprite key so every beat restarts at frame 1 - without it a rematch can
+   * reuse a finished frame strip and the fighter looks frozen.
+   */
+  beatKey?: string;
 };
 
 /**
@@ -17,7 +23,7 @@ type FighterSpriteProps = {
  * Controller decides the asset, and the fallback chain guarantees something is
  * always drawn.
  */
-export const FighterSprite = ({ fighter, hero }: FighterSpriteProps) => {
+export const FighterSprite = ({ fighter, hero, beatKey = '' }: FighterSpriteProps) => {
   const cue = fighter.event ? resolveCue(hero, fighter.event) : idleCue(hero);
   const popupCue = fighter.resultEvent ? resolveCue(hero, fighter.resultEvent) : cue;
   const isHit = cue.motion === 'hit';
@@ -38,7 +44,7 @@ export const FighterSprite = ({ fighter, hero }: FighterSpriteProps) => {
         .join(' ')}
     >
       <AnimatedSprite
-        key={`${fighter.id}:${fighter.event ? `${fighter.event.type}:${fighter.event.round}:${fighter.hp}` : `idle:${fighter.hp}`}`}
+        key={`${fighter.id}:${beatKey}:${fighter.event ? `${fighter.event.type}:${fighter.event.round}:${fighter.hp}` : `idle:${fighter.hp}`}`}
         frames={heroFrameUrls(hero, cue.visual)}
         still={heroAssetChain(hero, cue.visual)}
         loop={cue.visual.type === 'idle'}

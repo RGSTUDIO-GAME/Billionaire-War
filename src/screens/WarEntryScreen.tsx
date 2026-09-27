@@ -10,7 +10,6 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { SceneCard } from '../components/ui/SceneCard';
 import { ComingSoon } from '../components/ui/ComingSoon';
-import { Icon } from '../components/ui/Icon';
 import { Modal } from '../components/ui/Modal';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { StatBar } from '../components/ui/StatBar';
@@ -27,7 +26,6 @@ type WarEntryScreenProps = {
  */
 export const WarEntryScreen = ({ onBack, onBattleStart }: WarEntryScreenProps) => {
   const [pvpOpen, setPvpOpen] = useState(false);
-  const [botOpen, setBotOpen] = useState(false);
 
   const equippedHeroId = usePlayerStore((state) => state.equippedHeroId);
   const ownedHeroIds = usePlayerStore((state) => state.ownedHeroIds);
@@ -102,43 +100,9 @@ export const WarEntryScreen = ({ onBack, onBattleStart }: WarEntryScreenProps) =
             <Badge tone="muted">Soon</Badge>
           </button>
 
-          {!botOpen ? (
-            <Button variant="primary" size="lg" block icon={iconIds.robot} onClick={() => setBotOpen(true)}>
-              Vs Bot
-            </Button>
-          ) : (
-            <Card>
-              <div className="row" style={{ alignItems: 'center' }}>
-                <div className="center stack grow" style={{ gap: 'var(--s-2)' }}>
-                  <div className="home-portrait" style={{ width: 96, height: 122 }}>
-                    <AssetImg
-                      assetId={heroPortraitIds[playerHero.id] ?? heroPortraitIds.durov}
-                      alt={playerHero.name}
-                    />
-                  </div>
-                  <div className="display" style={{ fontSize: 13 }}>
-                    {playerHero.name}
-                  </div>
-                </div>
-                <span className="battle__versus" style={{ paddingBottom: 0 }}>
-                  VS
-                </span>
-                <div className="center stack grow" style={{ gap: 'var(--s-2)' }}>
-                  <div className="avatar avatar--md">
-                    <Icon assetId={iconIds.robot} alt="Bot" />
-                  </div>
-                  <div className="display" style={{ fontSize: 13 }}>
-                    BOT
-                  </div>
-                </div>
-              </div>
-              <div style={{ marginTop: 'var(--s-3)' }}>
-                <Button variant="primary" size="lg" block icon={iconIds.swords} onClick={startBotBattle}>
-                  Fight
-                </Button>
-              </div>
-            </Card>
-          )}
+          <Button variant="primary" size="lg" block icon={iconIds.robot} onClick={startBotBattle}>
+            Vs Bot
+          </Button>
         </div>
 
         <Card flat>
