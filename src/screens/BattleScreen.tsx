@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { getAssetUrl } from '../assets/resolve';
-import { prefetchHeroFrames } from '../assets/heroAssets';
+import { hasAttackFx, prefetchHeroFrames, prefetchHeroFx } from '../assets/heroAssets';
 import { backgroundIds, iconIds } from '../assets/manifest';
 import { Icon } from '../components/ui/Icon';
 import { getHeroById } from '../data/heroes';
@@ -14,6 +14,7 @@ import { BattleLog } from '../components/battle/BattleLog';
 import { BattleDebugPanel } from '../components/battle/BattleDebugPanel';
 import { BattleResultOverlay } from '../components/battle/BattleResultOverlay';
 import { FighterCard } from '../components/battle/FighterCard';
+import { AttackFx } from '../components/battle/AttackFx';
 import { FighterSprite } from '../components/battle/FighterSprite';
 import { RoundBanner } from '../components/battle/RoundBanner';
 import { RoundTimer } from '../components/battle/RoundTimer';
@@ -48,6 +49,8 @@ export const BattleScreen = ({ onExit, onRematch }: BattleScreenProps) => {
     const b = heroBId ? getHeroById(heroBId) : undefined;
     if (a) prefetchHeroFrames(a);
     if (b) prefetchHeroFrames(b);
+    if (a) prefetchHeroFx(a);
+    if (b) prefetchHeroFx(b);
   }, [heroAId, heroBId]);
   // The reward is a battle outcome, not a battle rule, so it lives in its own
   // hook. The view is built before it runs, because the reward is keyed by the
@@ -64,6 +67,17 @@ export const BattleScreen = ({ onExit, onRematch }: BattleScreenProps) => {
   // New key on every battle, phase and resolved attack, so both fighters -
   // player and enemy - always restart their frame strip at frame 1.
   const beatKey = `${view.battleId}:${view.status}:${view.log.length}`;
+
+  // The paper plane flies only while someone plays an ATTACK event -
+  // countdowns, blocks, hits and results never launch one.
+  const fxAttacker = view.attacker;
+  const fxEvent = fxAttacker ? view.fighters[fxAttacker].event : null;
+  const fxHero =
+    fxAttacker && fxEvent && fxEvent.type.startsWith('ATTACK')
+      ? fxAttacker === 'A'
+        ? getHeroById(battle.playerA.heroId)
+        : getHeroById(battle.playerB.heroId)
+      : undefined;
 
   const playerHero = getHeroById(battle.playerA.heroId);
   const opponentHero = getHeroById(battle.playerB.heroId);
@@ -114,6 +128,9 @@ export const BattleScreen = ({ onExit, onRematch }: BattleScreenProps) => {
 
       <div className="battle__arena">
         <FighterSprite fighter={view.fighters.A} hero={playerHero} beatKey={beatKey} />
+        {fxAttacker && fxHero && hasAttackFx(fxHero) ? (
+          <AttackFx key={beatKey} hero={fxHero} attacker={fxAttacker} beatKey={beatKey} />
+        ) : null}
         <span className="battle__versus">VS</span>
         <FighterSprite fighter={view.fighters.B} hero={opponentHero} beatKey={beatKey} />
       </div>

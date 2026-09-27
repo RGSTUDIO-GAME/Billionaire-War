@@ -20,6 +20,11 @@ public/assets/
       poses: idle, attack_head, attack_body, attack_arm, attack_leg,
       defense, hit, victory, defeat. One representative frame per pose doubles
       as the still the battle controller contract resolves to.
+    projectile/frame_01.png ... frame_04.png   paper plane flight (durov).
+    explosion/frame_01.png ... frame_03.png    blue impact burst (durov).
+      Attack cinema plays over the arena while the attacker swings and is
+      registered outside the 10-key hero contract - a hero without these
+      folders simply launches nothing.
   backgrounds/
     battle_arena.svg   battle stage
     home.svg           home screen backdrop

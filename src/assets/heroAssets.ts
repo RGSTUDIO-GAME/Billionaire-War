@@ -2,7 +2,7 @@ import type { BodyPart } from '../data/balance';
 import type { Hero } from '../data/heroes/types';
 import { HERO_ASSET_KEYS, type HeroAssetKey, type HeroVisual } from './types';
 import { getAssetUrl, getFallbackChain } from './resolve';
-import { heroFrames } from './manifest';
+import { heroFrames, heroFxFrames, type HeroFxKind } from './manifest';
 import type { AssetId } from './types';
 
 const ATTACK_KEY: Record<BodyPart, 'attackHead' | 'attackBody' | 'attackArm' | 'attackLeg'> = {
@@ -50,6 +50,31 @@ export const heroFrameUrls = (hero: Hero, visual: HeroVisual): string[] => {
   if (!key) return [];
   const ids = heroFrames[hero.id]?.[key] ?? [];
   return ids.map(getAssetUrl).filter((url) => url.length > 0);
+};
+
+/* ------------------------------------------------------- attack cinema */
+
+const fxUrls = (hero: Hero, kind: HeroFxKind): string[] => {
+  const ids = heroFxFrames[hero.id]?.[kind] ?? [];
+  return ids.map(getAssetUrl).filter((url) => url.length > 0);
+};
+
+/** The paper plane strip, in flight order. Empty when the hero has none. */
+export const heroProjectileUrls = (hero: Hero): string[] => fxUrls(hero, 'projectile');
+
+/** The impact burst strip, in blast order. Empty when the hero has none. */
+export const heroExplosionUrls = (hero: Hero): string[] => fxUrls(hero, 'explosion');
+
+/** True when the hero ships its own attack projectile plus impact. */
+export const hasAttackFx = (hero: Hero): boolean =>
+  heroProjectileUrls(hero).length > 0 && heroExplosionUrls(hero).length > 0;
+
+/** Warms the browser cache for a hero's attack cinema. Call on battle entry. */
+export const prefetchHeroFx = (hero: Hero): void => {
+  for (const url of [...heroProjectileUrls(hero), ...heroExplosionUrls(hero)]) {
+    const image = new Image();
+    image.src = url;
+  }
 };
 
 /** Warms the browser cache for every frame of a hero. Call on battle entry. */

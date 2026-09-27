@@ -122,6 +122,38 @@ export const heroFrames: Record<string, Record<HeroAssetKey, AssetId[]>> = {
   durov: registerHeroFrames('durov'),
 };
 
+/* ------------------------------------------------------- attack fx frames */
+
+/**
+ * Per-hero attack cinema: a projectile strip plus an impact strip.
+ * Kept outside hero.assets (like portraits and frame strips) so the 10-key
+ * contract holds - a hero without these folders simply has no cinema.
+ */
+export type HeroFxKind = 'projectile' | 'explosion';
+
+const heroFxCount: Record<HeroFxKind, number> = {
+  projectile: 4,
+  explosion: 3,
+};
+
+const registerHeroFx = (heroId: string, kind: HeroFxKind): AssetId[] =>
+  Array.from({ length: heroFxCount[kind] }, (_, index) =>
+    registerHero(
+      heroId,
+      `${kind}_frame_${index + 1}`,
+      `${kind}/frame_${String(index + 1).padStart(2, '0')}.png`,
+      PLACEHOLDER_POSE,
+      false,
+    ),
+  );
+
+export const heroFxFrames: Record<string, Record<HeroFxKind, AssetId[]>> = {
+  durov: {
+    projectile: registerHeroFx('durov', 'projectile'),
+    explosion: registerHeroFx('durov', 'explosion'),
+  },
+};
+
 /** Display portrait per hero. Outside hero.assets so the 10-key contract holds. */
 export const heroPortraitIds: Record<string, AssetId> = {
   durov: register('heroes', 'durov_portrait', 'durov/portrait.jpg', 'hero', 'Durov portrait'),

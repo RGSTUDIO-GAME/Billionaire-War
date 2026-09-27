@@ -11,6 +11,7 @@ import { DUROV } from '../src/data/heroes/durov';
 import { getHeroById, HEROES } from '../src/data/heroes';
 import { ANIMATION_EVENTS, eventToAsset, eventToEffect, eventToLabel, eventToVisual, resolveCue } from '../src/assets/animationController';
 import { getAssetUrl, getFallbackChain, isRegistered } from '../src/assets/resolve';
+import { hasAttackFx, heroExplosionUrls, heroProjectileUrls } from '../src/assets/heroAssets';
 import { ALL_EVENT_TYPES } from '../src/engine/events';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -138,6 +139,19 @@ const everyHeroAssetRegistered = HEROES.every((hero) =>
   Object.values(hero.assets).every((asset) => isRegistered(asset)),
 );
 check('every registered hero asset id exists in the manifest', everyHeroAssetRegistered);
+
+/* ------------------------------------------------------- attack cinema (fx) */
+
+const plane = heroProjectileUrls(DUROV);
+const blast = heroExplosionUrls(DUROV);
+check('durov ships a 4-frame paper plane strip', plane.length === 4, String(plane.length));
+check('durov ships a 3-frame explosion strip', blast.length === 3, String(blast.length));
+check('every fx frame has a url', [...plane, ...blast].every((url) => url.length > 0));
+check('durov has attack cinema', hasAttackFx(DUROV));
+check(
+  'a hero without cinema renders nothing',
+  !hasAttackFx({ id: 'ghost' } as never),
+);
 
 /* -------------------------------------------------------------- fallbacks */
 

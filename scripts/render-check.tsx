@@ -69,6 +69,7 @@ check('screen: neither choice is readable', (opening.words.match(/ATK \?\?\?/g) 
 check('screen: the round log hides the choices', opening.words.includes('CHOICES ARE HIDDEN UNTIL FIGHT'));
 check('screen: confirm waits for a full pick', opening.words.includes('Pick attack'));
 check('screen: the clock starts at 30', opening.html.includes('aria-label="30 seconds left"'));
+check('screen: no paper plane before the fight', !opening.html.includes('attack-fx'));
 check('screen: the attack row offers all four parts', ['HEAD', 'BODY', 'ARM', 'LEG'].every((part) => opening.words.includes(part)));
 
 setDebugEnabled(true);
@@ -109,6 +110,7 @@ check('store: FIGHT hands over to execution', battle()?.status === BATTLE_STATUS
 const swinging = shot();
 check('screen: the attacker lunges', swinging.html.includes('is-attacking'));
 check('screen: the defender reacts in the same beat', swinging.html.includes('sprite--right is-'), swinging.html.slice(0, 200));
+check('screen: the paper plane flies left to right', swinging.html.includes('attack-fx attack-fx--from-left'));
 check('screen: the choices are revealed at last', swinging.html.includes('chip--atk') && !swinging.html.includes('chip--locked'));
 check('screen: the selection panel stays hidden', !swinging.words.includes('Pick attack'));
 
@@ -117,6 +119,7 @@ const enemySwing = shot();
 check('screen: the enemy lunges on its own beat', enemySwing.html.includes('sprite--right is-attacking'), enemySwing.html.slice(0, 120));
 check('screen: the enemy swings an attack frame', /sprite--right is-attacking.*?attack_\w+\/frame_01/s.test(enemySwing.html));
 check('screen: the player rests while the enemy swings', !enemySwing.html.includes('sprite--left is-attacking'));
+check('screen: the enemy plane flies right to left', enemySwing.html.includes('attack-fx attack-fx--from-right'));
 const firstLanded = enemySwing;
 const firstAttack = battle()?.currentRoundRecord?.attacks[0];
 check('screen: the log reports the player attack', firstLanded.words.includes('YOU:'), firstLanded.words.slice(0, 120));
