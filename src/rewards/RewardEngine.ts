@@ -6,6 +6,7 @@ import type {
   RewardOutcome,
   RewardRequest,
   RewardResult,
+  RewardSettleOptions,
 } from './types';
 import type { BattleMode, BattleWinner } from '../engine/types';
 
@@ -76,18 +77,24 @@ export const transactionId = ({ battleId, playerId }: RewardRequest): string =>
 export const settle = (
   request: RewardRequest,
   settledKeys: readonly string[] = [],
-  config: RewardConfig = rewardConfig,
+  options: RewardSettleOptions = {},
 ): RewardOutcome => {
+  const { config = rewardConfig, balance = 0 } = options;
   const key = settlementKey(request);
   const amount = amountFor(modeFor(request.mode), request.result, config);
 
+  // The balance is an INPUT, not something the engine reads: the engine stays
+  // pure, and the caller passes the figure it is about to apply the payout to.
   const transaction: GoldTransaction = {
     transactionId: transactionId(request),
     playerId: request.playerId,
+    kind: 'BATTLE_REWARD',
     battleId: request.battleId,
     mode: request.mode,
     result: request.result,
     amount,
+    balanceBefore: balance,
+    balanceAfter: balance + amount,
     createdAt: request.createdAt,
   };
 

@@ -1,4 +1,5 @@
 import type { BattleMode } from '../engine/types';
+import type { GoldTransaction } from '../storage/records';
 
 /**
  * REWARD SYSTEM TYPES
@@ -32,16 +33,7 @@ export type RewardRequest = RewardIdentity & {
   createdAt: number;
 };
 
-/** One recorded $GOLD payout. */
-export type GoldTransaction = {
-  transactionId: string;
-  playerId: string;
-  battleId: string;
-  mode: BattleMode;
-  result: RewardResult;
-  amount: number;
-  createdAt: number;
-};
+export type { GoldTransaction };
 
 export type RewardOutcome = {
   /** GRANTED on the first call, ALREADY_SETTLED on every later one. */
@@ -49,5 +41,17 @@ export type RewardOutcome = {
   /** `battleId + playerId`, the anti-duplicate key. */
   settlementKey: string;
   amount: number;
+  /**
+   * The payout. A bare `settle` returns the transaction it planned; the
+   * coordinator replaces it with the one the ledger actually holds, so a
+   * caller - granted or refused - always reads a real recorded entry.
+   */
   transaction: GoldTransaction;
+};
+
+/** Overrides for tests and for callers that know the live balance. */
+export type RewardSettleOptions = {
+  config?: RewardConfig;
+  /** The balance this payout is applied to, recorded on the transaction. */
+  balance?: number;
 };

@@ -6,6 +6,7 @@
  *   scripts/asset-check.ts  - animation controller + asset resolution
  *   scripts/render-check.ts - the battle screen, rendered for real
  *   scripts/reward-check.ts - $GOLD rewards, ledger and anti-duplicate rules
+ *   scripts/data-check.ts   - the data layer: storage, repositories, services
  */
 import { build } from 'esbuild';
 import { existsSync, mkdtempSync, rmSync } from 'node:fs';
@@ -44,6 +45,7 @@ const entries = [
   'flow-check',
   'view-check',
   'reward-check',
+  'data-check',
   'asset-check',
   'render-check',
 ];

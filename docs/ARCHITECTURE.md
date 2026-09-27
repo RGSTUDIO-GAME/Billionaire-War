@@ -1,6 +1,6 @@
 # Architecture
 
-> Stage 2 — the **Universal Battle Engine**.
+> The **Universal Battle Engine** and the **data layer** that surrounds it.
 
 ## Layers
 
@@ -8,10 +8,14 @@
 screens/        compose the UI for one page
 components/     reusable UI (ui / layout / hero / battle)
 hooks/          timing only (the battle clock, animation beats)
-state/          Zustand stores: player, navigation, battle runtime
+state/          Zustand stores: player, navigation, battle runtime, THE WIRING
 assets/         manifest, resolver, fallbacks, ANIMATION CONTROLLER
 game/           the bot, the only "random" actor
 engine/         UNIVERSAL BATTLE ENGINE - pure, deterministic, asset-free
+rewards/        what a finished battle is worth, and nothing else
+services/       the rules over stored data: gold, battle identity, rewards
+repositories/   one per persisted record, each validating what it reads
+storage/        the ONLY code that knows a device has storage at all
 data/           tunables (balance.ts) and hero DATA
 ```
 
@@ -22,6 +26,12 @@ Dependencies only ever point **downward**.
 | `engine/` imports nothing from `assets/`, `state/`, `components/`, `screens/` | gameplay stays asset-free and testable | `asset-check.ts` reads the engine sources |
 | `engine/` performs no I/O and uses no `Math.random` | deterministic, replayable | `asset-check.ts` |
 | The engine never names a hero or a file extension | a new hero needs no engine change | `asset-check.ts` |
+| Only `storage/` mentions `localStorage` | the database is replaceable behind one interface | `data-check.ts` |
+| A repository imports nothing above it | a record knows nothing about stores or UI | `data-check.ts` |
+| A service imports nothing above it | $GOLD rules do not depend on a screen | `data-check.ts` |
+| Only `GoldService` computes a balance | the ledger describes every coin that moved | `data-check.ts` |
+| The engine knows nothing about storage, a profile or a ledger | a battle cannot pay for itself | `data-check.ts` |
+| `state/runtime.ts` is the only place the data layer is built | swapping it is a one-file change | `data-check.ts` |
 | Only `assets/manifest.ts` holds asset paths | one place to retheme the game | — |
 | No `if (hero.id === 'durov')` anywhere | heroes are data | `asset-check.ts` |
 
@@ -180,10 +190,83 @@ applyPlayerAAttack / applyPlayerBAttack
 finishRound        -> settleRound -> BATTLE_RESULT, or the next round
 ```
 
+The id for a new battle comes from `BattleService`, not from a counter in the
+store: identity has to survive a reload without ever reissuing an id the
+history already holds.
+
 `hooks/useBattleFlow.ts` owns the timers and nothing else. It asks the read
 model what is happening and asks `presentation/audioEvents.ts` what that should
 sound like; it never names a sound file and never reads a rule. The store holds
 no timers, so the engine stays inspectable and replayable.
+
+---
+
+## The data layer
+
+```
+UI -> store -> service -> repository -> StorageAdapter -> the device
+```
+
+Each arrow is the only way data moves. Nothing reaches past its neighbour, and
+the bottom of the stack is a four-method interface.
+
+### `storage/` — the device
+
+`StorageAdapter` is `read / write / remove / keys`. `browserStorage()` probes
+`localStorage` once and falls back to memory when it is unavailable (private
+mode, a blocked third-party context, Node during a check). A write that throws
+returns `false`; it is never rethrown, because losing a save must not end the
+game. `keys.ts` holds one versioned key per record, which is what a future
+migration hangs off.
+
+### `repositories/` — the records
+
+One repository per record, and **no read is ever trusted**. `parseProfile`,
+`parseTransaction` and `parseBattleRecord` repair each field independently, so
+one bad value cannot take a save down with it: a truncated write yields a
+sanitised record or `null`, never an exception.
+
+The ledger is the special one. It is append-only, each entry carries its own
+before and after balances, and `rebuildBalance` reads the live figure back out
+of it. That is what makes a damaged balance recoverable rather than lost — and
+it is why the anti-duplicate keys are derived from the ledger instead of being
+remembered in memory.
+
+### `services/` — the rules
+
+`GoldService` is the only place a balance is computed or moved. It refuses a
+debit larger than the balance outright rather than clamping it, because a
+clamped debit looks like a purchase that cost less than it should. Every
+movement writes through to storage before the caller sees the new profile.
+
+`BattleService` mints battle ids and owns the archive. The ids carry a
+per-session token, so a battle started after a reload can never collide with one
+already in the history — a collision would make a brand new battle look already
+paid, and the player would silently never be paid for it.
+
+`RewardService` is the bridge:
+
+```
+BATTLE_RESULT -> RewardEngine.settle -> amount from config
+              -> GoldService.credit  -> ledger entry
+              -> BattleService.archive -> battle record
+```
+
+It refuses anything that is not `BATTLE_RESULT`, and it derives what has
+already been paid from the ledger, so calling it twice — or calling it again
+after a reload — moves nothing and reports the payout that was really recorded.
+
+### `state/` — the mirror
+
+`state/runtime.ts` is the only file that builds a repository or resolves the
+storage. A store is a write-through cache: every action persists **first** and
+then mirrors the result, so the save and the screen can never disagree.
+
+`playerStore` keeps its data and its actions separate, which is what lets
+`resetProgress` wipe the save without replacing the store's own behaviour with
+stubs. `applyReward` never pays — the service has already paid by then, and the
+action only re-reads the save so the result card can only ever show a
+transaction the ledger actually holds.
 
 ---
 
@@ -252,23 +335,35 @@ the rules.
 
 ## Verification
 
-`npm run verify` bundles three TypeScript suites with esbuild and runs them on
+`npm run verify` bundles seven TypeScript suites with esbuild and runs them on
 Node against the **real** modules — no mocks, no reimplementation of the rules.
 
 | Suite | Checks | Covers |
 | --- | --- | --- |
-| `engine-check.ts` | 194 | the five worked examples from the spec, every acceptance combination, the state machine, hit/block across all 16 target pairs, KO, win, lose, draw, round history, determinism, PvP/bot parity |
-| `flow-check.ts` | 58 | the real store: phase wiring, per-round bot lock, timers, countdown, execution order, timeouts, rematch |
+| `engine-check.ts` | 198 | the five worked examples from the spec, every acceptance combination, the state machine, hit/block across all 16 target pairs, KO, win, lose, draw, round history, determinism, PvP/bot parity |
+| `flow-check.ts` | 92 | the real store: phase wiring, per-round bot lock, timers, countdown, execution order, timeouts, rematch |
+| `view-check.ts` | 101 | the read model the screen draws: labels, reveal timing, result events, damage totals |
+| `reward-check.ts` | 158 | every mode and outcome pays, the amount comes from configuration, the ledger records it, and it is never paid twice |
+| `data-check.ts` | 154 | reload survival, damaged-save recovery, the $GOLD rules, the battle archive, id uniqueness across sessions, and the layer boundaries |
 | `asset-check.ts` | 178 | every event resolves to a registered asset, the documented mappings, hero-agnostic controller, engine purity, fallbacks |
+| `render-check.tsx` | 57 | `BattleScreen` rendered for real at every phase of a battle |
 
 ```
-All 194 battle rule checks passed.
-All  58 battle flow checks passed.
+All 198 battle rule checks passed.
+All  92 battle flow checks passed.
+All 101 presentation layer checks passed.
+All 158 reward system checks passed.
+All 154 data layer checks passed.
 All 178 animation controller checks passed.
+All  57 battle screen render checks passed.
 ```
 
 `flow-check.ts` is what caught a bot that only locked its choice in round 1,
-which left every battle stuck after the first round.
+which left every battle stuck after the first round. `data-check.ts` is what
+caught a `resetProgress` that replaced the store's own actions with stubs, and a
+settlement guard that compared battle ids against `battleId::playerId` keys and
+therefore never matched — a bug that would have paid for the same battle twice
+after a reload.
 
 ---
 
@@ -276,10 +371,13 @@ which left every battle stuck after the first round.
 
 | Next stage | Where it plugs in |
 | --- | --- |
-| Reward economy | `playerStore.addGold`; award from `BattleResultOverlay` |
-| Quests / achievements | `battle.roundHistory` is already archived for it |
+| Quests / achievements | `battle.roundHistory` is archived, and `BattleRecord` is persisted |
 | Leaderboard | needs a backend — nothing faked yet |
 | Real PvP | `BattleEngine` is mode-agnostic; only a transport is missing |
 | Hero skills | `Hero.skills` exists in the data model, the engine ignores it |
 | New HP / stats | `CombatantSeed.hp` only — no constant is hardcoded |
 | Battle replay | `RoundRecord.events` is stored and ordered |
+| More heroes | a data file plus `public/assets/heroes/<id>/`; the engine does not change |
+| A shop | `GoldService.debit` already refuses an overspend and records the spend |
+| A server save | implement `StorageAdapter` and pass it to `createRuntime` — nothing above changes |
+| A save migration | bump `STORAGE_VERSION` and add a `…:v2` loader beside the `…:v1` key |

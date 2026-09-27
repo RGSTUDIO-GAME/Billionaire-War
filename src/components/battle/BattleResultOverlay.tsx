@@ -92,7 +92,8 @@ export const BattleResultOverlay = ({
             <div className="battle-result__reward-head">
               <span className="badge badge--gold">REWARD</span>
               <span className="muted" style={{ fontSize: 10, letterSpacing: '0.12em' }}>
-                {MODE_LABEL[reward.mode]} &middot; {reward.result}
+                {reward.mode ? `${MODE_LABEL[reward.mode]} · ` : ''}
+                {reward.result ?? 'REWARD'}
               </span>
             </div>
             <div className="battle-result__amount">

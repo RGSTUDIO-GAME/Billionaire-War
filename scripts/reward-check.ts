@@ -57,12 +57,44 @@ const RESULTS: { result: RewardResult; key: keyof RewardConfig['vsBot'] }[] = [
   { result: 'DRAW', key: 'draw' },
 ];
 
-const settleAs = (battleId: string, mode: 'bot' | 'pvp', result: RewardResult, config?: RewardConfig): RewardOutcome =>
-  RewardEngine.settle(
-    { battleId, playerId: player().playerId, mode, result, createdAt: 1_700_000_000_000 },
-    player().settledRewards,
-    config,
-  );
+/** The clock every settlement in this check is stamped with. */
+const NOW = 1_700_000_000_000;
+
+const WINNER: Record<RewardResult, 'A' | 'B' | 'DRAW'> = {
+  VICTORY: 'A',
+  DEFEAT: 'B',
+  DRAW: 'DRAW',
+};
+
+/**
+ * A battle that has already finished, shaped the way the engine leaves one.
+ * Settling goes through the real coordinator, so a check can price any mode
+ * and outcome without playing six battles to get there.
+ */
+const finishedBattle = (battleId: string, mode: 'bot' | 'pvp', result: RewardResult): BattleState =>
+  ({
+    battleId,
+    mode,
+    status: BATTLE_STATUS.BATTLE_RESULT,
+    currentRound: 3,
+    winner: WINNER[result],
+    playerA: { currentHp: result === 'DEFEAT' ? 0 : 640 },
+    playerB: { currentHp: result === 'VICTORY' ? 0 : 720 },
+    result: {
+      winner: WINNER[result],
+      playerAHP: result === 'DEFEAT' ? 0 : 640,
+      playerBHP: result === 'VICTORY' ? 0 : 720,
+      roundsPlayed: 3,
+      timedOut: { A: false, B: false },
+    },
+  }) as unknown as BattleState;
+
+const settleAs = (
+  battleId: string,
+  mode: 'bot' | 'pvp',
+  result: RewardResult,
+  config?: RewardConfig,
+): RewardOutcome => settleBattleReward(finishedBattle(battleId, mode, result), NOW, config)!;
 
 /* ------------------------------------------------------- 1. configuration */
 
@@ -105,9 +137,7 @@ for (const { mode, table } of MODES) {
     check(`${label}: the transaction records the result`, outcome.transaction.result === result);
     check(`${label}: the transaction records the battle`, outcome.transaction.battleId === `btl-${table}-${result}`);
     check(`${label}: the transaction records the player`, outcome.transaction.playerId === player().playerId);
-    check(`${label}: the transaction is timestamped`, outcome.transaction.createdAt === 1_700_000_000_000);
-
-    player().applyReward(outcome);
+    check(`${label}: the transaction is timestamped`, outcome.transaction.createdAt === NOW);
 
     check(`${label}: GOLD increases by exactly the reward`, player().gold === before + expected,
       `${player().gold} vs ${before + expected}`);
@@ -129,10 +159,8 @@ check('config: injecting a test config never mutates the real one',
 player().resetProgress();
 
 const first = settleAs('btl-duplicate', 'bot', 'VICTORY', TEST_CONFIG);
-player().applyReward(first);
 const goldAfterFirst = player().gold;
 const second = settleAs('btl-duplicate', 'bot', 'VICTORY', TEST_CONFIG);
-player().applyReward(second);
 
 check('duplicate: the first call grants the reward', first.status === 'GRANTED');
 check('duplicate: the second call is refused', second.status === 'ALREADY_SETTLED', second.status);
@@ -144,8 +172,7 @@ check('duplicate: only one settlement key was stored', player().settledRewards.l
 check('duplicate: the settlement key is battle + player',
   player().settledRewards[0] === `btl-duplicate::${player().playerId}`, String(player().settledRewards[0]));
 
-const anotherBattle = settleAs('btl-duplicate-2', 'bot', 'VICTORY', TEST_CONFIG);
-player().applyReward(anotherBattle);
+settleAs('btl-duplicate-2', 'bot', 'VICTORY', TEST_CONFIG);
 check('duplicate: a different battle id pays again', player().gold === goldAfterFirst + TEST_CONFIG.vsBot.victory,
   `${player().gold} vs ${goldAfterFirst + TEST_CONFIG.vsBot.victory}`);
 
@@ -153,14 +180,14 @@ player().resetProgress();
 const otherPlayerKey = RewardEngine.settle(
   { battleId: 'btl-shared', playerId: 'player_other', mode: 'bot', result: 'VICTORY', createdAt: 1 },
   [],
-  TEST_CONFIG,
+  { config: TEST_CONFIG },
 );
 check('duplicate: a different player id is a different settlement', otherPlayerKey.status === 'GRANTED');
 check('duplicate: the same battle can pay two different players',
   RewardEngine.settle(
     { battleId: 'btl-shared', playerId: 'player_other', mode: 'bot', result: 'VICTORY', createdAt: 2 },
     [otherPlayerKey.settlementKey],
-    TEST_CONFIG,
+    { config: TEST_CONFIG },
   ).status === 'ALREADY_SETTLED');
 
 /* ------------------------------------------- 4. nothing pays before the end */

@@ -7,6 +7,7 @@ import { BattleEngine } from '../engine';
 import { BATTLE_STATUS } from '../engine/types';
 import type { BattleResult, BattleState, BattleWinner, CombatantId } from '../engine/types';
 import { decideBotChoice } from '../game/botStrategy';
+import { runtime } from './runtime';
 
 export type BattleRuntime = {
   status: 'idle' | 'active' | 'finished';
@@ -29,16 +30,6 @@ export type BattleActions = {
   openNextRound: () => void;
   rematch: () => void;
   reset: () => void;
-};
-
-/**
- * Every battle gets a fresh id, so a rematch can never inherit the previous
- * battle's reward settlement.
- */
-let battleSequence = 0;
-const nextBattleId = (seed: number): string => {
-  battleSequence += 1;
-  return `btl-${battleSequence.toString(36)}-${seed.toString(36)}`;
 };
 
 const idleState = (): BattleRuntime => ({
@@ -75,7 +66,7 @@ export const useBattleStore = create<BattleRuntime & BattleActions>()((set, get)
     let battle = BattleEngine.createBattle({
       mode,
       seed,
-      battleId: nextBattleId(seed),
+      battleId: runtime.battleService.nextId(seed),
       playerA: { heroId: heroA.id, name: heroA.name, hp: heroA.hp },
       playerB: { heroId: heroB.id, name: heroB.name, hp: heroB.hp },
     });

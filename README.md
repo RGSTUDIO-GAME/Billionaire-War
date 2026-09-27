@@ -2,11 +2,14 @@
 
 Telegram Web App — **1 vs 1 auto battle**, maximum **3 rounds**.
 
-This repository covers **Prompts 1 → 4**: the game shell and main UI, a
+This repository covers **Prompts 1 → 5**: the game shell and main UI, a
 deterministic Universal Battle Engine, the full Battle Arena with its animation
-layer, and the **$GOLD battle reward** loop that closes the game. A battle is playable end to end — pick, confirm, countdown,
-sequential execution, round transitions, result. Anything that is not built yet
-says **COMING SOON** — nothing is faked.
+layer, the **$GOLD battle reward** loop that closes the game, and the **data
+layer** that makes the whole thing survive being closed. A battle is playable
+end to end — pick, confirm, countdown, sequential execution, round transitions,
+result, reward, and the player, their balance and their history are all still
+there tomorrow. Anything that is not built yet says **COMING SOON** — nothing
+is faked.
 
 ---
 
@@ -14,7 +17,8 @@ says **COMING SOON** — nothing is faked.
 
 No blockchain, no wallet, no NFT, no smart contract, no token transaction, no
 marketplace, no random damage, no critical hits, no second hero, no hero skills,
-no shop, no matchmaking, no leaderboard. $GOLD rewards exist; $BWAR is still
+no shop, no matchmaking, no leaderboard, no server, no account, no cloud save.
+$GOLD rewards exist and are stored **on the device**; $BWAR is still
 display-only.
 
 ---
@@ -32,7 +36,7 @@ npm run dev        # http://localhost:5173
 | `npm run build` | Typecheck + production build to `dist/` |
 | `npm run preview` | Serve the production build |
 | `npm run typecheck` | TypeScript only |
-| `npm run verify` | **739 assertions** — engine rules, store flow, presentation, rewards, animation, rendered screen |
+| `npm run verify` | **938 assertions** — engine rules, store flow, presentation, rewards, data layer, animation, rendered screen |
 | `npm run assets:check` | Report which registered assets exist on disk |
 | `npm run assets:placeholder` | Regenerate the bundled placeholder art/audio |
 | `npm run lint` | oxlint |
@@ -86,17 +90,31 @@ src/
     rewardConfig.ts     THE amounts. A win is 1000 $GOLD; defeat/draw unpriced
     RewardEngine.ts     mode + result -> configured amount -> transaction
     settleBattleReward.ts  The only bridge from a finished battle to a balance
+  storage/              The persistence layer — the only code that knows a device
+    StorageAdapter.ts   read / write / remove / keys, degrading to memory
+    keys.ts             Where each record lives, versioned for future migrations
+    records.ts          The persisted shapes: profile, ledger entry, battle record
+  repositories/         One repository per record, each validating what it reads
+    playerRepository.ts   Identity, roster, equipped hero, balances
+    goldRepository.ts     The append-only $GOLD ledger
+    battleRepository.ts   The archive of finished battles
+    heroRepository.ts     Ownership and equip rules, over a profile
+  services/             Game rules over the data: gold, battle identity, reward
+    goldService.ts        The only place a balance ever moves
+    battleService.ts      Battle ids and the battle archive
+    rewardService.ts      BATTLE_RESULT -> $GOLD -> ledger -> history
+    telegram.ts           The Telegram bridge
   state/                Zustand stores: player, ui/navigation, battle runtime
+    runtime.ts           The one place the data layer is wired together
   assets/               The asset layer — manifest, resolver, fallbacks
     animationController.ts   Battle event -> asset (the only visual mapping)
   components/           ui / layout / hero / battle components
   screens/              One file per screen
-  services/             Telegram bridge, storage helpers
   audio/                SFX + music player built on the asset registry
   hooks/                Battle clock and animation timing
 public/assets/          Every replaceable art and audio file
 docs/                   ASSETS.md, ARCHITECTURE.md
-scripts/                Asset generation, five verification suites, asset report
+scripts/                Asset generation, seven verification suites, asset report
 ```
 
 ---
@@ -184,7 +202,7 @@ different.
 A finished battle pays out exactly once:
 
 ```
-BATTLE_RESULT → Reward Engine → amount from config → $GOLD → ledger → result card
+BATTLE_RESULT → RewardService → amount from config → GoldService → ledger → result card
 ```
 
 | Rule | How it is enforced |
@@ -192,13 +210,46 @@ BATTLE_RESULT → Reward Engine → amount from config → $GOLD → ledger → 
 | Priced per mode | `rewardConfig.vsBot` and `rewardConfig.pvp` are separate tables; one engine, two prices |
 | Amounts live in config only | a win pays **1000 $GOLD**; losing and drawing are still unpriced `0` placeholders — change the number, change nothing else |
 | Paid only after the battle | `settleBattleReward` returns `null` for all nine non-final engine states |
-| Never twice | settlement key is `battleId::playerId`, stored permanently; a replay resolves to `ALREADY_SETTLED` |
-| Recorded | every payout appends a `GoldTransaction` to a persisted ledger |
+| Never twice | the settlement key is `battleId::playerId` and is derived from the persisted ledger, so a replay — **even after a reload** — resolves to `ALREADY_SETTLED` |
+| Recorded | every payout appends a `GoldTransaction` with its before and after balances |
+| Refused duplicates report the real payout | an `ALREADY_SETTLED` outcome is rewritten with the transaction the ledger already holds |
 | BATTLE AGAIN is clean | each battle gets a fresh id, and the result card only shows the reward belonging to *its* battle |
 
 The Battle Engine cannot move a balance — it knows nothing about rewards, and
 `npm run verify` fails if any file under `src/engine/` so much as mentions one.
 $BWAR, wallets, chains, transfers and trade are deliberately absent.
+
+## The data layer
+
+Everything the player earns is kept **on the device**, in a shape the game can
+repair rather than trust:
+
+```
+UI → store → service → repository → StorageAdapter → localStorage
+```
+
+| Layer | Rule |
+| --- | --- |
+| `storage/` | the only code that knows `localStorage` exists; it degrades to memory when storage is blocked, and a failed write is reported rather than thrown |
+| `repositories/` | one per record, and each one validates what it reads — junk, truncated JSON and hand-edited values are repaired or dropped, never fatal |
+| `services/` | the game rules over that data; `GoldService` is the only place a balance is ever computed or moved |
+| `state/` | mirrors the save so the UI can read it synchronously; a store action persists **before** the state changes |
+
+What that buys, and what `data-check` asserts:
+
+| Rule | How it is enforced |
+| --- | --- |
+| Survives a reload | identity, $GOLD, the roster, the equipped hero, the ledger and the battle history are read back from storage |
+| A damaged save heals | each field is repaired on its own; a balance that cannot be read is rebuilt from the ledger, and an unrecoverable one starts the player over rather than at zero |
+| A balance is never negative | a debit larger than the balance is refused outright — never clamped, because a clamped debit looks like a purchase that cost less than it should |
+| $GOLD is auditable | every movement is a `GoldTransaction` carrying its before and after balances |
+| A finished battle is history | archived once, newest first, and never for a battle that was abandoned |
+| A reload cannot reissue an id | battle ids carry a per-session token, so a new battle after a reload can never look like one that was already paid |
+| `Settings → Reset progress` really resets | the save is wiped and a new player minted — and the store still works afterwards |
+
+There is no server, no account and no cloud save. `localStorage` is the whole
+database, which is why every read is defensive and why the adapter is one small
+interface: replacing it with a real backend is a change in one file.
 
 ## Animation events
 
@@ -249,12 +300,14 @@ The Battle Engine does not change. See [docs/ASSETS.md](docs/ASSETS.md).
 
 ## Verification
 
-`npm run verify` bundles five suites and runs them on Node:
+`npm run verify` bundles seven suites and runs them on Node — **938 assertions**:
 
 | Suite | Covers |
 | --- | --- |
 | `engine-check` | the battle rules, including the specification's worked examples |
 | `flow-check` | the store: phases, the bot's per-round lock, timers, result detection |
 | `view-check` | the read model: labels, reveal timing, result events, damage totals |
+| `reward-check` | the payout: every mode and outcome, config-driven amounts, the ledger, and never paying twice |
+| `data-check` | the data layer: reload survival, damaged saves, the gold rules, the archive, and the layer boundaries |
 | `asset-check` | the animation controller, hero-agnostic mapping, fallback chains |
 | `render-check` | `BattleScreen` rendered for real at every phase of a battle |
