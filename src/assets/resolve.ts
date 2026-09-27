@@ -2,7 +2,16 @@ import { getPlaceholder } from './placeholders';
 import { ASSET_ENTRIES } from './manifest';
 import type { AssetEntry, AssetId } from './types';
 
-const BASE_PATH = '/assets';
+const BASE_PATH = (() => {
+  if (typeof document !== 'undefined' && document.baseURI) {
+    try {
+      return `${new URL('.', document.baseURI).pathname}assets`;
+    } catch {
+      return 'assets';
+    }
+  }
+  return 'assets';
+})();
 
 const byId = new Map<AssetId, AssetEntry>(ASSET_ENTRIES.map((entry) => [entry.id, entry]));
 
