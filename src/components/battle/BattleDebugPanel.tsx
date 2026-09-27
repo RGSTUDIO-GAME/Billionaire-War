@@ -17,11 +17,12 @@ const Row = ({ label, value }: { label: string; value: string }) => (
 );
 
 /**
- * Development-only battle inspector. Reads the live engine state, so it can
- * never disagree with the real rules. Hidden unless debug mode is enabled.
+ * Battle inspector. Reads the live engine state, so it can never disagree
+ * with the real rules. Shown once the round is confirmed, collapsed until
+ * tapped so the arena above never moves.
  */
 export const BattleDebugPanel = ({ battle }: BattleDebugPanelProps) => (
-  <details className="card card--tight battle-debug" open>
+  <details className="card card--tight battle-debug">
     <summary style={{ fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--gold)' }}>
       Debug · {BATTLE_STATUS[battle.status]}
     </summary>

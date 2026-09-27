@@ -12,7 +12,6 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { DUROV } from '../src/data/heroes/durov';
-import { setDebugEnabled } from '../src/engine/debug';
 import { BATTLE_STATUS } from '../src/engine/types';
 import { BattleScreen } from '../src/screens/BattleScreen';
 import { TopBar } from '../src/components/layout/TopBar';
@@ -55,7 +54,6 @@ const shot = (): { html: string; words: string } => {
 
 /* ---------------------------------------------------------- 1. selection */
 
-setDebugEnabled(false);
 // The check bundles share one in-memory storage, so start from a fresh player.
 usePlayerStore.getState().resetProgress();
 store().start('bot', DUROV, DUROV, 20260926);
@@ -70,11 +68,9 @@ check('screen: the round log hides the choices', opening.words.includes('CHOICES
 check('screen: confirm waits for a full pick', opening.words.includes('Pick attack'));
 check('screen: the clock starts at 30', opening.html.includes('aria-label="30 seconds left"'));
 check('screen: no paper plane before the fight', !opening.html.includes('attack-fx'));
+check('screen: VS is shown while picking', opening.html.includes('battle__versus'));
 check('screen: the attack row offers all four parts', ['HEAD', 'BODY', 'ARM', 'LEG'].every((part) => opening.words.includes(part)));
 
-setDebugEnabled(true);
-check('screen: the debug inspector can be switched on', shot().html.includes('battle-debug'));
-setDebugEnabled(false);
 
 /* ------------------------------------------------------------- 2. picking */
 
@@ -94,6 +90,8 @@ check('store: both sides locked in starts the countdown at once', battle()?.stat
 
 const counting = shot();
 check('screen: the selection panel is gone', !counting.words.includes('Pick attack'));
+check('screen: the debug inspector appears after confirm', counting.html.includes('battle-debug'));
+check('screen: VS is gone once the battle starts', !counting.html.includes('battle__versus'));
 check('screen: the countdown is on screen', counting.html.includes('countdown'));
 check('screen: both choices are announced as locked', counting.words.includes('Both choices locked'));
 

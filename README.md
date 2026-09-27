@@ -260,9 +260,9 @@ entirely different art without touching a single line of engine code.
 
 ## Debug
 
-`Settings → Engine debug` toggles battle logging and an in-battle inspector that
-shows the live engine state, round by round. It defaults to on in development
-and off in production builds.
+Confirming the round opens an in-battle inspector that shows the live engine
+state, round by round. Engine logging defaults to on in development and off in
+production builds.
 
 ## Screens
 

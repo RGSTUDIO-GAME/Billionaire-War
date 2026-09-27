@@ -316,9 +316,9 @@ needs the other, and neither can do the other's job.
 
 ## Debug
 
-`engine/debug.ts` is on in development and off in production, and can be
-toggled at runtime from **Settings → Engine debug**. It logs a full round
-snapshot:
+`engine/debug.ts` is on in development and off in production. It logs a full
+round snapshot, and confirming a round opens the same state as an in-battle
+inspector:
 
 ```
 Round: 2

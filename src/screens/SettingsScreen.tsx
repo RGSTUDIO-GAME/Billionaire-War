@@ -40,8 +40,6 @@ export const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
   const music = useSettingsStore((state) => state.music);
   const toggleSfx = useSettingsStore((state) => state.toggleSfx);
   const toggleMusic = useSettingsStore((state) => state.toggleMusic);
-  const debug = useSettingsStore((state) => state.debug);
-  const toggleDebug = useSettingsStore((state) => state.toggleDebug);
   const resetProgress = usePlayerStore((state) => state.resetProgress);
   const [confirmReset, setConfirmReset] = useState(false);
 
@@ -66,13 +64,6 @@ export const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
             hint="Loops while a battle is running"
             value={music}
             onToggle={toggleMusic}
-          />
-          <hr className="divider" />
-          <ToggleRow
-            label="Engine debug"
-            hint="Round-by-round state, damage and winner logging"
-            value={debug}
-            onToggle={toggleDebug}
           />
         </Card>
 

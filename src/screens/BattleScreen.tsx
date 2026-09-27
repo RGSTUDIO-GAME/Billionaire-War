@@ -9,7 +9,6 @@ import { useBattleReward } from '../hooks/useBattleReward';
 import { useBattleStore } from '../state/battleStore';
 import { usePlayerStore } from '../state/playerStore';
 import { buildBattleView } from '../presentation/battleView';
-import { isDebugEnabled } from '../engine/debug';
 import { BattleLog } from '../components/battle/BattleLog';
 import { BattleDebugPanel } from '../components/battle/BattleDebugPanel';
 import { BattleResultOverlay } from '../components/battle/BattleResultOverlay';
@@ -128,6 +127,7 @@ export const BattleScreen = ({ onExit, onRematch }: BattleScreenProps) => {
 
       <div className="battle__arena">
         <FighterSprite fighter={view.fighters.A} hero={playerHero} beatKey={beatKey} />
+        {view.showSelection ? <span className="battle__versus">VS</span> : null}
         {fxAttacker && fxHero && hasAttackFx(fxHero) ? (
           <AttackFx key={beatKey} hero={fxHero} attacker={fxAttacker} beatKey={beatKey} />
         ) : null}
@@ -164,7 +164,7 @@ export const BattleScreen = ({ onExit, onRematch }: BattleScreenProps) => {
           </div>
         )}
 
-        {isDebugEnabled() ? (
+        {!view.showSelection ? (
           <div style={{ marginTop: 'var(--s-3)' }}>
             <BattleDebugPanel battle={battle} />
           </div>
