@@ -83,8 +83,8 @@ export const heroAssetIds = registerHeroAssets('durov');
 
 export const backgroundIds = {
   battleArena: register('backgrounds', 'battle_arena', 'battle_arena.svg', 'background', 'Battle arena'),
-  home: register('backgrounds', 'home', 'home.svg', 'background', 'Home'),
-  menu: register('backgrounds', 'menu', 'menu.svg', 'background', 'Menu'),
+  home: register('backgrounds', 'home', 'home.png', 'background', 'Home'),
+  menu: register('backgrounds', 'menu', 'menu.png', 'background', 'Menu'),
 } satisfies Record<string, AssetId>;
 
 /* --------------------------------------------------------------------- ui */
