@@ -1,3 +1,4 @@
+import { AssetImg } from '../../assets/AssetImg';
 import { AnimatedSprite } from './AnimatedSprite';
 import { heroAssetChain, heroFrameUrls } from '../../assets/heroAssets';
 import { idleCue, resolveCue } from '../../assets/animationController';
@@ -56,6 +57,11 @@ export const FighterSprite = ({ fighter, hero, beatKey = '' }: FighterSpriteProp
         </span>
       ) : null}
 
+      {cue.motion === 'block' && cue.effect ? (
+        <span className="sprite__effect sprite__effect--block">
+          <AssetImg assetId={cue.effect} alt="" />
+        </span>
+      ) : null}
     </div>
   );
 };

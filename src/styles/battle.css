@@ -130,7 +130,7 @@
   flex: 1 1 auto;
   min-height: 0;
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: 1fr 1fr;
   align-items: end;
   gap: var(--s-2);
   padding: var(--s-2) var(--s-4) var(--s-4);
@@ -139,6 +139,12 @@
 }
 
 .battle__versus {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  pointer-events: none;
   align-self: center;
   font-family: var(--font-display);
   font-size: 22px;
@@ -367,6 +373,22 @@
 
 .sprite.is-blocking {
   animation: brace 0.45s ease-out;
+}
+
+.sprite__effect {
+  position: absolute;
+  inset: -10%;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  animation: fade-in 0.2s ease-out both;
+}
+
+.sprite__effect img {
+  width: 58%;
+  height: 58%;
+  object-fit: contain;
+  animation: pop-in 0.3s ease-out both;
 }
 
 @keyframes brace {
@@ -756,7 +778,7 @@
 
 .battle-result__stats {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: 1fr 1fr;
   align-items: center;
   gap: var(--s-3);
   margin: var(--s-4) 0;
