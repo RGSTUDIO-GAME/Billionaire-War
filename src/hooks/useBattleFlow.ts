@@ -5,7 +5,6 @@ import { BATTLE_MUSIC, playEventCue } from '../presentation/audioEvents';
 import { buildBattleView } from '../presentation/battleView';
 import { isSelectionPhase, nextFlowStep } from '../presentation/flowPlan';
 import type { FlowStep } from '../presentation/flowPlan';
-import { eventsForAttack } from '../engine';
 import { useBattleStore } from '../state/battleStore';
 
 /**
@@ -97,13 +96,11 @@ export const useBattleFlow = (): void => {
 
     if (view.attacker) {
       playEventCue(view.fighters[view.attacker].event?.type ?? null);
-    }
-
-    // The attack that has just resolved is the last one in the round log.
-    const landed = view.log[beat - 1];
-    if (landed) {
-      const events = eventsForAttack(landed);
-      playEventCue(events[events.length - 1]?.type ?? null);
+      // The defender reacts in the same beat as the swing, so its impact
+      // sounds together with the attack - not one beat later when the attack
+      // resolves in the round log.
+      const target = view.attacker === 'A' ? view.fighters.B : view.fighters.A;
+      playEventCue(target.event?.type ?? null);
     }
 
     const step = nextFlowStep(view.status);

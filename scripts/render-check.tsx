@@ -108,6 +108,7 @@ check('store: FIGHT hands over to execution', battle()?.status === BATTLE_STATUS
 
 const swinging = shot();
 check('screen: the attacker lunges', swinging.html.includes('is-attacking'));
+check('screen: the defender reacts in the same beat', swinging.html.includes('sprite--right is-'), swinging.html.slice(0, 200));
 check('screen: the choices are revealed at last', swinging.html.includes('chip--atk') && !swinging.html.includes('chip--locked'));
 check('screen: the selection panel stays hidden', !swinging.words.includes('Pick attack'));
 

@@ -173,7 +173,7 @@ const openNextSelection = (state: BattleState): BattleState => BattleEngine.begi
   const view = buildBattleView(fight);
   check('execution: A swings first', view.attacker === 'A', String(view.attacker));
   check('execution: the attacker plays an attack event', view.fighters.A.event?.type === 'ATTACK_HEAD', String(view.fighters.A.event?.type));
-  check('execution: the target has nothing to show yet', view.fighters.B.event === null);
+  check('execution: the target reacts in the same beat', view.fighters.B.event?.type === 'HIT', String(view.fighters.B.event?.type));
   check('execution: the round log is still empty', view.log.length === 0);
 }
 
@@ -185,7 +185,7 @@ const openNextSelection = (state: BattleState): BattleState => BattleEngine.begi
   const view = buildBattleView(afterA);
   check('execution: B is up next', view.attacker === 'B', String(view.attacker));
   check('execution: the next attacker plays its own swing', view.fighters.B.event?.type === 'ATTACK_BODY', String(view.fighters.B.event?.type));
-  check('execution: the fighter waiting its turn shows nothing', view.fighters.A.event === null, String(view.fighters.A.event?.type));
+  check('execution: the waiting fighter reacts in the same beat', view.fighters.A.event?.type === 'HIT', String(view.fighters.A.event?.type));
   check('execution: the incoming attack is already known', view.fighters.B.attack === 'body', String(view.fighters.B.attack));
   check('execution: the round log records the first attack', view.log.length === 1);
   check('execution: round 1 damage is 200', view.log[0]?.damage === 200, String(view.log[0]?.damage));

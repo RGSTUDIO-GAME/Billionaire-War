@@ -161,11 +161,30 @@ const RESULT_VISIBLE: Record<1 | 2, readonly BattleStatus[]> = {
 };
 
 /**
+ * The result landing on this fighter, read from the pre-resolved plans so the
+ * defender reacts in the SAME beat as the swing - not one beat later when the
+ * attack resolves in the round record. Gameplay is untouched: damage, HP and
+ * the log still resolve one attack at a time in the engine.
+ */
+const incomingResultFor = (battle: BattleState, id: CombatantId): BattleEvent | null => {
+  const plans = battle.currentPlans;
+  if (!plans) return null;
+  if (battle.status === BATTLE_STATUS.EXECUTION_PLAYER_A && id === 'B') {
+    return eventsForAttack(plans[0])[1] ?? null;
+  }
+  if (battle.status === BATTLE_STATUS.EXECUTION_PLAYER_B && id === 'A') {
+    return eventsForAttack(plans[1])[1] ?? null;
+  }
+  return null;
+};
+
+/**
  * The event animating on a fighter right now.
  *
- * The attacker plays its attack event; the target plays the result event once
- * that attack has resolved. Both are read from the plans the engine resolved
- * before the first animation frame - nothing is decided here.
+ * The attacker plays its attack event; the target plays the incoming result
+ * in the same beat, and a resolved result persists into the round summary.
+ * Everything is read from the plans the engine resolved before the first
+ * animation frame - nothing is decided here.
  */
 /**
  * The attack that has already landed on this fighter, if its result is still
@@ -194,9 +213,10 @@ const eventFor = (battle: BattleState, id: CombatantId): BattleEvent | null => {
   // visibly swings every round instead of freezing on the previous hit.
   if (attacker === id) return eventsForAttack(plan)[0] ?? null;
 
-  // A result stays on screen from the moment it resolves until the round
-  // closes, so the last beat of the round does not blink the second hit away.
-  return resultEventFor(battle, id);
+  // The defender reacts the moment the swing starts. A resolved result
+  // stays on screen until the round closes, so the last beat of the round
+  // does not blink the second hit away.
+  return incomingResultFor(battle, id) ?? resultEventFor(battle, id);
 };
 
 const fighterView = (battle: BattleState, id: CombatantId): FighterView => {
