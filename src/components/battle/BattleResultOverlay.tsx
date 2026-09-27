@@ -1,5 +1,5 @@
-import { AssetImg } from '../../assets/AssetImg';
-import { heroAssetChain } from '../../assets/heroAssets';
+import { AnimatedSprite } from './AnimatedSprite';
+import { heroAssetChain, heroFrameUrls } from '../../assets/heroAssets';
 import type { Hero } from '../../data/heroes/types';
 import type { GoldTransaction } from '../../rewards';
 import type { BattleSummary } from '../../presentation/battleView';
@@ -54,7 +54,12 @@ export const BattleResultOverlay = ({
     <Modal open title={`Round ${summary.rounds} complete`} onClose={onExit}>
       <div className="center stack">
         <div className="battle-result__sprite">
-          <AssetImg chain={heroAssetChain(hero, { type: pose })} alt={hero.name} />
+          <AnimatedSprite
+            frames={heroFrameUrls(hero, { type: pose })}
+            still={heroAssetChain(hero, { type: pose })}
+            loop={pose === 'idle'}
+            alt={hero.name}
+          />
         </div>
 
         <h2 className={`battle-result__title ${title.className}`}>{title.text}</h2>

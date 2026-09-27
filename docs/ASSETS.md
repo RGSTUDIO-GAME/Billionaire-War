@@ -14,16 +14,12 @@ All replaceable files are in `public/assets/`. Nothing else contains a path.
 ```
 public/assets/
   heroes/<hero_id>/
-    character.svg      full body, used in menus and the hero screen
-    idle.svg           neutral battle stance
-    attack_head.svg    attack pose aimed at HEAD
-    attack_body.svg    attack pose aimed at BODY
-    attack_arm.svg     attack pose aimed at ARM
-    attack_leg.svg     attack pose aimed at LEG
-    defense.svg        blocking / taking a hit
-    hit.svg            reacting to damage
-    victory.svg        winner pose
-    defeat.svg         loser pose
+    character.png      portrait, used in menus and the hero screen
+    <pose>/frame_01.png ... frame_08.png   8-frame strip per pose, played in
+      order by AnimatedSprite (idle loops, the rest play once and hold).
+      poses: idle, attack_head, attack_body, attack_arm, attack_leg,
+      defense, hit, victory, defeat. One representative frame per pose doubles
+      as the still the battle controller contract resolves to.
   backgrounds/
     battle_arena.svg   battle stage
     home.svg           home screen backdrop
@@ -179,9 +175,9 @@ The Battle Engine stays exactly the same. Three steps:
 
 ```
 public/assets/heroes/<hero_id>/
-  character.svg  idle.svg  attack_head.svg  attack_body.svg
-  attack_arm.svg attack_leg.svg defense.svg  hit.svg
-  victory.svg defeat.svg
+  character.png  <pose>/frame_01.png ... frame_08.png
+  (poses: idle, attack_head, attack_body, attack_arm, attack_leg,
+   defense, hit, victory, defeat)
 ```
 
 Missing files are fine — they fall back.

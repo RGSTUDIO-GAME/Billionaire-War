@@ -24,6 +24,8 @@ export type AssetEntry = {
   /** Inline artwork used when every file in the chain is missing. */
   placeholder: PlaceholderKind;
   label: string;
+  /** False skips the entry in the startup prefetch (heavy frame strips). */
+  preload?: boolean;
 };
 
 /** Semantic keys every hero must provide. */

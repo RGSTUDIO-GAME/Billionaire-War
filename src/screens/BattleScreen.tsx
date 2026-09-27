@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { getAssetUrl } from '../assets/resolve';
+import { prefetchHeroFrames } from '../assets/heroAssets';
 import { backgroundIds, iconIds } from '../assets/manifest';
 import { Icon } from '../components/ui/Icon';
 import { getHeroById } from '../data/heroes';
@@ -37,6 +39,16 @@ export const BattleScreen = ({ onExit, onRematch }: BattleScreenProps) => {
   const gold = usePlayerStore((state) => state.gold);
 
   useBattleFlow();
+  const heroAId = battle?.playerA.heroId;
+  const heroBId = battle?.playerB.heroId;
+  // Warm the frame strips when a battle opens so the first cue plays instantly.
+  // Startup prefetch skips frames on purpose - 16MB has no business on boot.
+  useEffect(() => {
+    const a = heroAId ? getHeroById(heroAId) : undefined;
+    const b = heroBId ? getHeroById(heroBId) : undefined;
+    if (a) prefetchHeroFrames(a);
+    if (b) prefetchHeroFrames(b);
+  }, [heroAId, heroBId]);
   // The reward is a battle outcome, not a battle rule, so it lives in its own
   // hook. The view is built before it runs, because the reward is keyed by the
   // battle it belongs to.

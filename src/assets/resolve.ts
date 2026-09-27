@@ -53,6 +53,7 @@ export const isRegistered = (id: AssetId): boolean => byId.has(id);
 export const prefetchAllAssets = (): void => {
   for (const entry of ASSET_ENTRIES) {
     if (entry.category === 'sounds' || entry.category === 'music') continue;
+    if (entry.preload === false) continue;
     const url = getAssetUrl(entry.id);
     if (!url) continue;
     const image = new Image();

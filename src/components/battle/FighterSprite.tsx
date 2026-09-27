@@ -1,5 +1,6 @@
 import { AssetImg } from '../../assets/AssetImg';
-import { heroAssetChain } from '../../assets/heroAssets';
+import { AnimatedSprite } from './AnimatedSprite';
+import { heroAssetChain, heroFrameUrls } from '../../assets/heroAssets';
 import { idleCue, resolveCue } from '../../assets/animationController';
 import type { Hero } from '../../data/heroes/types';
 import type { FighterView } from '../../presentation/battleView';
@@ -34,7 +35,13 @@ export const FighterSprite = ({ fighter, hero }: FighterSpriteProps) => {
         .filter(Boolean)
         .join(' ')}
     >
-      <AssetImg chain={heroAssetChain(hero, cue.visual)} alt={fighter.name} />
+      <AnimatedSprite
+        key={`${fighter.id}:${fighter.event ? `${fighter.event.type}:${fighter.event.round}:${fighter.hp}` : `idle:${fighter.hp}`}`}
+        frames={heroFrameUrls(hero, cue.visual)}
+        still={heroAssetChain(hero, cue.visual)}
+        loop={cue.visual.type === 'idle'}
+        alt={fighter.name}
+      />
 
       {cue.label ? (
         <span className={`popup ${isBlock || isIdleOutcome || cue.label === 'HIT 0' ? 'popup--block' : ''}`}>

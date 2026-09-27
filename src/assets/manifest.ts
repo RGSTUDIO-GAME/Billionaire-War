@@ -21,14 +21,15 @@ const register = (
   placeholder: PlaceholderKind,
   label: string,
   fallback?: AssetId,
+  preload = true,
 ): AssetId => {
   sequence += 1;
   const id = `${category}.${key}#${sequence}`;
-  entries.push({ id, category, file, placeholder, label, fallback });
+  entries.push({ id, category, file, placeholder, label, fallback, preload });
   return id;
 };
 
-const registerHero = (heroId: string, key: string, file: string, fallback?: AssetId): AssetId => {
+const registerHero = (heroId: string, key: string, file: string, fallback?: AssetId, preload = true): AssetId => {
   sequence += 1;
   const id = `heroes.${heroId}.${key}#${sequence}`;
   entries.push({
@@ -38,6 +39,7 @@ const registerHero = (heroId: string, key: string, file: string, fallback?: Asse
     placeholder: key === 'character' ? 'hero' : 'heroPose',
     label: `${heroId} ${key}`,
     fallback,
+    preload,
   });
   return id;
 };
@@ -51,16 +53,16 @@ const PLACEHOLDER_POSE = register('heroes', '__placeholder_pose', '', 'heroPose'
 /* ------------------------------------------------------------------ heroes */
 
 const heroFiles: Record<HeroAssetKey, string> = {
-  character: 'character.svg',
-  idle: 'idle.svg',
-  attackHead: 'attack_head.svg',
-  attackBody: 'attack_body.svg',
-  attackArm: 'attack_arm.svg',
-  attackLeg: 'attack_leg.svg',
-  defense: 'defense.svg',
-  hit: 'hit.svg',
-  victory: 'victory.svg',
-  defeat: 'defeat.svg',
+  character: 'character.png',
+  idle: 'idle/frame_01.png',
+  attackHead: 'attack_head/frame_04.png',
+  attackBody: 'attack_body/frame_05.png',
+  attackArm: 'attack_arm/frame_05.png',
+  attackLeg: 'attack_leg/frame_05.png',
+  defense: 'defense/frame_04.png',
+  hit: 'hit/frame_04.png',
+  victory: 'victory/frame_08.png',
+  defeat: 'defeat/frame_08.png',
 };
 
 /** Builds the asset id set for a hero folder. Missing files fall back gracefully. */
@@ -78,6 +80,47 @@ export const registerHeroAssets = (heroId: string): Record<HeroAssetKey, AssetId
 });
 
 export const heroAssetIds = registerHeroAssets('durov');
+
+/* ------------------------------------------------------- animation frames */
+
+export const HERO_FRAME_COUNT = 8;
+
+const heroFrameFolder: Record<HeroAssetKey, string | null> = {
+  character: null,
+  idle: 'idle',
+  attackHead: 'attack_head',
+  attackBody: 'attack_body',
+  attackArm: 'attack_arm',
+  attackLeg: 'attack_leg',
+  defense: 'defense',
+  hit: 'hit',
+  victory: 'victory',
+  defeat: 'defeat',
+};
+
+const frameFile = (index: number): string => `frame_${String(index).padStart(2, '0')}.png`;
+
+/**
+ * Every animation frame of a pose, in play order. Stills stay the single
+ * source of truth for the battle controller contract - frames are a
+ * presentation-only layer on top, so a hero without frames still renders.
+ */
+const registerHeroFrames = (heroId: string): Record<HeroAssetKey, AssetId[]> => {
+  const out = {} as Record<HeroAssetKey, AssetId[]>;
+  (Object.keys(heroFrameFolder) as HeroAssetKey[]).forEach((key) => {
+    const folder = heroFrameFolder[key];
+    out[key] = folder
+      ? Array.from({ length: HERO_FRAME_COUNT }, (_, i) =>
+          registerHero(heroId, `${key}_frame_${i + 1}`, `${folder}/${frameFile(i + 1)}`, PLACEHOLDER_POSE, false),
+        )
+      : [];
+  });
+  return out;
+};
+
+export const heroFrames: Record<string, Record<HeroAssetKey, AssetId[]>> = {
+  durov: registerHeroFrames('durov'),
+};
 
 /* ------------------------------------------------------------ backgrounds */
 

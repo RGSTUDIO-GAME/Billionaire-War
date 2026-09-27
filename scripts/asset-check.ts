@@ -147,7 +147,7 @@ check('an unknown asset id ends in inline artwork', missing[missing.length - 1].
 check('an unknown asset id never returns undefined', missing.every((url) => typeof url === 'string'));
 
 const chain = getFallbackChain(DUROV.assets.attackHead);
-check('a real asset chain starts with the real file', chain[0].includes('durov/attack_head.svg'), chain[0]);
+check('a real asset chain starts with the real file', chain[0].includes('durov/attack_head/frame_04.png'), chain[0]);
 check('a real asset chain ends in inline artwork', chain[chain.length - 1].startsWith('data:image/svg+xml'));
 
 /* ----------------------------------------------------------------- report */
