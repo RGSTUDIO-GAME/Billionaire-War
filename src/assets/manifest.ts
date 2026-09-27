@@ -122,6 +122,11 @@ export const heroFrames: Record<string, Record<HeroAssetKey, AssetId[]>> = {
   durov: registerHeroFrames('durov'),
 };
 
+/** Display portrait per hero. Outside hero.assets so the 10-key contract holds. */
+export const heroPortraitIds: Record<string, AssetId> = {
+  durov: register('heroes', 'durov_portrait', 'durov/portrait.jpg', 'hero', 'Durov portrait'),
+};
+
 /* ------------------------------------------------------------ backgrounds */
 
 export const backgroundIds = {

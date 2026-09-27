@@ -6,7 +6,7 @@ import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { SceneCard } from '../components/ui/SceneCard';
-import { HeroAvatar } from '../components/hero/HeroAvatar';
+import { heroPortraitIds } from '../assets/manifest';
 import { Icon } from '../components/ui/Icon';
 import { StatBar } from '../components/ui/StatBar';
 
@@ -26,7 +26,9 @@ export const HomeScreen = ({ onWar, onHero, onQuest }: HomeScreenProps) => {
     <div className="stack-lg anim-fade">
       <SceneCard background={backgroundIds.home}>
         <div className="row" style={{ alignItems: 'flex-start' }}>
-          <HeroAvatar hero={hero} size="lg" />
+          <div className="home-portrait">
+            <AssetImg assetId={heroPortraitIds[hero.id] ?? heroPortraitIds.durov} alt={hero.name} />
+          </div>
           <div className="stack grow" style={{ minWidth: 0 }}>
             <Badge tone="gold">Equipped</Badge>
             <h2 className="display" style={{ fontSize: 26, color: 'var(--gold)' }}>
