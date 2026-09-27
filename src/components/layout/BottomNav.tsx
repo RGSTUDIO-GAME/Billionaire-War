@@ -25,14 +25,14 @@ export const BottomNav = ({ active, onNavigate }: BottomNavProps) => (
         key={item.screen}
         type="button"
         className={`bottomnav__item${active === item.screen ? ' is-active' : ''}`}
+        aria-label={item.label}
         aria-current={active === item.screen ? 'page' : undefined}
         onClick={() => {
           haptic.select();
           onNavigate(item.screen);
         }}
       >
-        <AssetImg assetId={item.icon} alt="" />
-        <span>{item.label}</span>
+        <AssetImg assetId={item.icon} alt={item.label} className="bottomnav__img" />
       </button>
     ))}
   </nav>

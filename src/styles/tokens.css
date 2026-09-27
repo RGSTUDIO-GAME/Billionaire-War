@@ -49,7 +49,7 @@
   /* layout */
   --shell-max: 560px;
   --topbar-h: 56px;
-  --bottomnav-h: 64px;
+  --bottomnav-h: 72px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 

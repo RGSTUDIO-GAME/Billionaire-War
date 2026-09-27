@@ -138,23 +138,19 @@
 
 .bottomnav__item {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  color: var(--text-muted);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  transition: color 0.15s;
+  padding: 6px 2px 8px;
+  transition: filter 0.15s, transform 0.15s;
 }
 
-.bottomnav__item img {
-  width: 22px;
-  height: 22px;
+.bottomnav__item img,
+.bottomnav__img {
+  width: 56px;
+  height: 46px;
+  object-fit: contain;
   opacity: 0.75;
-  transition: opacity 0.15s, transform 0.15s;
+  transition: opacity 0.15s, transform 0.15s, filter 0.15s;
 }
 
 .bottomnav__item:hover,
@@ -162,9 +158,11 @@
   color: var(--gold);
 }
 
-.bottomnav__item.is-active img {
+.bottomnav__item.is-active img,
+.bottomnav__item.is-active .bottomnav__img {
   opacity: 1;
-  transform: translateY(-1px);
+  transform: translateY(-1px) scale(1.08);
+  filter: drop-shadow(0 0 6px rgba(255, 190, 60, 0.55));
 }
 
 .bottomnav__item.is-active::before {

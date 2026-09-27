@@ -97,14 +97,14 @@ export const uiIds = {
 
 /* ------------------------------------------------------------------ icons */
 
-const icon = (name: string) => register('icons', name, `${name}.svg`, 'icon', name);
+const icon = (name: string, ext = 'svg') => register('icons', name, `${name}.${ext}`, 'icon', name);
 
 export const iconIds = {
-  home: icon('home'),
-  quest: icon('quest'),
-  inventory: icon('inventory'),
-  hero: icon('hero'),
-  settings: icon('settings'),
+  home: icon('home', 'png'),
+  quest: icon('quest', 'png'),
+  inventory: icon('inventory', 'png'),
+  hero: icon('hero', 'png'),
+  settings: icon('settings', 'png'),
   trophy: icon('trophy'),
   swords: icon('swords'),
   heart: icon('heart'),
