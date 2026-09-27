@@ -188,24 +188,15 @@
 }
 
 .currency__icon {
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  font-size: 11px;
-  font-weight: 900;
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
   flex: 0 0 auto;
 }
 
-.currency__icon--gold {
-  background: linear-gradient(180deg, var(--gold-soft), var(--gold));
-  color: #2a1f02;
-}
-
+.currency__icon--gold,
 .currency__icon--bwar {
-  background: linear-gradient(180deg, #9fd4ff, var(--info));
-  color: #04223f;
+  background: transparent;
 }
 
 .currency--bwar {

@@ -11,9 +11,9 @@ type CurrencyPillProps = {
   locked?: boolean;
 };
 
-const META: Record<CurrencyKind, { symbol: string; label: string }> = {
-  gold: { symbol: '$G', label: '$GOLD' },
-  bwar: { symbol: '$B', label: '$BWAR' },
+const META: Record<CurrencyKind, { label: string; icon: string }> = {
+  gold: { label: '$GOLD', icon: iconIds.gold },
+  bwar: { label: '$BWAR', icon: iconIds.bwar },
 };
 
 const format = (value: number): string =>
@@ -31,7 +31,7 @@ export const CurrencyPill = ({ kind, value, onClick, locked = false }: CurrencyP
   const meta = META[kind];
   const content = (
     <>
-      <span className={`currency__icon currency__icon--${kind}`}>{meta.symbol}</span>
+      <AssetImg assetId={meta.icon} alt={meta.label} className={`currency__icon currency__icon--${kind}`} />
       <span>{format(value)}</span>
       {locked ? <AssetImg assetId={iconIds.lock} className="currency__lock" alt="Coming soon" /> : null}
     </>
