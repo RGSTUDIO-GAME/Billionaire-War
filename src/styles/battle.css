@@ -135,7 +135,7 @@
   gap: var(--s-2);
   padding: var(--s-2) var(--s-4) var(--s-4);
   overflow: hidden;
-  column-gap: var(--s-4);
+  column-gap: clamp(28px, 9vw, 56px);
 }
 
 .battle__versus {
@@ -369,22 +369,6 @@
   animation: brace 0.45s ease-out;
 }
 
-.sprite__effect {
-  position: absolute;
-  inset: -10%;
-  display: grid;
-  place-items: center;
-  pointer-events: none;
-  animation: fade-in 0.2s ease-out both;
-}
-
-.sprite__effect img {
-  width: 58%;
-  height: 58%;
-  object-fit: contain;
-  animation: pop-in 0.3s ease-out both;
-}
-
 @keyframes brace {
   0%,
   100% {
@@ -460,13 +444,13 @@
 }
 
 .attack-fx--from-left .attack-fx__plane {
-  --fx-from: 6%;
-  --fx-to: 60%;
+  --fx-from: 4%;
+  --fx-to: 62%;
 }
 
 .attack-fx--from-right .attack-fx__plane {
-  --fx-from: 60%;
-  --fx-to: 6%;
+  --fx-from: 62%;
+  --fx-to: 4%;
 }
 
 .attack-fx--from-right .attack-fx__plane img {
@@ -483,11 +467,11 @@
 }
 
 .attack-fx--from-left .attack-fx__boom {
-  left: 76%;
+  left: 78%;
 }
 
 .attack-fx--from-right .attack-fx__boom {
-  left: 24%;
+  left: 22%;
 }
 
 @keyframes fx-fly {
@@ -933,4 +917,19 @@
 
 .battle-debug summary::-webkit-details-marker {
   display: none;
+}
+
+.battle-debug__rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  margin-top: var(--s-2);
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+@media (max-height: 640px) {
+  .battle-debug__rows {
+    max-height: 76px;
+  }
 }

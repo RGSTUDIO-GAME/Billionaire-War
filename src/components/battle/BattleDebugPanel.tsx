@@ -18,16 +18,16 @@ const Row = ({ label, value }: { label: string; value: string }) => (
 
 /**
  * Battle inspector. Reads the live engine state, so it can never disagree
- * with the real rules. Shown once the round is confirmed, collapsed until
- * tapped so the arena above never moves.
+ * with the real rules. Shown open once the round is confirmed; the rows live
+ * in a fixed scrollbox so the arena above never moves.
  */
 export const BattleDebugPanel = ({ battle }: BattleDebugPanelProps) => (
-  <details className="card card--tight battle-debug">
+  <details className="card card--tight battle-debug" open>
     <summary style={{ fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--gold)' }}>
       Debug · {BATTLE_STATUS[battle.status]}
     </summary>
 
-    <div className="stack" style={{ marginTop: 'var(--s-2)', gap: 'var(--s-1)' }}>
+    <div className="battle-debug__rows">
       <Row label="Battle" value={battle.battleId} />
       <Row label="Mode / Round" value={`${battle.mode.toUpperCase()} ${battle.currentRound}/3`} />
       <Row label="Clock" value={battle.countdown === null ? `${battle.secondsRemaining}s` : `CD ${battle.countdown}`} />
