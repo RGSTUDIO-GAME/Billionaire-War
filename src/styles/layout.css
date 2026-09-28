@@ -56,9 +56,9 @@
 }
 
 .topbar__logo {
-  height: 36px;
+  height: 44px;
   width: auto;
-  max-width: 170px;
+  max-width: 200px;
   object-fit: contain;
   object-position: left center;
 }
