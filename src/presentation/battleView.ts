@@ -206,8 +206,13 @@ const eventFor = (battle: BattleState, id: CombatantId): BattleEvent | null => {
   const plans = battle.currentPlans;
   if (!plans) return null;
 
-  const plan = id === 'A' ? plans[0] : plans[1];
+  // Outside the two execution beats the fighters rest in idle. In particular
+  // the round summary and the final result replay no hit / block reactions -
+  // the damage popups (resultEvent) stay up on their own.
   const attacker = ATTACKING[battle.status];
+  if (!attacker) return null;
+
+  const plan = id === 'A' ? plans[0] : plans[1];
 
   // This fighter's own attack. It wins over any landed result, so the enemy
   // visibly swings every round instead of freezing on the previous hit.

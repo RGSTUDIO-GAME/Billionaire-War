@@ -198,7 +198,9 @@ const openNextSelection = (state: BattleState): BattleState => BattleEngine.begi
   );
   const view = buildBattleView(afterB);
   check('execution: both attacks are in the log', view.log.length === 2);
-  check('execution: both results stay on screen at the round summary', view.fighters.A.event?.type === 'HIT' && view.fighters.B.event?.type === 'HIT',
+  check('execution: both results stay on screen at the round summary', view.fighters.A.resultEvent?.type === 'HIT' && view.fighters.B.resultEvent?.type === 'HIT',
+    `${String(view.fighters.A.resultEvent?.type)} / ${String(view.fighters.B.resultEvent?.type)}`);
+  check('execution: fighters rest instead of replaying reactions', view.fighters.A.event === null && view.fighters.B.event === null,
     `${String(view.fighters.A.event?.type)} / ${String(view.fighters.B.event?.type)}`);
   check('execution: the banner announces the finished round', view.banner?.title === 'ROUND 1 COMPLETE', String(view.banner?.title));
   check('execution: the summary is not available yet', view.summary === null);
@@ -225,7 +227,8 @@ const openNextSelection = (state: BattleState): BattleState => BattleEngine.begi
   );
   const view = buildBattleView(afterB);
   check('block: a mutual block leaves both HP pools full', view.fighters.A.hp === 1000 && view.fighters.B.hp === 1000);
-  check('block: both block events are visible', view.fighters.A.event?.type === 'BLOCK_LEG' && view.fighters.B.event?.type === 'BLOCK_HEAD');
+  check('block: both block results stay visible', view.fighters.A.resultEvent?.type === 'BLOCK_LEG' && view.fighters.B.resultEvent?.type === 'BLOCK_HEAD');
+  check('block: fighters rest instead of replaying reactions', view.fighters.A.event === null && view.fighters.B.event === null);
 }
 
 /* ---------------------------------------------------------------- timeout */
