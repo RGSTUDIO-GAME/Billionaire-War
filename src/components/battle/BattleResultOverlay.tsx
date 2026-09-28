@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { AnimatedSprite } from './AnimatedSprite';
 import { heroAssetChain, heroFrameUrls } from '../../assets/heroAssets';
 import type { Hero } from '../../data/heroes/types';
@@ -53,7 +54,10 @@ export const BattleResultOverlay = ({
   return (
     <Modal open title={`Round ${summary.rounds} complete`} onClose={onExit}>
       <div className="center stack">
-        <div className="battle-result__sprite">
+        <div
+          className="battle-result__sprite"
+          style={{ '--sprite-scale': String(hero.spriteScale ?? 1) } as CSSProperties}
+        >
           <AnimatedSprite
             frames={heroFrameUrls(hero, { type: pose })}
             still={heroAssetChain(hero, { type: pose })}

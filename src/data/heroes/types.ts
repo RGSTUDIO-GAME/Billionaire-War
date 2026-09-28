@@ -27,6 +27,10 @@ export type Hero = {
   free: boolean;
   /** Empty for now. The engine reads skills from here when they exist. */
   skills: HeroSkill[];
+  /** Render scale for the fighter sprite. 1 (or omitted) = same box as everyone. */
+  spriteScale?: number;
+  /** Idle frame interval in ms. Omitted = the shared animation tempo. */
+  idleIntervalMs?: number;
   assets: {
     character: AssetId;
     idle: AssetId;

@@ -1,5 +1,6 @@
+import type { CSSProperties } from 'react';
 import { AssetImg } from '../../assets/AssetImg';
-import { AnimatedSprite } from './AnimatedSprite';
+import { AnimatedSprite, FRAME_INTERVAL_MS } from './AnimatedSprite';
 import { heroAssetChain, heroFrameUrls } from '../../assets/heroAssets';
 import { idleCue, resolveCue } from '../../assets/animationController';
 import type { Hero } from '../../data/heroes/types';
@@ -33,6 +34,7 @@ export const FighterSprite = ({ fighter, hero, beatKey = '' }: FighterSpriteProp
 
   return (
     <div
+      style={{ '--sprite-scale': String(hero.spriteScale ?? 1) } as CSSProperties}
       className={[
         'sprite',
         fighter.id === 'A' ? 'sprite--left' : 'sprite--right',
@@ -47,6 +49,7 @@ export const FighterSprite = ({ fighter, hero, beatKey = '' }: FighterSpriteProp
         key={`${fighter.id}:${beatKey}:${fighter.event ? `${fighter.event.type}:${fighter.event.round}:${fighter.hp}` : `idle:${fighter.hp}`}`}
         frames={heroFrameUrls(hero, cue.visual)}
         still={heroAssetChain(hero, cue.visual)}
+        intervalMs={cue.visual.type === 'idle' ? (hero.idleIntervalMs ?? FRAME_INTERVAL_MS) : FRAME_INTERVAL_MS}
         loop={cue.visual.type === 'idle'}
         alt={fighter.name}
       />
