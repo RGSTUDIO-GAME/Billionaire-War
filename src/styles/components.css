@@ -199,6 +199,11 @@
   background: transparent;
 }
 
+/* Wide game logo next to the $BWAR value. */
+.currency__icon--bwar {
+  width: 46px;
+}
+
 .currency--bwar {
   opacity: 0.85;
 }

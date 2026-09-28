@@ -1,3 +1,4 @@
+import { AssetImg } from '../../assets/AssetImg';
 import { CurrencyPill } from '../ui/CurrencyPill';
 import { Icon } from '../ui/Icon';
 import { iconIds } from '../../assets/manifest';
@@ -15,8 +16,11 @@ export const TopBar = ({ onLeaderboard, onBwarPress }: TopBarProps) => {
   return (
     <header className="topbar">
       <div className="topbar__brand">
-        <span className="topbar__title">BILLIONAIRE WAR</span>
-        <span className="topbar__sub">Season 0 &middot; Foundation</span>
+        <AssetImg assetId={iconIds.bwar} alt="Billionaire War" className="topbar__logo" />
+        <div className="topbar__brand-text">
+          <span className="topbar__title">BILLIONAIRE WAR</span>
+          <span className="topbar__sub">Season 0 &middot; Foundation</span>
+        </div>
       </div>
 
       <div className="topbar__actions">
