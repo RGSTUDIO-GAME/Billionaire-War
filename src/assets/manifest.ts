@@ -85,7 +85,7 @@ export const registerHeroAssets = (heroId: string, frameCount: number = HERO_FRA
   defeat: registerHero(heroId, 'defeat', clampStill(heroFiles.defeat, frameCount), PLACEHOLDER_POSE),
 });
 
-export const heroAssetIds = registerHeroAssets('durov');
+export const heroAssetIds = registerHeroAssets('durov', 4);
 
 export const elonmuskAssetIds = registerHeroAssets('elonmusk', 4);
 
@@ -125,7 +125,7 @@ const registerHeroFrames = (heroId: string, frameCount: number = HERO_FRAME_COUN
 };
 
 export const heroFrames: Record<string, Record<HeroAssetKey, AssetId[]>> = {
-  durov: registerHeroFrames('durov'),
+  durov: registerHeroFrames('durov', 4),
   elonmusk: registerHeroFrames('elonmusk', 4),
 };
 

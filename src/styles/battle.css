@@ -335,7 +335,7 @@
   --mirror: 1;
   position: relative;
   width: clamp(96px, 30vw, 150px);
-  aspect-ratio: 2 / 3;
+  aspect-ratio: 1 / 1;
   justify-self: center;
 }
 
