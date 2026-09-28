@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { AssetImg } from '../assets/AssetImg';
 import { backgroundIds, heroPortraitIds, iconIds } from '../assets/manifest';
-import { getHeroById } from '../data/heroes';
+import { HEROES, getHeroById } from '../data/heroes';
 import { usePlayerStore } from '../state/playerStore';
 import { useBattleStore } from '../state/battleStore';
 import { runtime } from '../state/runtime';
@@ -28,16 +28,15 @@ export const WarEntryScreen = ({ onBack, onBattleStart }: WarEntryScreenProps) =
   const [pvpOpen, setPvpOpen] = useState(false);
 
   const equippedHeroId = usePlayerStore((state) => state.equippedHeroId);
-  const ownedHeroIds = usePlayerStore((state) => state.ownedHeroIds);
   const playerId = usePlayerStore((state) => state.playerId);
   const startBattle = useBattleStore((state) => state.start);
 
   const playerHero = getHeroById(equippedHeroId);
-  // The bot can only field heroes that exist. Until a second hero ships, this
-  // is a mirror match - no placeholder opponent is invented.
-  const opponentHeroId =
-    ownedHeroIds.find((id) => id !== equippedHeroId) ?? equippedHeroId;
-  const opponentHero = getHeroById(opponentHeroId);
+  // The bot fields a random hero that differs from the player's. Mirror
+  // matches only happen when a single hero exists at all.
+  const botPool = HEROES.filter((hero) => hero.id !== equippedHeroId);
+  const opponentHero =
+    botPool[Math.floor(Math.random() * botPool.length)] ?? playerHero;
 
   const record = useMemo(() => {
     const history = runtime.battleService.history.list(playerId || undefined);

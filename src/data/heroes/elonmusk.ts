@@ -12,8 +12,10 @@ export const ELONMUSK: Hero = {
   bio: 'A relentless engineer taking humanity to the stars.',
   hp: 1000,
   rarity: 'legendary',
-  free: false,
-  priceInGold: 10000,
+  // TEST PHASE: free so the owner can equip it now. Flip to event-only
+  // (free: false, priceInGold: null) at launch - heroes are never sold.
+  free: true,
+  priceInGold: null,
   skills: [],
   assets: elonmuskAssetIds,
 };

@@ -36,7 +36,7 @@ const HeroRow = ({ hero, ownership }: { hero: Hero; ownership: 'locked' | 'owned
           </div>
           <div className="row" style={{ gap: 'var(--s-2)', flexWrap: 'wrap' }}>
             <Badge>HP {hero.hp}</Badge>
-            <Badge>{hero.free ? 'Free' : `${hero.priceInGold} $GOLD`}</Badge>
+            <Badge>{hero.free ? 'Free' : hero.priceInGold !== null ? `${hero.priceInGold} $GOLD` : 'Event'}</Badge>
             <Badge>{hero.skills.length} skill</Badge>
           </div>
         </div>
