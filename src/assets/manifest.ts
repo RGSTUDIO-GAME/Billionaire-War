@@ -65,25 +65,31 @@ const heroFiles: Record<HeroAssetKey, string> = {
   defeat: 'defeat/frame_08.png',
 };
 
+export const HERO_FRAME_COUNT = 8;
+
+/** Clamps a still frame number to what the hero actually ships. */
+const clampStill = (file: string, frameCount: number): string =>
+  file.replace(/frame_(\d+)\.png$/, (_, n) => `frame_${String(Math.min(Number(n), frameCount)).padStart(2, '0')}.png`);
+
 /** Builds the asset id set for a hero folder. Missing files fall back gracefully. */
-export const registerHeroAssets = (heroId: string): Record<HeroAssetKey, AssetId> => ({
+export const registerHeroAssets = (heroId: string, frameCount: number = HERO_FRAME_COUNT): Record<HeroAssetKey, AssetId> => ({
   character: registerHero(heroId, 'character', heroFiles.character, PLACEHOLDER_HERO),
-  idle: registerHero(heroId, 'idle', heroFiles.idle, PLACEHOLDER_POSE),
-  attackHead: registerHero(heroId, 'attack_head', heroFiles.attackHead, PLACEHOLDER_POSE),
-  attackBody: registerHero(heroId, 'attack_body', heroFiles.attackBody, PLACEHOLDER_POSE),
-  attackArm: registerHero(heroId, 'attack_arm', heroFiles.attackArm, PLACEHOLDER_POSE),
-  attackLeg: registerHero(heroId, 'attack_leg', heroFiles.attackLeg, PLACEHOLDER_POSE),
-  defense: registerHero(heroId, 'defense', heroFiles.defense, PLACEHOLDER_POSE),
-  hit: registerHero(heroId, 'hit', heroFiles.hit, PLACEHOLDER_POSE),
-  victory: registerHero(heroId, 'victory', heroFiles.victory, PLACEHOLDER_POSE),
-  defeat: registerHero(heroId, 'defeat', heroFiles.defeat, PLACEHOLDER_POSE),
+  idle: registerHero(heroId, 'idle', clampStill(heroFiles.idle, frameCount), PLACEHOLDER_POSE),
+  attackHead: registerHero(heroId, 'attack_head', clampStill(heroFiles.attackHead, frameCount), PLACEHOLDER_POSE),
+  attackBody: registerHero(heroId, 'attack_body', clampStill(heroFiles.attackBody, frameCount), PLACEHOLDER_POSE),
+  attackArm: registerHero(heroId, 'attack_arm', clampStill(heroFiles.attackArm, frameCount), PLACEHOLDER_POSE),
+  attackLeg: registerHero(heroId, 'attack_leg', clampStill(heroFiles.attackLeg, frameCount), PLACEHOLDER_POSE),
+  defense: registerHero(heroId, 'defense', clampStill(heroFiles.defense, frameCount), PLACEHOLDER_POSE),
+  hit: registerHero(heroId, 'hit', clampStill(heroFiles.hit, frameCount), PLACEHOLDER_POSE),
+  victory: registerHero(heroId, 'victory', clampStill(heroFiles.victory, frameCount), PLACEHOLDER_POSE),
+  defeat: registerHero(heroId, 'defeat', clampStill(heroFiles.defeat, frameCount), PLACEHOLDER_POSE),
 });
 
 export const heroAssetIds = registerHeroAssets('durov');
 
-/* ------------------------------------------------------- animation frames */
+export const elonmuskAssetIds = registerHeroAssets('elonmusk', 4);
 
-export const HERO_FRAME_COUNT = 8;
+/* ------------------------------------------------------- animation frames */
 
 const heroFrameFolder: Record<HeroAssetKey, string | null> = {
   character: null,
@@ -105,12 +111,12 @@ const frameFile = (index: number): string => `frame_${String(index).padStart(2, 
  * source of truth for the battle controller contract - frames are a
  * presentation-only layer on top, so a hero without frames still renders.
  */
-const registerHeroFrames = (heroId: string): Record<HeroAssetKey, AssetId[]> => {
+const registerHeroFrames = (heroId: string, frameCount: number = HERO_FRAME_COUNT): Record<HeroAssetKey, AssetId[]> => {
   const out = {} as Record<HeroAssetKey, AssetId[]>;
   (Object.keys(heroFrameFolder) as HeroAssetKey[]).forEach((key) => {
     const folder = heroFrameFolder[key];
     out[key] = folder
-      ? Array.from({ length: HERO_FRAME_COUNT }, (_, i) =>
+      ? Array.from({ length: frameCount }, (_, i) =>
           registerHero(heroId, `${key}_frame_${i + 1}`, `${folder}/${frameFile(i + 1)}`, PLACEHOLDER_POSE, false),
         )
       : [];
@@ -120,6 +126,7 @@ const registerHeroFrames = (heroId: string): Record<HeroAssetKey, AssetId[]> => 
 
 export const heroFrames: Record<string, Record<HeroAssetKey, AssetId[]>> = {
   durov: registerHeroFrames('durov'),
+  elonmusk: registerHeroFrames('elonmusk', 4),
 };
 
 /* ------------------------------------------------------- attack fx frames */
@@ -157,6 +164,7 @@ export const heroFxFrames: Record<string, Record<HeroFxKind, AssetId[]>> = {
 /** Display portrait per hero. Outside hero.assets so the 10-key contract holds. */
 export const heroPortraitIds: Record<string, AssetId> = {
   durov: register('heroes', 'durov_portrait', 'durov/portrait.jpg', 'hero', 'Durov portrait'),
+  elonmusk: register('heroes', 'elonmusk_portrait', 'elonmusk/portrait.jpg', 'hero', 'Elonmusk portrait'),
 };
 
 /* ------------------------------------------------------------ backgrounds */
