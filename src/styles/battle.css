@@ -746,8 +746,10 @@
 
 .battle-result__title {
   font-family: var(--font-display);
-  font-size: 40px;
+  font-size: 30px;
+  line-height: 1;
   letter-spacing: 0.06em;
+  margin: var(--s-1) 0 0;
 }
 
 .battle-result__title.is-win {
@@ -765,9 +767,9 @@
 }
 
 .battle-result__sprite {
-  width: 120px;
-  height: 150px;
-  margin: 0 auto var(--s-3);
+  width: 84px;
+  height: 105px;
+  margin: 0 auto var(--s-1);
 }
 
 .battle-result__sprite img {
@@ -778,11 +780,11 @@
 
 .battle-result__stats {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: var(--s-3);
-  margin: var(--s-4) 0;
-  padding: var(--s-3);
+  gap: var(--s-2);
+  margin: var(--s-2) 0;
+  padding: var(--s-2);
   border-radius: var(--r-md);
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid var(--line);
@@ -790,7 +792,7 @@
 
 .battle-result__hp-value {
   font-family: var(--font-display);
-  font-size: 24px;
+  font-size: 20px;
   color: var(--text);
 }
 
@@ -798,7 +800,7 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--s-2);
-  margin-bottom: var(--s-3);
+  margin-bottom: var(--s-2);
 }
 
 .battle-result__stat {
@@ -830,8 +832,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--s-1);
-  margin-bottom: var(--s-3);
-  padding: var(--s-3);
+  margin-bottom: var(--s-2);
+  padding: var(--s-2);
   border-radius: var(--r-sm);
   border: 1px dashed var(--line-strong);
   background: rgba(245, 197, 66, 0.06);
@@ -863,7 +865,7 @@
 
 .battle-result__amount {
   font-family: var(--font-display);
-  font-size: 30px;
+  font-size: 24px;
   line-height: 1.1;
   color: var(--gold-soft);
   text-shadow: 0 0 22px rgba(245, 197, 66, 0.55);
