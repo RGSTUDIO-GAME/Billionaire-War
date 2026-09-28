@@ -26,7 +26,7 @@ public/assets/
       registered outside the 10-key hero contract - a hero without these
       folders simply launches nothing.
   backgrounds/
-    battle_arena.svg   battle stage
+    battle_arena.jpg   battle stage (throne hall)
     home.svg           home screen backdrop
     menu.svg           app backdrop (desktop, behind the phone column)
   ui/

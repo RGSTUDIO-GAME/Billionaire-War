@@ -162,7 +162,7 @@ export const heroPortraitIds: Record<string, AssetId> = {
 /* ------------------------------------------------------------ backgrounds */
 
 export const backgroundIds = {
-  battleArena: register('backgrounds', 'battle_arena', 'battle_arena.svg', 'background', 'Battle arena'),
+  battleArena: register('backgrounds', 'battle_arena', 'battle_arena.jpg', 'background', 'Battle arena throne hall'),
   home: register('backgrounds', 'home', 'home.png', 'background', 'Home'),
   menu: register('backgrounds', 'menu', 'menu.png', 'background', 'Menu'),
 } satisfies Record<string, AssetId>;
