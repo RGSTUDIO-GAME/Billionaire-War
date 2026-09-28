@@ -35,7 +35,7 @@ export const HomeScreen = ({ onWar, onHero, onQuest }: HomeScreenProps) => {
               {hero.name}
             </h2>
             <div className="muted" style={{ fontSize: 12 }}>
-              {hero.title}
+              HP {hero.hp} &middot; {hero.rarity}
             </div>
             <div style={{ marginTop: 'var(--s-2)' }}>
               <StatBar value={hero.hp} max={hero.hp} label="Base HP" />

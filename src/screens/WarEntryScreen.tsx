@@ -74,7 +74,7 @@ export const WarEntryScreen = ({ onBack, onBattleStart }: WarEntryScreenProps) =
                 {playerHero.name}
               </h2>
               <div className="muted" style={{ fontSize: 12 }}>
-                {playerHero.title}
+                HP {playerHero.hp} &middot; {playerHero.rarity}
               </div>
               <div style={{ marginTop: 'var(--s-2)' }}>
                 <StatBar value={playerHero.hp} max={playerHero.hp} label="Base HP" />

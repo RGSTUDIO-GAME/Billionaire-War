@@ -32,7 +32,7 @@ const HeroRow = ({ hero, ownership }: { hero: Hero; ownership: 'locked' | 'owned
             <Badge tone={OWNERSHIP_TONE[ownership]}>{OWNERSHIP_LABEL[ownership]}</Badge>
           </div>
           <div className="muted" style={{ fontSize: 12 }}>
-            {hero.title} &middot; {hero.rarity}
+            HP {hero.hp} &middot; {hero.rarity}
           </div>
           <div className="row" style={{ gap: 'var(--s-2)', flexWrap: 'wrap' }}>
             <Badge>HP {hero.hp}</Badge>
