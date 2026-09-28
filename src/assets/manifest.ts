@@ -200,6 +200,7 @@ export const iconIds = {
   user: icon('user'),
   gold: icon('gold', 'png'),
   bwar: icon('bwar', 'png'),
+  logo: icon('logo', 'png'),
   partHead: icon('part_head'),
   partBody: icon('part_body'),
   partArm: icon('part_arm'),

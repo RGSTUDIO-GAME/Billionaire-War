@@ -49,26 +49,18 @@
 
 .topbar__brand {
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  line-height: 1;
-  gap: var(--s-2);
-  min-width: 0;
-}
-
-.topbar__logo {
-  height: 34px;
-  width: auto;
-  flex: 0 0 auto;
-  object-fit: contain;
-}
-
-.topbar__brand-text {
-  display: flex;
   flex-direction: column;
   line-height: 1;
   gap: 2px;
   min-width: 0;
+}
+
+.topbar__logo {
+  height: 36px;
+  width: auto;
+  max-width: 170px;
+  object-fit: contain;
+  object-position: left center;
 }
 
 .topbar__title {

@@ -16,11 +16,8 @@ export const TopBar = ({ onLeaderboard, onBwarPress }: TopBarProps) => {
   return (
     <header className="topbar">
       <div className="topbar__brand">
-        <AssetImg assetId={iconIds.bwar} alt="Billionaire War" className="topbar__logo" />
-        <div className="topbar__brand-text">
-          <span className="topbar__title">BILLIONAIRE WAR</span>
-          <span className="topbar__sub">Season 0 &middot; Foundation</span>
-        </div>
+        <AssetImg assetId={iconIds.logo} alt="Billionaire War" className="topbar__logo" />
+        <span className="topbar__sub">Season 0 &middot; Foundation</span>
       </div>
 
       <div className="topbar__actions">
