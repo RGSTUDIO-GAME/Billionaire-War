@@ -396,6 +396,8 @@
   display: grid;
   place-items: center;
   pointer-events: none;
+  /* Above the fighter (z-index 1), below the damage text (z-index 2). */
+  z-index: 1;
   animation: fade-in 0.2s ease-out both;
 }
 
