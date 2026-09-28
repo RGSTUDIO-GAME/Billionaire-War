@@ -17,7 +17,5 @@ export const DUROV: Hero = {
   skills: [],
   // Chibi art reads small next to Elonmusk, so render slightly larger.
   spriteScale: 1.18,
-  // Four bouncy idle frames look rushed at the shared tempo.
-  idleIntervalMs: 340,
   assets: heroAssetIds,
 };
