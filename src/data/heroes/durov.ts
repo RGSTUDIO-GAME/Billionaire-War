@@ -9,7 +9,7 @@ export const DUROV: Hero = {
   id: 'durov',
   name: 'DUROV',
   title: 'The Iron Heir',
-  bio: 'A disciplined heavyweight who trades nothing he does not choose to give.',
+  bio: 'Privacy is not for sale, and human rights should not be compromised out of fear or greed. \u2014 Pavel Durov, CEO & Founder of Telegram',
   hp: 1000,
   rarity: 'common',
   free: true,
