@@ -5,15 +5,16 @@ import type { CombatantId } from '../../engine/types';
 
 type AttackFxProps = {
   hero: Hero;
-  /** Who launched the plane. Decides the flight direction and blast side. */
+  /** Who launched the projectile. Decides the flight direction and blast side. */
   attacker: CombatantId;
   /** Battle beat identity, so every swing restarts the flight at frame 1. */
   beatKey: string;
 };
 
 /**
- * Durov's attack cinema: a paper plane flies across the arena and bursts
- * into a blue explosion on the defender.
+ * Per-hero attack cinema: the projectile strip flies across the arena and
+ * bursts into the explosion strip on the defender (Durov's paper plane,
+ * Elonmusk's duo missiles).
  *
  * Pure presentation. The parent renders this only while the attacker plays an
  * ATTACK event, and heroes without their own cinema render nothing at all.

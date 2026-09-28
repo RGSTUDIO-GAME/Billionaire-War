@@ -143,8 +143,8 @@ const heroFxCount: Record<HeroFxKind, number> = {
   explosion: 3,
 };
 
-const registerHeroFx = (heroId: string, kind: HeroFxKind): AssetId[] =>
-  Array.from({ length: heroFxCount[kind] }, (_, index) =>
+const registerHeroFx = (heroId: string, kind: HeroFxKind, count: number = heroFxCount[kind]): AssetId[] =>
+  Array.from({ length: count }, (_, index) =>
     registerHero(
       heroId,
       `${kind}_frame_${index + 1}`,
@@ -158,6 +158,10 @@ export const heroFxFrames: Record<string, Record<HeroFxKind, AssetId[]>> = {
   durov: {
     projectile: registerHeroFx('durov', 'projectile'),
     explosion: registerHeroFx('durov', 'explosion'),
+  },
+  elonmusk: {
+    projectile: registerHeroFx('elonmusk', 'projectile', 3),
+    explosion: registerHeroFx('elonmusk', 'explosion', 4),
   },
 };
 
