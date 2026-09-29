@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { HEROES, getOwnedState } from '../data/heroes';
 import type { Hero, HeroRarity } from '../data/heroes/types';
 import { MAX_ROUNDS, ROUND_DAMAGE } from '../data/balance';
@@ -78,16 +79,54 @@ const RARITY_LABEL: Record<HeroRarity, string> = {
   legendary: 'Legendary',
 };
 
+type RarityTab = HeroRarity | 'all';
+
 export const HeroScreen = ({ onBack }: HeroScreenProps) => {
   const ownedHeroIds = usePlayerStore((state) => state.ownedHeroIds);
   const equippedHeroId = usePlayerStore((state) => state.equippedHeroId);
+  const [tab, setTab] = useState<RarityTab>('all');
+
+  const pickTab = (next: RarityTab) => {
+    if (next === tab) return;
+    audio.playSfx(soundIds.uiConfirm, 0.3);
+    haptic.impact('light');
+    setTab(next);
+  };
+
+  const visibleRarities = tab === 'all' ? RARITY_ORDER : [tab];
 
   return (
     <div className="anim-fade">
       <ScreenHeader title="Hero" subtitle={`${HEROES.length} hero available`} onBack={onBack} />
 
-      <div className="stack" style={{ gap: 'var(--s-4)' }}>
+      <div className="tabs" style={{ marginBottom: 'var(--s-3)' }}>
+        <button
+          key="all"
+          type="button"
+          className={`tabs__btn${tab === 'all' ? ' is-active' : ''}`}
+          aria-pressed={tab === 'all'}
+          onClick={() => pickTab('all')}
+        >
+          All · {HEROES.length}
+        </button>
         {RARITY_ORDER.map((rarity) => {
+          const count = HEROES.filter((hero) => hero.rarity === rarity).length;
+          return (
+            <button
+              key={rarity}
+              type="button"
+              className={`tabs__btn${tab === rarity ? ' is-active' : ''}`}
+              aria-pressed={tab === rarity}
+              onClick={() => pickTab(rarity)}
+            >
+              {RARITY_LABEL[rarity]} · {count}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="stack" style={{ gap: 'var(--s-4)' }}>
+        {visibleRarities.map((rarity) => {
           const heroes = HEROES.filter((hero) => hero.rarity === rarity);
           return (
             <section key={rarity}>
