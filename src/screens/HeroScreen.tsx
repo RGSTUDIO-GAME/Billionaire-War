@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { HEROES, getOwnedState } from '../data/heroes';
 import type { Hero, HeroRarity } from '../data/heroes/types';
 import { MAX_ROUNDS, ROUND_DAMAGE } from '../data/balance';
+import { formatGold, formatHashrate, hashrateFor, heroLevelOf, upgradeCost } from '../data/economy';
 import { usePlayerStore } from '../state/playerStore';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
@@ -20,7 +21,13 @@ const OWNERSHIP_LABEL = { equipped: 'Equipped', owned: 'Owned', locked: 'Locked'
 
 const HeroRow = ({ hero, ownership }: { hero: Hero; ownership: 'locked' | 'owned' | 'equipped' }) => {
   const equipHero = usePlayerStore((state) => state.equipHero);
+  const gold = usePlayerStore((state) => state.gold);
+  const heroLevels = usePlayerStore((state) => state.heroLevels);
+  const upgradeHero = usePlayerStore((state) => state.upgradeHero);
   const isLocked = ownership === 'locked';
+  const level = heroLevelOf(heroLevels, hero.id);
+  const rate = hashrateFor(hero.rarity, level);
+  const cost = upgradeCost(level);
 
   const accent = RARITY_ACCENT[hero.rarity];
   return (
@@ -42,11 +49,36 @@ const HeroRow = ({ hero, ownership }: { hero: Hero; ownership: 'locked' | 'owned
           </div>
           <div className="row" style={{ gap: 'var(--s-2)', flexWrap: 'wrap' }}>
             <Badge>HP {hero.hp}</Badge>
+            <Badge>Lv {level}</Badge>
             <Badge>{hero.free ? 'Free' : hero.priceInGold !== null ? `${hero.priceInGold} $GOLD` : 'Event'}</Badge>
             <Badge>{hero.skills.length} skill</Badge>
           </div>
+          <div className="muted" style={{ fontSize: 12 }}>
+            Hashrate {formatHashrate(rate)} BWAR/s
+          </div>
         </div>
       </div>
+
+      {!isLocked ? (
+        <div style={{ marginTop: 'var(--s-3)' }}>
+          {cost === null ? (
+            <div className="empty-state">MAX LEVEL - {formatHashrate(rate)} BWAR/s</div>
+          ) : (
+            <Button
+              variant="gold"
+              block
+              disabled={gold < cost}
+              onClick={() => {
+                audio.playSfx(soundIds.uiConfirm, 0.5);
+                haptic.impact('medium');
+                upgradeHero(hero.id);
+              }}
+            >
+              Upgrade to Lv {level + 1} - {formatGold(cost)} $GOLD
+            </Button>
+          )}
+        </div>
+      ) : null}
 
       <div style={{ marginTop: 'var(--s-3)' }}>
         {ownership === 'equipped' ? (

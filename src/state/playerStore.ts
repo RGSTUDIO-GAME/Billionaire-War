@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { StoreApi, UseBoundStore } from 'zustand';
 import { STARTING_BWAR, STARTING_GOLD } from '../data/balance';
+import { heroLevelOf, upgradeCost } from '../data/economy';
 import { getFreeHeroes, getHeroById } from '../data/heroes';
 import { withEquippedHero, withHero } from '../repositories/heroRepository';
 import type { GoldRef } from '../services/goldService';
@@ -43,6 +44,8 @@ export type PlayerData = {
   bwar: number;
   ownedHeroIds: string[];
   equippedHeroId: string;
+  /** Hero level per hero id. Missing heroes are Level 0. */
+  heroLevels: Record<string, number>;
   createdAt: number;
   updatedAt: number;
 
@@ -61,6 +64,12 @@ export type PlayerActions = {
   hydrate: () => void;
   equipHero: (heroId: string) => void;
   grantHero: (heroId: string) => void;
+  /**
+   * Buys the next level for a hero with $GOLD. Refused at max level or when
+   * the balance cannot cover the linear price - the ledger is the only thing
+   * that moves money, exactly like every other purchase.
+   */
+  upgradeHero: (heroId: string) => boolean;
   addGold: (amount: number, ref?: GoldRef) => boolean;
   debitGold: (amount: number, ref?: GoldRef) => boolean;
   /** Mirrors a reward the Reward Service has already paid. */
@@ -86,6 +95,7 @@ const blankData = (): PlayerData => ({
   bwar: STARTING_BWAR,
   ownedHeroIds: getFreeHeroes().map((hero) => hero.id),
   equippedHeroId: getFreeHeroes()[0]?.id ?? 'durov',
+  heroLevels: {},
   createdAt: 0,
   updatedAt: 0,
   goldTransactions: [],
@@ -109,6 +119,7 @@ export const createPlayerStore = (app: AppRuntime): PlayerStore => {
       bwar: profile.bwarBalance,
       ownedHeroIds: profile.ownedHeroes,
       equippedHeroId: profile.equippedHeroId,
+      heroLevels: profile.heroLevels,
       createdAt: profile.createdAt,
       updatedAt: profile.updatedAt,
       goldTransactions: app.gold.list(profile.playerId),
@@ -139,6 +150,21 @@ export const createPlayerStore = (app: AppRuntime): PlayerStore => {
       if (profile.ownedHeroes.length === get().ownedHeroIds.length) return;
       app.players.save(profile);
       commit(set);
+    },
+
+    upgradeHero: (heroId) => {
+      if (getHeroById(heroId) === undefined) return false;
+      const cost = upgradeCost(heroLevelOf(get().heroLevels, heroId));
+      if (cost === null) return false;
+      const paid = app.goldService.debit(currentProfile(app, get()), cost, { kind: 'SPEND' }, Date.now());
+      if (!paid.ok) return false;
+      const profile = paid.profile;
+      app.players.save({
+        ...profile,
+        heroLevels: { ...profile.heroLevels, [heroId]: heroLevelOf(profile.heroLevels, heroId) + 1 },
+      });
+      commit(set);
+      return true;
     },
 
     addGold: (amount, ref = {}) => {
@@ -217,6 +243,7 @@ const currentProfile = (app: AppRuntime, state: PlayerState): PlayerProfile =>
     username: state.username,
     equippedHeroId: state.equippedHeroId,
     ownedHeroes: state.ownedHeroIds,
+    heroLevels: state.heroLevels,
     goldBalance: state.gold,
     bwarBalance: state.bwar,
     createdAt: state.createdAt,

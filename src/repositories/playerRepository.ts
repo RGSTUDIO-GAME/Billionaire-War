@@ -1,4 +1,5 @@
 import { STARTING_BWAR, STARTING_GOLD } from '../data/balance';
+import { clampHeroLevel } from '../data/economy';
 import { getFreeHeroes, getHeroById, HEROES } from '../data/heroes';
 import type { StorageAdapter } from '../storage/StorageAdapter';
 import { STORAGE_KEYS, STORAGE_VERSION } from '../storage/keys';
@@ -35,6 +36,18 @@ const knownHeroIds = (value: unknown): string[] => {
   return [...new Set(ids.filter((id) => getHeroById(id) !== undefined))];
 };
 
+/** Levels that survived sanitising: known heroes only, clamped to 0..MAX. */
+const knownHeroLevels = (value: unknown): Record<string, number> => {
+  if (!isPlainObject(value)) return {};
+  const levels: Record<string, number> = {};
+  for (const [heroId, level] of Object.entries(value)) {
+    if (getHeroById(heroId) === undefined) continue;
+    if (typeof level !== 'number' || !Number.isInteger(level)) continue;
+    levels[heroId] = clampHeroLevel(level);
+  }
+  return levels;
+};
+
 /** Free heroes are always available, so a new player can always fight. */
 const withFreeHeroes = (ids: string[]): string[] => {
   const free = getFreeHeroes().map((hero) => hero.id);
@@ -58,6 +71,7 @@ export const newProfile = (now: number): PlayerProfile => {
     username: usernameFor(playerId),
     equippedHeroId: getFreeHeroes()[0]?.id ?? HEROES[0]?.id ?? 'durov',
     ownedHeroes: withFreeHeroes([]),
+    heroLevels: {},
     goldBalance: STARTING_GOLD,
     bwarBalance: STARTING_BWAR,
     createdAt: now,
@@ -110,6 +124,7 @@ export const parseProfile = (
         : usernameFor(resolvedId),
     equippedHeroId,
     ownedHeroes,
+    heroLevels: knownHeroLevels(raw.heroLevels),
     goldBalance,
     bwarBalance: asGold(raw.bwarBalance) ?? STARTING_BWAR,
     createdAt,

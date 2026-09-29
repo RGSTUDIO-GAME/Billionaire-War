@@ -17,6 +17,8 @@ export type PlayerProfile = {
   username: string;
   equippedHeroId: string;
   ownedHeroes: string[];
+  /** Hero level per hero id. Missing heroes are Level 0. */
+  heroLevels: Record<string, number>;
   goldBalance: number;
   /** Display-only utility counter. No transaction ever moves it. */
   bwarBalance: number;

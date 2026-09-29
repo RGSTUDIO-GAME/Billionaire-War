@@ -16,6 +16,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { MAX_ROUNDS, STARTING_BWAR, STARTING_GOLD } from '../src/data/balance';
+import { BASE_HASHRATE, MAX_HERO_LEVEL, UPGRADE_BASE_COST, hashrateFor, heroLevelOf, totalUpgradeCost, upgradeCost } from '../src/data/economy';
 import { getFreeHeroes } from '../src/data/heroes';
 import { BATTLE_STATUS } from '../src/engine/types';
 import type { BattleState } from '../src/engine/types';
@@ -561,6 +562,70 @@ function rewardOf(outcome: { transaction: GoldTransaction } | null): number {
   check('layers: every record has its own versioned key',
     ['player', 'goldLedger', 'battleHistory'].every((key) => storage.includes(`${key}:`) && storage.includes('STORAGE_VERSION')));
   check('layers: storage keys are namespaced to the game', Object.values(STORAGE_KEYS).every((key) => key.startsWith('billionaire-war:')));
+}
+
+/* -------------------------------------------------------- hero economy */
+
+{
+  // Spec price list: Lv X -> Lv X+1 costs 100,000 x (X+1) $GOLD.
+  check('economy: Lv0 -> Lv1 costs 100,000', upgradeCost(0) === 100_000);
+  check('economy: Lv1 -> Lv2 costs 200,000', upgradeCost(1) === 200_000);
+  check('economy: Lv2 -> Lv3 costs 300,000', upgradeCost(2) === 300_000);
+  check('economy: Lv9 -> Lv10 costs 1,000,000', upgradeCost(9) === 1_000_000);
+  check('economy: Lv99 -> Lv100 costs 10,000,000', upgradeCost(99) === 10_000_000);
+  check('economy: nothing to buy at max level', upgradeCost(MAX_HERO_LEVEL) === null);
+  check('economy: Lv0 -> Lv100 costs 505,000,000 in total', totalUpgradeCost(0, MAX_HERO_LEVEL) === 505_000_000);
+
+  // Spec hashrate table, plus linearity: each level adds one base unit.
+  const close = (a: number, b: number): boolean => Math.abs(a - b) < 1e-9;
+  check('economy: base table matches spec',
+    BASE_HASHRATE.common === 0.000001 &&
+    BASE_HASHRATE.uncommon === 0.00001 &&
+    BASE_HASHRATE.rare === 0.0001 &&
+    BASE_HASHRATE.epic === 0.001 &&
+    BASE_HASHRATE.legendary === 0.01);
+  check('economy: Level 0 mines nothing', hashrateFor('legendary', 0) === 0);
+  check('economy: legendary Lv1 mines 0.01 BWAR/s', close(hashrateFor('legendary', 1), 0.01));
+  check('economy: legendary Lv100 mines 1 BWAR/s', close(hashrateFor('legendary', 100), 1));
+  check('economy: max table matches spec',
+    close(hashrateFor('common', 100), 0.0001) &&
+    close(hashrateFor('uncommon', 100), 0.001) &&
+    close(hashrateFor('rare', 100), 0.01) &&
+    close(hashrateFor('epic', 100), 0.1) &&
+    close(hashrateFor('legendary', 100), 1));
+  check('economy: one level always adds one base unit',
+    close(hashrateFor('rare', 50) - hashrateFor('rare', 49), BASE_HASHRATE.rare) &&
+    close(hashrateFor('epic', 77), 77 * BASE_HASHRATE.epic));
+
+  // Persistence: levels survive a reload, garbage is repaired.
+  const fresh = newProfile(NOW);
+  check('economy: new heroes start at Level 0', heroLevelOf(fresh.heroLevels, 'durov') === 0);
+  const repaired = parseProfile(
+    { ...fresh, heroLevels: { durov: 5, elonmusk: 150, nope: 3, gracychen: 'x' } },
+    { now: NOW },
+  );
+  check('economy: stored levels load back',
+    repaired !== null && heroLevelOf(repaired.heroLevels, 'durov') === 5);
+  check('economy: unknown heroes and bad values are dropped, levels clamp to max',
+    repaired !== null &&
+    !('nope' in repaired.heroLevels) &&
+    !('gracychen' in repaired.heroLevels) &&
+    repaired.heroLevels.elonmusk === MAX_HERO_LEVEL);
+
+  // Store: real $GOLD moves through the ledger, or nothing moves at all.
+  const game = world();
+  const store = createPlayerStore(game);
+  store.getState().hydrate();
+  check('economy: unknown heroes cannot level', store.getState().upgradeHero('nope') === false);
+  check('economy: broke players cannot level', store.getState().upgradeHero('durov') === false);
+  store.getState().addGold(1_000_000);
+  const before = store.getState().gold;
+  check('economy: affordable upgrade levels up', store.getState().upgradeHero('durov') === true);
+  check('economy: upgrade debits exactly the linear price',
+    store.getState().gold === before - UPGRADE_BASE_COST &&
+    heroLevelOf(store.getState().heroLevels, 'durov') === 1);
+  const spent = store.getState().goldTransactions.find((entry) => entry.amount === -UPGRADE_BASE_COST);
+  check('economy: upgrade spend is written to the ledger', spent !== undefined && spent.balanceAfter === before - UPGRADE_BASE_COST);
 }
 
 /* ----------------------------------------------------------------- report */
