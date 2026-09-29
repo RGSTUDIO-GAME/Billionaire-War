@@ -36,7 +36,7 @@ npm run dev        # http://localhost:5173
 | `npm run build` | Typecheck + production build to `dist/` |
 | `npm run preview` | Serve the production build |
 | `npm run typecheck` | TypeScript only |
-| `npm run verify` | **938 assertions** — engine rules, store flow, presentation, rewards, data layer, animation, rendered screen |
+| `npm run verify` | **976 assertions** — engine rules, store flow, presentation, rewards, data layer, animation, rendered screen |
 | `npm run assets:check` | Report which registered assets exist on disk |
 | `npm run assets:placeholder` | Regenerate the bundled placeholder art/audio |
 | `npm run lint` | oxlint |
@@ -300,7 +300,7 @@ The Battle Engine does not change. See [docs/ASSETS.md](docs/ASSETS.md).
 
 ## Verification
 
-`npm run verify` bundles seven suites and runs them on Node — **938 assertions**:
+`npm run verify` bundles seven suites and runs them on Node — **976 assertions**:
 
 | Suite | Covers |
 | --- | --- |

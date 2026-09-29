@@ -42,16 +42,11 @@ const HeroRow = ({ hero, ownership }: { hero: Hero; ownership: 'locked' | 'owned
             <Badge tone={OWNERSHIP_TONE[ownership]}>{OWNERSHIP_LABEL[ownership]}</Badge>
           </div>
           <div className="row" style={{ gap: 6, alignItems: 'center' }}>
-            <span className="muted" style={{ fontSize: 12 }}>
-              HP {hero.hp}
-            </span>
             <RarityBadge rarity={hero.rarity} />
           </div>
           <div className="row" style={{ gap: 'var(--s-2)', flexWrap: 'wrap' }}>
             <Badge>HP {hero.hp}</Badge>
             <Badge>Lv {level}</Badge>
-            <Badge>{hero.free ? 'Free' : hero.priceInGold !== null ? `${hero.priceInGold} $GOLD` : 'Event'}</Badge>
-            <Badge>{hero.skills.length} skill</Badge>
           </div>
           <div className="muted" style={{ fontSize: 12 }}>
             Hashrate {formatHashrate(rate)} BWAR/s

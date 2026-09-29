@@ -5,7 +5,7 @@ import type { HeroRarity } from './heroes/types';
  * ===========
  * Level and hashrate rules. Pure math only - no storage, no UI.
  *
- * - Every hero starts at Level 0 with 0 hashrate.
+ * - Every hero starts at Level 0 with 0 hashrate, except Legendary starts at 0.001.
  * - Upgrading from Lv X to Lv X+1 costs 100,000 x (X+1) $GOLD (linear).
  * - Lv0 -> Lv100 costs 505,000,000 $GOLD in total.
  * - Hashrate = base hashrate of the rarity x level (linear, BWAR/second).
@@ -13,6 +13,9 @@ import type { HeroRarity } from './heroes/types';
 
 /** No hero can pass this level. */
 export const MAX_HERO_LEVEL = 100;
+
+/** Hashrate every Legendary hero earns before its first upgrade. */
+export const LEGENDARY_LEVEL_0_HASHRATE = 0.001;
 
 /** Cost multiplier: Lv X -> Lv X+1 costs this times (X+1). */
 export const UPGRADE_BASE_COST = 100_000;
@@ -47,9 +50,12 @@ export const totalUpgradeCost = (fromLevel: number, toLevel: number): number => 
   return total;
 };
 
-/** BWAR per second a hero of this rarity and level mines. Level 0 mines nothing. */
-export const hashrateFor = (rarity: HeroRarity, level: number): number =>
-  (BASE_HASHRATE[rarity] ?? 0) * clampHeroLevel(level);
+/** BWAR per second a hero of this rarity and level mines. */
+export const hashrateFor = (rarity: HeroRarity, level: number): number => {
+  const currentLevel = clampHeroLevel(level);
+  if (rarity === 'legendary' && currentLevel === 0) return LEGENDARY_LEVEL_0_HASHRATE;
+  return (BASE_HASHRATE[rarity] ?? 0) * currentLevel;
+};
 
 /** Level of one hero inside a stored level map. Unknown heroes are Level 0. */
 export const heroLevelOf = (levels: Record<string, number> | undefined, heroId: string): number =>
