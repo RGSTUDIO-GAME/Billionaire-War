@@ -48,6 +48,7 @@ const entries = [
   'data-check',
   'asset-check',
   'render-check',
+  'mining-check',
 ];
 
 /**

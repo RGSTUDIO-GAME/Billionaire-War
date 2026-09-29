@@ -23,11 +23,11 @@ export const InventoryScreen = ({ onBack, onBwarPress }: InventoryScreenProps) =
           </div>
           <div className="row" style={{ flexWrap: 'wrap' }}>
             <CurrencyPill kind="gold" value={gold} />
-            <CurrencyPill kind="bwar" value={bwar} locked onClick={onBwarPress} />
+            <CurrencyPill kind="bwar" value={bwar} onClick={onBwarPress} />
           </div>
           <p className="muted" style={{ fontSize: 12, marginTop: 'var(--s-3)' }}>
-            $GOLD is the internal game currency. $BWAR is shown for display only - there are no
-            token transactions in this build.
+            $GOLD is the internal game currency. $BWAR is earned locally through Mining; there
+            are no on-chain token transactions in this build.
           </p>
         </Card>
 

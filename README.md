@@ -18,8 +18,8 @@ is faked.
 No blockchain, no wallet, no NFT, no smart contract, no token transaction, no
 marketplace, no random damage, no critical hits, no second hero, no hero skills,
 no shop, no matchmaking, no leaderboard, no server, no account, no cloud save.
-$GOLD rewards exist and are stored **on the device**; $BWAR is still
-display-only.
+$GOLD rewards and locally mined $BWAR are stored **on the device**; there is no
+wallet, chain or token transfer.
 
 ---
 
@@ -36,7 +36,7 @@ npm run dev        # http://localhost:5173
 | `npm run build` | Typecheck + production build to `dist/` |
 | `npm run preview` | Serve the production build |
 | `npm run typecheck` | TypeScript only |
-| `npm run verify` | **976 assertions** — engine rules, store flow, presentation, rewards, data layer, animation, rendered screen |
+| `npm run verify` | **996 assertions** — engine rules, store flow, presentation, rewards, data layer, animation, rendered screen, mining |
 | `npm run assets:check` | Report which registered assets exist on disk |
 | `npm run assets:placeholder` | Regenerate the bundled placeholder art/audio |
 | `npm run lint` | oxlint |
@@ -217,7 +217,8 @@ BATTLE_RESULT → RewardService → amount from config → GoldService → ledge
 
 The Battle Engine cannot move a balance — it knows nothing about rewards, and
 `npm run verify` fails if any file under `src/engine/` so much as mentions one.
-$BWAR, wallets, chains, transfers and trade are deliberately absent.
+$BWAR wallets, chains, transfers and trade are deliberately absent; Mining only
+moves a local balance.
 
 ## The data layer
 
@@ -267,17 +268,20 @@ production builds.
 ## Screens
 
 `HOME` · `QUEST` · `HERO` · `INVENTORY` · `SETTINGS`, plus `LEADERBOARD` from
-the trophy button in the top bar, and `WAR` from the big button on Home.
+the trophy button in the top bar, `WAR` from the big button on Home, and
+`MINING` from the BWAR Mining button.
 
 - **Home** — equipped hero, base HP, currencies, the ⚔️ WAR button.
 - **War** — VS BOT is playable. PvP shows **COMING SOON**: matchmaking is not
   implemented and no fake queue or fake opponent is simulated.
 - **Hero** — DUROV with LOCKED / OWNED / EQUIPPED states and the equip button.
-- **Quest**, **Inventory items**, **Leaderboard**, **$BWAR utility** — all
-  **COMING SOON** via the shared `ComingSoon` component.
+- **BWAR Mining** — choose one owned hero with positive hashrate, watch a 24-hour
+  local counter, then claim the full amount into the $BWAR balance.
+- **Quest**, **Inventory items**, **Leaderboard**, **Trade** — **COMING SOON**
+  via the shared `ComingSoon` component.
 
-`$GOLD` is internal game currency. `$BWAR` is displayed only — there are no
-token transactions in this build.
+`$GOLD` is internal game currency. `$BWAR` is earned locally through Mining —
+there are no on-chain token transactions in this build.
 
 ---
 
@@ -300,7 +304,7 @@ The Battle Engine does not change. See [docs/ASSETS.md](docs/ASSETS.md).
 
 ## Verification
 
-`npm run verify` bundles seven suites and runs them on Node — **976 assertions**:
+`npm run verify` bundles eight suites and runs them on Node — **996 assertions**:
 
 | Suite | Covers |
 | --- | --- |
@@ -311,3 +315,4 @@ The Battle Engine does not change. See [docs/ASSETS.md](docs/ASSETS.md).
 | `data-check` | the data layer: reload survival, damaged saves, the gold rules, the archive, and the layer boundaries |
 | `asset-check` | the animation controller, hero-agnostic mapping, fallback chains |
 | `render-check` | `BattleScreen` rendered for real at every phase of a battle |
+| `mining-check` | eligible heroes, 24-hour timing, pause at full, one active session, claim and reload persistence |

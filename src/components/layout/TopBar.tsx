@@ -20,7 +20,7 @@ export const TopBar = ({ onLeaderboard, onBwarPress }: TopBarProps) => {
       </div>
 
       <div className="topbar__actions">
-        <CurrencyPill kind="bwar" value={bwar} locked onClick={onBwarPress} />
+        <CurrencyPill kind="bwar" value={bwar} onClick={onBwarPress} />
         <CurrencyPill kind="gold" value={gold} />
         <button type="button" className="icon-btn" onClick={onLeaderboard} aria-label="Leaderboard">
           <Icon assetId={iconIds.trophy} alt="" />

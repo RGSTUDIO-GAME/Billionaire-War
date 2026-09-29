@@ -8,7 +8,9 @@ export type Screen =
   | 'settings'
   | 'leaderboard'
   | 'war-entry'
-  | 'battle';
+  | 'battle'
+  | 'mining-select'
+  | 'mining';
 
 export type NavParams = Record<string, string>;
 

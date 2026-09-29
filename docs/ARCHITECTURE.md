@@ -314,6 +314,30 @@ needs the other, and neither can do the other's job.
 
 ---
 
+## BWAR Mining
+
+```
+HOME / BWAR BALANCE ──> MINING SELECT ──(Equip)──> MiningService ──> PLAYER PROFILE
+                                                       │
+                                                   24-hour timer
+                                                       │
+                                             Claim ──> local BWAR balance
+```
+
+`MiningService.start` snapshots the selected hero's hashrate and its exact
+24-hour target into the single `profile.mining` session. The UI derives its
+moving counter from `startedAt`; it never writes the balance. Once elapsed
+reaches `MINING_DURATION_MS`, progress clamps at the target and the Claim button
+becomes available.
+
+`MiningService.claim` credits that target, persists the profile, and immediately
+starts the same hero's next cycle. A second claim sees a fresh session and is
+refused. Equipping another hero replaces the one active session, so there is
+never more than one mining hero. The session and balance both live in the player
+profile, which makes them survive reloads without a new storage record.
+
+---
+
 ## Debug
 
 `engine/debug.ts` is on in development and off in production. It logs a full
@@ -335,27 +359,29 @@ the rules.
 
 ## Verification
 
-`npm run verify` bundles seven TypeScript suites with esbuild and runs them on
+`npm run verify` bundles eight TypeScript suites with esbuild and runs them on
 Node against the **real** modules — no mocks, no reimplementation of the rules.
 
 | Suite | Checks | Covers |
 | --- | --- | --- |
 | `engine-check.ts` | 198 | the five worked examples from the spec, every acceptance combination, the state machine, hit/block across all 16 target pairs, KO, win, lose, draw, round history, determinism, PvP/bot parity |
 | `flow-check.ts` | 92 | the real store: phase wiring, per-round bot lock, timers, countdown, execution order, timeouts, rematch |
-| `view-check.ts` | 101 | the read model the screen draws: labels, reveal timing, result events, damage totals |
+| `view-check.ts` | 103 | the read model the screen draws: labels, reveal timing, result events, damage totals |
 | `reward-check.ts` | 158 | every mode and outcome pays, the amount comes from configuration, the ledger records it, and it is never paid twice |
-| `data-check.ts` | 154 | reload survival, damaged-save recovery, the $GOLD rules, the battle archive, id uniqueness across sessions, and the layer boundaries |
-| `asset-check.ts` | 178 | every event resolves to a registered asset, the documented mappings, hero-agnostic controller, engine purity, fallbacks |
-| `render-check.tsx` | 57 | `BattleScreen` rendered for real at every phase of a battle |
+| `data-check.ts` | 176 | reload survival, damaged-save recovery, the $GOLD rules, the battle archive, id uniqueness across sessions, and the layer boundaries |
+| `asset-check.ts` | 183 | every event resolves to a registered asset, the documented mappings, hero-agnostic controller, engine purity, fallbacks |
+| `render-check.tsx` | 66 | `BattleScreen` rendered for real at every phase of a battle |
+| `mining-check.ts` | 20 | eligible heroes, 24-hour timing, pause at full, claim, single active hero and reload persistence |
 
 ```
 All 198 battle rule checks passed.
 All  92 battle flow checks passed.
-All 101 presentation layer checks passed.
+All 103 presentation layer checks passed.
 All 158 reward system checks passed.
-All 154 data layer checks passed.
-All 178 animation controller checks passed.
-All  57 battle screen render checks passed.
+All 176 data layer checks passed.
+All 183 animation controller checks passed.
+All  66 battle screen render checks passed.
+All  20 mining checks passed.
 ```
 
 `flow-check.ts` is what caught a bot that only locked its choice in round 1,

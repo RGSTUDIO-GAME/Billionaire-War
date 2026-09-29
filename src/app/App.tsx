@@ -1,7 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { AppShell } from '../components/layout/AppShell';
-import { ComingSoon } from '../components/ui/ComingSoon';
-import { Modal } from '../components/ui/Modal';
 import { HomeScreen } from '../screens/HomeScreen';
 import { QuestScreen } from '../screens/QuestScreen';
 import { InventoryScreen } from '../screens/InventoryScreen';
@@ -10,11 +8,13 @@ import { SettingsScreen } from '../screens/SettingsScreen';
 import { LeaderboardScreen } from '../screens/LeaderboardScreen';
 import { WarEntryScreen } from '../screens/WarEntryScreen';
 import { BattleScreen } from '../screens/BattleScreen';
-import { iconIds } from '../assets/manifest';
+import { MiningScreen } from '../screens/MiningScreen';
+import { MiningSelectScreen } from '../screens/MiningSelectScreen';
 import { prefetchAllAssets } from '../assets/resolve';
 import { initTelegram } from '../services/telegram';
 import { audio } from '../audio/audioManager';
 import { useBattleStore } from '../state/battleStore';
+import { usePlayerStore } from '../state/playerStore';
 import { useSettingsStore } from '../state/settingsStore';
 import { useUiStore } from '../state/uiStore';
 import type { Screen } from '../state/uiStore';
@@ -27,8 +27,6 @@ export const App = () => {
 
   const sfx = useSettingsStore((state) => state.sfx);
   const music = useSettingsStore((state) => state.music);
-
-  const [bwarOpen, setBwarOpen] = useState(false);
 
   useEffect(() => {
     initTelegram();
@@ -56,6 +54,11 @@ export const App = () => {
     goTo('home');
   };
 
+  const openMining = () => {
+    const hasMining = usePlayerStore.getState().mining !== null;
+    goTo(hasMining ? 'mining' : 'mining-select');
+  };
+
   if (entry.screen === 'battle') {
     return (
       <BattleScreen
@@ -71,27 +74,25 @@ export const App = () => {
       onBack={back}
       onNavigate={goTo}
       onLeaderboard={() => goTo('leaderboard')}
-      onBwarPress={() => setBwarOpen(true)}
+      onBwarPress={openMining}
     >
       {entry.screen === 'home' ? (
-        <HomeScreen onWar={() => navigate('war-entry')} />
+        <HomeScreen onWar={() => navigate('war-entry')} onMining={() => goTo('mining-select')} />
       ) : null}
       {entry.screen === 'quest' ? <QuestScreen onBack={back} /> : null}
-      {entry.screen === 'inventory' ? <InventoryScreen onBack={back} onBwarPress={() => setBwarOpen(true)} /> : null}
+      {entry.screen === 'inventory' ? <InventoryScreen onBack={back} onBwarPress={openMining} /> : null}
       {entry.screen === 'hero' ? <HeroScreen onBack={back} /> : null}
       {entry.screen === 'settings' ? <SettingsScreen onBack={back} /> : null}
       {entry.screen === 'leaderboard' ? <LeaderboardScreen onBack={back} /> : null}
       {entry.screen === 'war-entry' ? (
         <WarEntryScreen onBack={back} onBattleStart={() => navigate('battle')} />
       ) : null}
-
-      <Modal open={bwarOpen} title="$BWAR" onClose={() => setBwarOpen(false)}>
-        <ComingSoon
-          icon={iconIds.bwar}
-          title="$BWAR utility"
-          description="Trading, premium items and Web3 features are not built yet. This build has no wallet, no chain and no token transactions - $BWAR is display only."
-        />
-      </Modal>
+      {entry.screen === 'mining-select' ? (
+        <MiningSelectScreen onBack={back} onEquip={() => goTo('mining')} />
+      ) : null}
+      {entry.screen === 'mining' ? (
+        <MiningScreen onBack={back} onChangeHero={() => navigate('mining-select')} />
+      ) : null}
     </AppShell>
   );
 };

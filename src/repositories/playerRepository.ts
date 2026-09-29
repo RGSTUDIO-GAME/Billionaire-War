@@ -1,9 +1,9 @@
-import { STARTING_BWAR, STARTING_GOLD } from '../data/balance';
+import { MINING_DURATION_MS, STARTING_BWAR, STARTING_GOLD } from '../data/balance';
 import { clampHeroLevel } from '../data/economy';
 import { getFreeHeroes, getHeroById, HEROES } from '../data/heroes';
 import type { StorageAdapter } from '../storage/StorageAdapter';
 import { STORAGE_KEYS, STORAGE_VERSION } from '../storage/keys';
-import type { PlayerProfile } from '../storage/records';
+import type { MiningSession, PlayerProfile } from '../storage/records';
 
 /**
  * PLAYER REPOSITORY
@@ -26,6 +26,9 @@ export const asGold = (value: unknown): number | null =>
   typeof value === 'number' && Number.isFinite(value) && value >= 0 && Number.isInteger(value)
     ? value
     : null;
+
+const asNonNegativeNumber = (value: unknown): number | null =>
+  typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null;
 
 const asTimestamp = (value: unknown, fallback: number): number =>
   typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : fallback;
@@ -54,6 +57,31 @@ const withFreeHeroes = (ids: string[]): string[] => {
   return [...new Set([...ids, ...free])];
 };
 
+const parseMiningSession = (
+  raw: unknown,
+  ownedHeroes: readonly string[],
+  now: number,
+): MiningSession | null => {
+  if (!isPlainObject(raw)) return null;
+  if (typeof raw.heroId !== 'string' || !ownedHeroes.includes(raw.heroId)) return null;
+  if (getHeroById(raw.heroId) === undefined) return null;
+
+  const hashrate = asNonNegativeNumber(raw.hashrate);
+  const rewardAmount = asNonNegativeNumber(raw.rewardAmount);
+  const startedAt = asTimestamp(raw.startedAt, 0);
+  if (hashrate === null || rewardAmount === null || startedAt === 0 || hashrate === 0) return null;
+
+  const expectedReward = (hashrate * MINING_DURATION_MS) / 1000;
+  if (Math.abs(rewardAmount - expectedReward) > 1e-6) return null;
+
+  return {
+    heroId: raw.heroId,
+    hashrate,
+    rewardAmount,
+    startedAt: startedAt > now ? now : startedAt,
+  };
+};
+
 const mintPlayerId = (): string => {
   const source = globalThis.crypto;
   if (typeof source?.randomUUID === 'function') return `player_${source.randomUUID().slice(0, 8)}`;
@@ -74,6 +102,7 @@ export const newProfile = (now: number): PlayerProfile => {
     heroLevels: {},
     goldBalance: STARTING_GOLD,
     bwarBalance: STARTING_BWAR,
+    mining: null,
     createdAt: now,
     updatedAt: now,
   };
@@ -126,7 +155,8 @@ export const parseProfile = (
     ownedHeroes,
     heroLevels: knownHeroLevels(raw.heroLevels),
     goldBalance,
-    bwarBalance: asGold(raw.bwarBalance) ?? STARTING_BWAR,
+    bwarBalance: asNonNegativeNumber(raw.bwarBalance) ?? STARTING_BWAR,
+    mining: parseMiningSession(raw.mining, ownedHeroes, now),
     createdAt,
     updatedAt: asTimestamp(raw.updatedAt, createdAt),
   };

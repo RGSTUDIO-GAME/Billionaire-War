@@ -5,6 +5,7 @@ import { heroLevelOf, upgradeCost } from '../data/economy';
 import { getFreeHeroes, getHeroById } from '../data/heroes';
 import { withEquippedHero, withHero } from '../repositories/heroRepository';
 import type { GoldRef } from '../services/goldService';
+import type { MiningSession } from '../storage/records';
 import { STORAGE_VERSION } from '../storage/keys';
 import type { BattleRecord, GoldTransaction, PlayerProfile } from '../storage/records';
 import type { RewardOutcome } from '../rewards';
@@ -40,12 +41,14 @@ export type PlayerData = {
   username: string;
   /** $GOLD balance. Never negative. */
   gold: number;
-  /** Display-only utility counter. No transaction moves it. */
+  /** Locally earned BWAR, credited by a completed mining claim. */
   bwar: number;
   ownedHeroIds: string[];
   equippedHeroId: string;
   /** Hero level per hero id. Missing heroes are Level 0. */
   heroLevels: Record<string, number>;
+  /** The single active mining session, or null before the first Equip. */
+  mining: MiningSession | null;
   createdAt: number;
   updatedAt: number;
 
@@ -63,6 +66,9 @@ export type PlayerActions = {
   /** Re-reads the save. Safe to call more than once. */
   hydrate: () => void;
   equipHero: (heroId: string) => void;
+  equipMiningHero: (heroId: string) => boolean;
+  /** Credits a full session and starts its next cycle. Returns the amount paid. */
+  claimMining: () => number;
   grantHero: (heroId: string) => void;
   /**
    * Buys the next level for a hero with $GOLD. Refused at max level or when
@@ -96,6 +102,7 @@ const blankData = (): PlayerData => ({
   ownedHeroIds: getFreeHeroes().map((hero) => hero.id),
   equippedHeroId: getFreeHeroes()[0]?.id ?? 'durov',
   heroLevels: {},
+  mining: null,
   createdAt: 0,
   updatedAt: 0,
   goldTransactions: [],
@@ -120,6 +127,7 @@ export const createPlayerStore = (app: AppRuntime): PlayerStore => {
       ownedHeroIds: profile.ownedHeroes,
       equippedHeroId: profile.equippedHeroId,
       heroLevels: profile.heroLevels,
+      mining: profile.mining,
       createdAt: profile.createdAt,
       updatedAt: profile.updatedAt,
       goldTransactions: app.gold.list(profile.playerId),
@@ -142,6 +150,20 @@ export const createPlayerStore = (app: AppRuntime): PlayerStore => {
       if (profile.equippedHeroId === get().equippedHeroId) return;
       app.players.save(profile);
       commit(set);
+    },
+
+    equipMiningHero: (heroId) => {
+      const outcome = app.miningService.start(currentProfile(app, get()), heroId, Date.now());
+      if (!outcome.ok) return false;
+      commit(set);
+      return true;
+    },
+
+    claimMining: () => {
+      const outcome = app.miningService.claim(currentProfile(app, get()), Date.now());
+      if (!outcome.ok) return 0;
+      commit(set);
+      return outcome.amount;
     },
 
     grantHero: (heroId) => {
@@ -244,6 +266,7 @@ const currentProfile = (app: AppRuntime, state: PlayerState): PlayerProfile =>
     equippedHeroId: state.equippedHeroId,
     ownedHeroes: state.ownedHeroIds,
     heroLevels: state.heroLevels,
+    mining: state.mining,
     goldBalance: state.gold,
     bwarBalance: state.bwar,
     createdAt: state.createdAt,

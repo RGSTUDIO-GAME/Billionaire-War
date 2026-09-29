@@ -16,12 +16,13 @@ import { Modal } from '../components/ui/Modal';
 
 type HomeScreenProps = {
   onWar: () => void;
+  onMining: () => void;
 };
 
-export const HomeScreen = ({ onWar }: HomeScreenProps) => {
+export const HomeScreen = ({ onWar, onMining }: HomeScreenProps) => {
   const equippedHeroId = usePlayerStore((state) => state.equippedHeroId);
   const hero = getHeroById(equippedHeroId);
-  const [soonFeature, setSoonFeature] = useState<'trade' | 'mining' | null>(null);
+  const [tradeOpen, setTradeOpen] = useState(false);
 
   if (!hero) return null;
 
@@ -59,28 +60,24 @@ export const HomeScreen = ({ onWar }: HomeScreenProps) => {
       </Button>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--s-3)' }}>
-        <Button variant="ghost" icon={iconIds.coin} onClick={() => setSoonFeature('trade')}>
+        <Button variant="ghost" icon={iconIds.coin} onClick={() => setTradeOpen(true)}>
           Trade
         </Button>
-        <Button variant="ghost" icon={iconIds.bwar} onClick={() => setSoonFeature('mining')}>
+        <Button variant="ghost" icon={iconIds.bwar} onClick={onMining}>
           BWAR Mining
         </Button>
       </div>
 
       <Modal
-        open={soonFeature !== null}
-        title={soonFeature === 'mining' ? 'BWAR Mining' : 'Trade'}
-        onClose={() => setSoonFeature(null)}
+        open={tradeOpen}
+        title="Trade"
+        onClose={() => setTradeOpen(false)}
       >
         <ComingSoon
-          icon={soonFeature === 'mining' ? iconIds.bwar : iconIds.coin}
-          title={soonFeature === 'mining' ? 'BWAR Mining' : 'Trade'}
-          description={
-            soonFeature === 'mining'
-              ? 'Mining $BWAR is not built yet. This build has no wallet, no chain and no token transactions.'
-              : 'Trading heroes and items is not built yet. The marketplace opens in a later season.'
-          }
-          onBack={() => setSoonFeature(null)}
+          icon={iconIds.coin}
+          title="Trade"
+          description="Trading heroes and items is not built yet. The marketplace opens in a later season."
+          onBack={() => setTradeOpen(false)}
         />
       </Modal>
 
@@ -90,8 +87,8 @@ export const HomeScreen = ({ onWar }: HomeScreenProps) => {
           <div className="grow">
             <div className="card__title">Season 0 &middot; Foundation</div>
             <div className="muted" style={{ fontSize: 12 }}>
-              Core battle system, hero roster and $GOLD battle rewards. Quests, leaderboard and
-              matchmaking arrive next.
+              Core battle system, hero roster, $GOLD battle rewards and local BWAR Mining.
+              Quests, leaderboard and matchmaking arrive next.
             </div>
           </div>
         </div>
@@ -107,7 +104,8 @@ export const HomeScreen = ({ onWar }: HomeScreenProps) => {
         <div className="row" style={{ gap: 'var(--s-2)', fontSize: 12 }}>
           <AssetImg assetId={iconIds.bwar} alt="" style={{ width: 18, height: 18 }} />
           <span className="muted">
-            $BWAR utility features, trading and Web3 are marked COMING SOON. No wallet, no chain.
+            BWAR Mining is live locally. Trading and Web3 features are marked COMING SOON. No
+            wallet, no chain.
           </span>
         </div>
       </Card>

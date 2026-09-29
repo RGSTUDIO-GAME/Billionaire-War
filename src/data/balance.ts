@@ -37,6 +37,9 @@ export const ROUND_DAMAGE: Record<number, number> = {
 export const STARTING_GOLD = 1000;
 export const STARTING_BWAR = 0;
 
+/** One BWAR Mining cycle fills after exactly 24 hours. */
+export const MINING_DURATION_MS = 24 * 60 * 60 * 1000;
+
 /**
  * Presentation timing only - none of these can change a result. They exist so
  * each beat of the battle is readable rather than instant.

@@ -21,11 +21,11 @@ const format = (value: number): string =>
     ? `${(value / 1_000_000).toFixed(1)}M`
     : value >= 10_000
       ? `${(value / 1_000).toFixed(1)}K`
-      : value.toLocaleString('en-US');
+      : value.toLocaleString('en-US', { maximumFractionDigits: 6 });
 
 /**
  * $GOLD is spendable in-game currency.
- * $BWAR is display-only for now - there are no token transactions here.
+ * $BWAR is a local balance earned through Mining; no token transaction exists here.
  */
 export const CurrencyPill = ({ kind, value, onClick, locked = false }: CurrencyPillProps) => {
   const meta = META[kind];
