@@ -89,6 +89,8 @@ export const heroAssetIds = registerHeroAssets('durov', 4);
 
 export const elonmuskAssetIds = registerHeroAssets('elonmusk', 4);
 
+export const gracychenAssetIds = registerHeroAssets('gracychen', 4);
+
 /* ------------------------------------------------------- animation frames */
 
 const heroFrameFolder: Record<HeroAssetKey, string | null> = {
@@ -127,6 +129,7 @@ const registerHeroFrames = (heroId: string, frameCount: number = HERO_FRAME_COUN
 export const heroFrames: Record<string, Record<HeroAssetKey, AssetId[]>> = {
   durov: registerHeroFrames('durov', 4),
   elonmusk: registerHeroFrames('elonmusk', 4),
+  gracychen: registerHeroFrames('gracychen', 4),
 };
 
 /* ------------------------------------------------------- attack fx frames */
@@ -169,6 +172,7 @@ export const heroFxFrames: Record<string, Record<HeroFxKind, AssetId[]>> = {
 export const heroPortraitIds: Record<string, AssetId> = {
   durov: register('heroes', 'durov_portrait', 'durov/portrait.jpg', 'hero', 'Durov portrait'),
   elonmusk: register('heroes', 'elonmusk_portrait', 'elonmusk/portrait.jpg', 'hero', 'Elonmusk portrait'),
+  gracychen: register('heroes', 'gracychen_portrait', 'gracychen/portrait.jpg', 'hero', 'Gracychen portrait'),
 };
 
 /* ------------------------------------------------------------ backgrounds */
