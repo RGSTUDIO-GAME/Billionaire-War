@@ -6,9 +6,9 @@ import type { Screen } from '../../state/uiStore';
 type NavItem = { screen: Screen; label: string; icon: string };
 
 const ITEMS: NavItem[] = [
-  { screen: 'home', label: 'Home', icon: iconIds.home },
   { screen: 'quest', label: 'Quest', icon: iconIds.quest },
   { screen: 'hero', label: 'Hero', icon: iconIds.hero },
+  { screen: 'home', label: 'Home', icon: iconIds.home },
   { screen: 'inventory', label: 'Items', icon: iconIds.inventory },
   { screen: 'settings', label: 'Settings', icon: iconIds.settings },
 ];

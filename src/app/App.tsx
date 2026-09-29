@@ -74,7 +74,7 @@ export const App = () => {
       onBwarPress={() => setBwarOpen(true)}
     >
       {entry.screen === 'home' ? (
-        <HomeScreen onWar={() => navigate('war-entry')} onHero={() => navigate('hero')} onQuest={() => navigate('quest')} />
+        <HomeScreen onWar={() => navigate('war-entry')} />
       ) : null}
       {entry.screen === 'quest' ? <QuestScreen onBack={back} /> : null}
       {entry.screen === 'inventory' ? <InventoryScreen onBack={back} onBwarPress={() => setBwarOpen(true)} /> : null}

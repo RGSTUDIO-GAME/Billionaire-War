@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { AssetImg } from '../assets/AssetImg';
 import { RarityBadge } from '../components/hero/RarityBadge';
 import { backgroundIds, iconIds, uiIds } from '../assets/manifest';
@@ -10,16 +11,17 @@ import { SceneCard } from '../components/ui/SceneCard';
 import { heroPortraitIds } from '../assets/manifest';
 import { Icon } from '../components/ui/Icon';
 import { StatBar } from '../components/ui/StatBar';
+import { ComingSoon } from '../components/ui/ComingSoon';
+import { Modal } from '../components/ui/Modal';
 
 type HomeScreenProps = {
   onWar: () => void;
-  onHero: () => void;
-  onQuest: () => void;
 };
 
-export const HomeScreen = ({ onWar, onHero, onQuest }: HomeScreenProps) => {
+export const HomeScreen = ({ onWar }: HomeScreenProps) => {
   const equippedHeroId = usePlayerStore((state) => state.equippedHeroId);
   const hero = getHeroById(equippedHeroId);
+  const [soonFeature, setSoonFeature] = useState<'trade' | 'mining' | null>(null);
 
   if (!hero) return null;
 
@@ -57,13 +59,30 @@ export const HomeScreen = ({ onWar, onHero, onQuest }: HomeScreenProps) => {
       </Button>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--s-3)' }}>
-        <Button variant="ghost" icon={iconIds.hero} onClick={onHero}>
-          Hero
+        <Button variant="ghost" icon={iconIds.coin} onClick={() => setSoonFeature('trade')}>
+          Trade
         </Button>
-        <Button variant="ghost" icon={iconIds.quest} onClick={onQuest}>
-          Quest
+        <Button variant="ghost" icon={iconIds.bwar} onClick={() => setSoonFeature('mining')}>
+          BWAR Mining
         </Button>
       </div>
+
+      <Modal
+        open={soonFeature !== null}
+        title={soonFeature === 'mining' ? 'BWAR Mining' : 'Trade'}
+        onClose={() => setSoonFeature(null)}
+      >
+        <ComingSoon
+          icon={soonFeature === 'mining' ? iconIds.bwar : iconIds.coin}
+          title={soonFeature === 'mining' ? 'BWAR Mining' : 'Trade'}
+          description={
+            soonFeature === 'mining'
+              ? 'Mining $BWAR is not built yet. This build has no wallet, no chain and no token transactions.'
+              : 'Trading heroes and items is not built yet. The marketplace opens in a later season.'
+          }
+          onBack={() => setSoonFeature(null)}
+        />
+      </Modal>
 
       <Card flat>
         <div className="row" style={{ gap: 'var(--s-3)' }}>
