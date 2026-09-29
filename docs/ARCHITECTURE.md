@@ -330,11 +330,12 @@ moving counter from `startedAt`; it never writes the balance. Once elapsed
 reaches `MINING_DURATION_MS`, progress clamps at the target and the Claim button
 becomes available.
 
-`MiningService.claim` credits that target, persists the profile, and immediately
-starts the same hero's next cycle. A second claim sees a fresh session and is
-refused. Equipping another hero replaces the one active session, so there is
-never more than one mining hero. The session and balance both live in the player
-profile, which makes them survive reloads without a new storage record.
+`MiningService.claim` can run at any time: it credits the amount accrued so far,
+persists the profile, and immediately starts the same hero's next cycle. At full,
+progress clamps until that claim is made. Equipping another hero replaces the one
+active session, so there is never more than one mining hero. The session and
+balance both live in the player profile, which makes them survive reloads
+without a new storage record.
 
 ---
 
@@ -371,7 +372,7 @@ Node against the **real** modules — no mocks, no reimplementation of the rules
 | `data-check.ts` | 176 | reload survival, damaged-save recovery, the $GOLD rules, the battle archive, id uniqueness across sessions, and the layer boundaries |
 | `asset-check.ts` | 183 | every event resolves to a registered asset, the documented mappings, hero-agnostic controller, engine purity, fallbacks |
 | `render-check.tsx` | 66 | `BattleScreen` rendered for real at every phase of a battle |
-| `mining-check.ts` | 20 | eligible heroes, 24-hour timing, pause at full, claim, single active hero and reload persistence |
+| `mining-check.ts` | 19 | eligible heroes, 24-hour timing, anytime claim, pause at full, single active hero and reload persistence |
 
 ```
 All 198 battle rule checks passed.
@@ -381,7 +382,7 @@ All 158 reward system checks passed.
 All 176 data layer checks passed.
 All 183 animation controller checks passed.
 All  66 battle screen render checks passed.
-All  20 mining checks passed.
+All  19 mining checks passed.
 ```
 
 `flow-check.ts` is what caught a bot that only locked its choice in round 1,

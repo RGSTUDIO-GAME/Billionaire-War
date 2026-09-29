@@ -36,7 +36,7 @@ npm run dev        # http://localhost:5173
 | `npm run build` | Typecheck + production build to `dist/` |
 | `npm run preview` | Serve the production build |
 | `npm run typecheck` | TypeScript only |
-| `npm run verify` | **996 assertions** — engine rules, store flow, presentation, rewards, data layer, animation, rendered screen, mining |
+| `npm run verify` | **995 assertions** — engine rules, store flow, presentation, rewards, data layer, animation, rendered screen, mining |
 | `npm run assets:check` | Report which registered assets exist on disk |
 | `npm run assets:placeholder` | Regenerate the bundled placeholder art/audio |
 | `npm run lint` | oxlint |
@@ -275,8 +275,9 @@ the trophy button in the top bar, `WAR` from the big button on Home, and
 - **War** — VS BOT is playable. PvP shows **COMING SOON**: matchmaking is not
   implemented and no fake queue or fake opponent is simulated.
 - **Hero** — DUROV with LOCKED / OWNED / EQUIPPED states and the equip button.
-- **BWAR Mining** — choose one owned hero with positive hashrate, watch a 24-hour
-  local counter, then claim the full amount into the $BWAR balance.
+- **BWAR Mining** — choose one owned hero with positive hashrate, watch a local
+  counter, and claim accrued $BWAR at any time. The counter reaches its full
+  target after 24 hours and pauses until claimed.
 - **Quest**, **Inventory items**, **Leaderboard**, **Trade** — **COMING SOON**
   via the shared `ComingSoon` component.
 
@@ -304,7 +305,7 @@ The Battle Engine does not change. See [docs/ASSETS.md](docs/ASSETS.md).
 
 ## Verification
 
-`npm run verify` bundles eight suites and runs them on Node — **996 assertions**:
+`npm run verify` bundles eight suites and runs them on Node — **995 assertions**:
 
 | Suite | Covers |
 | --- | --- |
@@ -315,4 +316,4 @@ The Battle Engine does not change. See [docs/ASSETS.md](docs/ASSETS.md).
 | `data-check` | the data layer: reload survival, damaged saves, the gold rules, the archive, and the layer boundaries |
 | `asset-check` | the animation controller, hero-agnostic mapping, fallback chains |
 | `render-check` | `BattleScreen` rendered for real at every phase of a battle |
-| `mining-check` | eligible heroes, 24-hour timing, pause at full, one active session, claim and reload persistence |
+| `mining-check` | eligible heroes, 24-hour timing, anytime claim, pause at full, one active session, and reload persistence |

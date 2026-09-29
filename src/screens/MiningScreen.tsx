@@ -133,8 +133,8 @@ export const MiningScreen = ({ onBack, onChangeHero }: MiningScreenProps) => {
             </div>
           ) : null}
           <div className="stack" style={{ marginTop: 'var(--s-4)' }}>
-            <Button variant="gold" block disabled={!progress.full} onClick={claim}>
-              {progress.full ? `Claim ${formatAmount(mining.rewardAmount)} $BWAR` : 'Claim when full'}
+            <Button variant="gold" block disabled={progress.amount <= 0} onClick={claim}>
+              {progress.amount > 0 ? `Claim ${formatAmount(progress.amount)} $BWAR` : 'Claim after mining starts'}
             </Button>
             <Button variant="ghost" block onClick={() => setConfirmChange(true)}>
               Change hero
@@ -146,8 +146,8 @@ export const MiningScreen = ({ onBack, onChangeHero }: MiningScreenProps) => {
           <div className="row">
             <AssetImg assetId={iconIds.clock} alt="" style={{ width: 20, height: 20 }} />
             <p className="muted" style={{ fontSize: 12 }}>
-              Mining runs for 24 hours, then pauses at full. Claim once to receive the amount;
-              the same hero starts its next cycle automatically.
+              Claim any time to receive the amount accrued so far. At full, mining pauses until
+              you claim; every claim starts the same hero's next cycle automatically.
             </p>
           </div>
         </Card>

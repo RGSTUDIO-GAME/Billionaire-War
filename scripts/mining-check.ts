@@ -47,26 +47,36 @@ if (started.ok) {
   if (session !== null) {
     const half = miningProgress(session, NOW + MINING_DURATION_MS / 2);
     check('mining: halfway progress pays halfway', close(half.amount, session.rewardAmount / 2));
-    check('mining: a session is not claimable before full', !half.full);
+    check('mining: an exact-start claim has nothing to credit', runtime.miningService.claim(started.profile, NOW).ok === false);
+
+    const halfAt = NOW + MINING_DURATION_MS / 2;
+    const earlyClaimed = runtime.miningService.claim(started.profile, halfAt);
     check(
-      'mining: an early claim is refused',
-      runtime.miningService.claim(started.profile, NOW + MINING_DURATION_MS / 2).ok === false,
+      'mining: an early claim credits the accrued amount and restarts',
+      earlyClaimed.ok &&
+        close(earlyClaimed.amount, session.rewardAmount / 2) &&
+        earlyClaimed.profile.mining?.startedAt === halfAt,
     );
 
-    const fullAt = NOW + MINING_DURATION_MS;
-    const full = miningProgress(session, fullAt);
+    const fullAt = halfAt + MINING_DURATION_MS;
+    const fullSession = earlyClaimed.ok ? earlyClaimed.profile.mining : null;
+    const full = fullSession === null ? miningProgress(session, fullAt) : miningProgress(fullSession, fullAt);
     check('mining: a 24-hour session reaches full exactly', full.full && close(full.amount, session.rewardAmount));
     check('mining: progress never exceeds the target', close(miningProgress(session, fullAt + 60_000).amount, session.rewardAmount));
 
-    const claimed = runtime.miningService.claim(started.profile, fullAt);
+    const claimed = earlyClaimed.ok ? runtime.miningService.claim(earlyClaimed.profile, fullAt) : earlyClaimed;
     check('mining: a full claim succeeds', claimed.ok);
-    check('mining: claim credits the full BWAR target', claimed.ok && close(claimed.profile.bwarBalance, claimed.amount));
-    check('mining: claim restarts the same hero cycle', claimed.ok && claimed.profile.mining?.startedAt === fullAt);
+    check(
+      'mining: claim credits both cycles and restarts the same hero',
+      claimed.ok &&
+        close(claimed.profile.bwarBalance, session.rewardAmount * 1.5) &&
+        claimed.profile.mining?.startedAt === fullAt,
+    );
 
     if (claimed.ok) {
-      const duplicate = runtime.miningService.claim(claimed.profile, fullAt + 1);
+      const duplicate = runtime.miningService.claim(claimed.profile, fullAt);
       check('mining: an immediate duplicate claim is refused', duplicate.ok === false);
-      check('mining: duplicate claim does not double the balance', close(claimed.profile.bwarBalance, claimed.amount));
+      check('mining: duplicate claim does not double the balance', close(claimed.profile.bwarBalance, session.rewardAmount * 1.5));
     }
   }
 }
@@ -75,7 +85,7 @@ const reloaded = runtime.players.load();
 check('mining: session survives a reload', reloaded !== null && reloaded.mining?.heroId === 'elonmusk');
 check('mining: balance survives a reload', reloaded !== null && reloaded.bwarBalance > 0);
 
-const switched = runtime.miningService.start(reloaded ?? profile, 'gracychen', NOW + MINING_DURATION_MS + 1);
+const switched = runtime.miningService.start(reloaded ?? profile, 'gracychen', NOW + MINING_DURATION_MS * 1.5 + 1);
 check('mining: changing hero starts a new session', switched.ok && switched.profile.mining?.heroId === 'gracychen');
 check('mining: only one hero remains active', switched.ok && switched.profile.mining?.heroId !== 'elonmusk');
 

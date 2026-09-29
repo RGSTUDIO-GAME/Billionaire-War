@@ -38,8 +38,8 @@ export const miningProgress = (session: MiningSession, now: number): MiningProgr
  * The one service allowed to start, pause and settle BWAR Mining.
  *
  * A session snapshots its rate and target when equipped, writes the profile
- * before the store changes, and settles exactly once: claiming credits the
- * target and immediately starts the same hero's next 24-hour cycle.
+ * before the store changes, and can be claimed at any time. Claim credits the
+ * accrued amount and immediately starts the same hero's next cycle.
  */
 export class MiningService {
   private readonly players: PlayerRepository;
@@ -71,12 +71,13 @@ export class MiningService {
   claim(profile: PlayerProfile, now: number): MiningClaimOutcome {
     const session = profile.mining;
     if (session === null) return { ok: false, reason: 'NO_SESSION', profile };
-    if (!miningProgress(session, now).full) return { ok: false, reason: 'NOT_READY', profile };
+    const progress = miningProgress(session, now);
+    if (progress.amount <= 0) return { ok: false, reason: 'NOT_READY', profile };
     if (!Number.isFinite(session.rewardAmount) || session.rewardAmount <= 0) {
       return { ok: false, reason: 'INVALID_REWARD', profile };
     }
 
-    const balanceAfter = profile.bwarBalance + session.rewardAmount;
+    const balanceAfter = profile.bwarBalance + progress.amount;
     if (!Number.isFinite(balanceAfter) || balanceAfter < 0) {
       return { ok: false, reason: 'INVALID_REWARD', profile };
     }
@@ -87,6 +88,6 @@ export class MiningService {
       mining: { ...session, startedAt: now },
     };
     if (!this.players.save(next)) return { ok: false, reason: 'SAVE_FAILED', profile };
-    return { ok: true, profile: next, amount: session.rewardAmount };
+    return { ok: true, profile: next, amount: progress.amount };
   }
 }
