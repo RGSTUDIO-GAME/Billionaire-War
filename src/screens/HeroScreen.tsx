@@ -22,8 +22,9 @@ const HeroRow = ({ hero, ownership }: { hero: Hero; ownership: 'locked' | 'owned
   const equipHero = usePlayerStore((state) => state.equipHero);
   const isLocked = ownership === 'locked';
 
+  const accent = RARITY_ACCENT[hero.rarity];
   return (
-    <Card>
+    <Card style={{ borderColor: accent, boxShadow: `0 0 14px ${accent}40` }}>
       <div className="row" style={{ alignItems: 'flex-start' }}>
         <HeroAvatar hero={hero} size="md" locked={isLocked} />
         <div className="grow stack" style={{ minWidth: 0 }}>
@@ -83,36 +84,36 @@ const RARITY_LABEL: Record<HeroRarity, string> = {
   legendary: 'Legendary',
 };
 
-type RarityTab = HeroRarity | 'all';
+/** Card frame accent sampled from the rarity plaques. Text stays untouched. */
+const RARITY_ACCENT: Record<HeroRarity, string> = {
+  common: '#9aa3b2',
+  uncommon: '#35c759',
+  rare: '#3b82f6',
+  epic: '#a855f7',
+  legendary: '#f5c542',
+};
 
 export const HeroScreen = ({ onBack }: HeroScreenProps) => {
   const ownedHeroIds = usePlayerStore((state) => state.ownedHeroIds);
   const equippedHeroId = usePlayerStore((state) => state.equippedHeroId);
-  const [tab, setTab] = useState<RarityTab>('all');
+  const [tab, setTab] = useState<HeroRarity>(
+    () => RARITY_ORDER.find((rarity) => HEROES.some((hero) => hero.rarity === rarity)) ?? 'common',
+  );
 
-  const pickTab = (next: RarityTab) => {
+  const pickTab = (next: HeroRarity) => {
     if (next === tab) return;
     audio.playSfx(soundIds.uiConfirm, 0.3);
     haptic.impact('light');
     setTab(next);
   };
 
-  const visibleRarities = tab === 'all' ? RARITY_ORDER : [tab];
+  const visibleRarities = [tab];
 
   return (
     <div className="anim-fade">
       <ScreenHeader title="Hero" subtitle={`${HEROES.length} hero available`} onBack={onBack} />
 
       <div className="tabs" style={{ marginBottom: 'var(--s-3)' }}>
-        <button
-          key="all"
-          type="button"
-          className={`tabs__btn${tab === 'all' ? ' is-active' : ''}`}
-          aria-pressed={tab === 'all'}
-          onClick={() => pickTab('all')}
-        >
-          All · {HEROES.length}
-        </button>
         {RARITY_ORDER.map((rarity) => {
           const count = HEROES.filter((hero) => hero.rarity === rarity).length;
           return (
