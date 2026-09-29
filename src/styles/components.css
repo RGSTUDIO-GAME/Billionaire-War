@@ -496,6 +496,10 @@
 }
 
 .tabs__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   flex: 1 0 auto;
   padding: 8px 10px;
   border-radius: var(--r-pill);

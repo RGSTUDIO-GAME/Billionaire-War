@@ -7,6 +7,7 @@ import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { HeroAvatar } from '../components/hero/HeroAvatar';
+import { RarityBadge } from '../components/hero/RarityBadge';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { haptic } from '../services/telegram';
 import { soundIds } from '../assets/manifest';
@@ -32,8 +33,11 @@ const HeroRow = ({ hero, ownership }: { hero: Hero; ownership: 'locked' | 'owned
             </h3>
             <Badge tone={OWNERSHIP_TONE[ownership]}>{OWNERSHIP_LABEL[ownership]}</Badge>
           </div>
-          <div className="muted" style={{ fontSize: 12 }}>
-            HP {hero.hp} &middot; {hero.rarity}
+          <div className="row" style={{ gap: 6, alignItems: 'center' }}>
+            <span className="muted" style={{ fontSize: 12 }}>
+              HP {hero.hp}
+            </span>
+            <RarityBadge rarity={hero.rarity} />
           </div>
           <div className="row" style={{ gap: 'var(--s-2)', flexWrap: 'wrap' }}>
             <Badge>HP {hero.hp}</Badge>
@@ -117,9 +121,11 @@ export const HeroScreen = ({ onBack }: HeroScreenProps) => {
               type="button"
               className={`tabs__btn${tab === rarity ? ' is-active' : ''}`}
               aria-pressed={tab === rarity}
+              aria-label={RARITY_LABEL[rarity]}
               onClick={() => pickTab(rarity)}
             >
-              {RARITY_LABEL[rarity]} · {count}
+              <RarityBadge rarity={rarity} height={20} />
+              <span>{count}</span>
             </button>
           );
         })}
@@ -131,9 +137,7 @@ export const HeroScreen = ({ onBack }: HeroScreenProps) => {
           return (
             <section key={rarity}>
               <div className="row-between" style={{ marginBottom: 'var(--s-2)' }}>
-                <h3 className="display" style={{ fontSize: 16 }}>
-                  {RARITY_LABEL[rarity]}
-                </h3>
+                <RarityBadge rarity={rarity} height={28} />
                 <span className="muted" style={{ fontSize: 12 }}>
                   {heroes.length} hero
                 </span>

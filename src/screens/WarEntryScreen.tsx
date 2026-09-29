@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { AssetImg } from '../assets/AssetImg';
+import { RarityBadge } from '../components/hero/RarityBadge';
 import { backgroundIds, heroPortraitIds, iconIds } from '../assets/manifest';
 import { HEROES, getHeroById } from '../data/heroes';
 import { usePlayerStore } from '../state/playerStore';
@@ -72,8 +73,11 @@ export const WarEntryScreen = ({ onBack, onBattleStart }: WarEntryScreenProps) =
               <h2 className="display" style={{ fontSize: 24, color: 'var(--gold)' }}>
                 {playerHero.name}
               </h2>
-              <div className="muted" style={{ fontSize: 12 }}>
-                HP {playerHero.hp} &middot; {playerHero.rarity}
+              <div className="row" style={{ gap: 6, alignItems: 'center' }}>
+                <span className="muted" style={{ fontSize: 12 }}>
+                  HP {playerHero.hp}
+                </span>
+                <RarityBadge rarity={playerHero.rarity} />
               </div>
               <div style={{ marginTop: 'var(--s-2)' }}>
                 <StatBar value={playerHero.hp} max={playerHero.hp} label="Base HP" />

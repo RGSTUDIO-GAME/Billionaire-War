@@ -1,4 +1,5 @@
 import type { AssetCategory, AssetEntry, AssetId, HeroAssetKey, PlaceholderKind } from './types';
+import type { HeroRarity } from '../data/heroes/types';
 
 /**
  * GLOBAL ASSET CONFIGURATION
@@ -190,6 +191,15 @@ export const uiIds = {
   divider: register('ui', 'divider', 'divider.svg', 'ui', 'Divider'),
   buttonGlow: register('ui', 'button_glow', 'button_glow.svg', 'ui', 'Button'),
 } satisfies Record<string, AssetId>;
+
+/** Rarity plaque buttons, keyed by hero rarity. */
+export const rarityIds: Record<HeroRarity, AssetId> = {
+  common: register('ui', 'rarity_common', 'rarity-common.png', 'ui', 'Common rarity'),
+  uncommon: register('ui', 'rarity_uncommon', 'rarity-uncommon.png', 'ui', 'Uncommon rarity'),
+  rare: register('ui', 'rarity_rare', 'rarity-rare.png', 'ui', 'Rare rarity'),
+  epic: register('ui', 'rarity_epic', 'rarity-epic.png', 'ui', 'Epic rarity'),
+  legendary: register('ui', 'rarity_legendary', 'rarity-legendary.png', 'ui', 'Legendary rarity'),
+};
 
 /* ------------------------------------------------------------------ icons */
 

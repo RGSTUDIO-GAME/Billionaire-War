@@ -1,4 +1,5 @@
 import { AssetImg } from '../assets/AssetImg';
+import { RarityBadge } from '../components/hero/RarityBadge';
 import { backgroundIds, iconIds, uiIds } from '../assets/manifest';
 import { getHeroById } from '../data/heroes';
 import { usePlayerStore } from '../state/playerStore';
@@ -34,8 +35,11 @@ export const HomeScreen = ({ onWar, onHero, onQuest }: HomeScreenProps) => {
             <h2 className="display" style={{ fontSize: 26, color: 'var(--gold)' }}>
               {hero.name}
             </h2>
-            <div className="muted" style={{ fontSize: 12 }}>
-              HP {hero.hp} &middot; {hero.rarity}
+            <div className="row" style={{ gap: 6, alignItems: 'center' }}>
+              <span className="muted" style={{ fontSize: 12 }}>
+                HP {hero.hp}
+              </span>
+              <RarityBadge rarity={hero.rarity} />
             </div>
             <div style={{ marginTop: 'var(--s-2)' }}>
               <StatBar value={hero.hp} max={hero.hp} label="Base HP" />
