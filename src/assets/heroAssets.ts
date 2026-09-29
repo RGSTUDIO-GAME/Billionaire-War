@@ -77,6 +77,20 @@ export const prefetchHeroFx = (hero: Hero): void => {
   }
 };
 
+/**
+ * Render scale for a hero visual.
+ * Flat poses (victory, defeat) fill little of a square sprite box, so they
+ * get a boost on top of the hero's own scale. Feet stay grounded through
+ * `transform-origin: 50% 100%` in CSS.
+ */
+const POSE_SCALE: Partial<Record<HeroVisual['type'], number>> = {
+  victory: 1.25,
+  defeat: 1.35,
+};
+
+export const heroSpriteScale = (hero: Hero, visual: HeroVisual): number =>
+  (hero.spriteScale ?? 1) * (POSE_SCALE[visual.type] ?? 1);
+
 /** Warms the browser cache for every frame of a hero. Call on battle entry. */
 export const prefetchHeroFrames = (hero: Hero): void => {
   const urls = new Set<string>();

@@ -1,6 +1,6 @@
 import type { AssetId } from '../../assets/types';
 
-export type HeroRarity = 'common' | 'rare' | 'epic' | 'legendary';
+export type HeroRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
 
 export type HeroSkill = {
   id: string;

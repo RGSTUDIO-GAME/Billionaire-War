@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { AnimatedSprite } from './AnimatedSprite';
-import { heroAssetChain, heroFrameUrls } from '../../assets/heroAssets';
+import { heroAssetChain, heroFrameUrls, heroSpriteScale } from '../../assets/heroAssets';
 import type { Hero } from '../../data/heroes/types';
 import type { GoldTransaction } from '../../rewards';
 import type { BattleSummary } from '../../presentation/battleView';
@@ -56,7 +56,7 @@ export const BattleResultOverlay = ({
       <div className="center stack">
         <div
           className="battle-result__sprite"
-          style={{ '--sprite-scale': String(hero.spriteScale ?? 1) } as CSSProperties}
+          style={{ '--sprite-scale': String(heroSpriteScale(hero, { type: pose })) } as CSSProperties}
         >
           <AnimatedSprite
             frames={heroFrameUrls(hero, { type: pose })}

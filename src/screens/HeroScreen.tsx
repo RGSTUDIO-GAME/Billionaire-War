@@ -1,5 +1,5 @@
 import { HEROES, getOwnedState } from '../data/heroes';
-import type { Hero } from '../data/heroes/types';
+import type { Hero, HeroRarity } from '../data/heroes/types';
 import { MAX_ROUNDS, ROUND_DAMAGE } from '../data/balance';
 import { usePlayerStore } from '../state/playerStore';
 import { Badge } from '../components/ui/Badge';
@@ -68,6 +68,16 @@ const HeroRow = ({ hero, ownership }: { hero: Hero; ownership: 'locked' | 'owned
   );
 };
 
+const RARITY_ORDER: HeroRarity[] = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
+
+const RARITY_LABEL: Record<HeroRarity, string> = {
+  common: 'Common',
+  uncommon: 'Uncommon',
+  rare: 'Rare',
+  epic: 'Epic',
+  legendary: 'Legendary',
+};
+
 export const HeroScreen = ({ onBack }: HeroScreenProps) => {
   const ownedHeroIds = usePlayerStore((state) => state.ownedHeroIds);
   const equippedHeroId = usePlayerStore((state) => state.equippedHeroId);
@@ -76,10 +86,35 @@ export const HeroScreen = ({ onBack }: HeroScreenProps) => {
     <div className="anim-fade">
       <ScreenHeader title="Hero" subtitle={`${HEROES.length} hero available`} onBack={onBack} />
 
-      <div className="stack">
-        {HEROES.map((hero) => (
-          <HeroRow key={hero.id} hero={hero} ownership={getOwnedState(hero, ownedHeroIds, equippedHeroId)} />
-        ))}
+      <div className="stack" style={{ gap: 'var(--s-4)' }}>
+        {RARITY_ORDER.map((rarity) => {
+          const heroes = HEROES.filter((hero) => hero.rarity === rarity);
+          return (
+            <section key={rarity}>
+              <div className="row-between" style={{ marginBottom: 'var(--s-2)' }}>
+                <h3 className="display" style={{ fontSize: 16 }}>
+                  {RARITY_LABEL[rarity]}
+                </h3>
+                <span className="muted" style={{ fontSize: 12 }}>
+                  {heroes.length} hero
+                </span>
+              </div>
+              {heroes.length > 0 ? (
+                <div className="stack">
+                  {heroes.map((hero) => (
+                    <HeroRow
+                      key={hero.id}
+                      hero={hero}
+                      ownership={getOwnedState(hero, ownedHeroIds, equippedHeroId)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-state">No heroes here yet - coming soon.</div>
+              )}
+            </section>
+          );
+        })}
       </div>
 
       <Card flat>

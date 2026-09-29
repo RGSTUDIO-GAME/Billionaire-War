@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react';
 import { AssetImg } from '../../assets/AssetImg';
 import { AnimatedSprite, FRAME_INTERVAL_MS } from './AnimatedSprite';
-import { heroAssetChain, heroFrameUrls } from '../../assets/heroAssets';
+import { heroAssetChain, heroFrameUrls, heroSpriteScale } from '../../assets/heroAssets';
 import { idleCue, resolveCue } from '../../assets/animationController';
 import type { Hero } from '../../data/heroes/types';
 import type { FighterView } from '../../presentation/battleView';
@@ -34,7 +34,7 @@ export const FighterSprite = ({ fighter, hero, beatKey = '' }: FighterSpriteProp
 
   return (
     <div
-      style={{ '--sprite-scale': String(hero.spriteScale ?? 1) } as CSSProperties}
+      style={{ '--sprite-scale': String(heroSpriteScale(hero, cue.visual)) } as CSSProperties}
       className={[
         'sprite',
         fighter.id === 'A' ? 'sprite--left' : 'sprite--right',
