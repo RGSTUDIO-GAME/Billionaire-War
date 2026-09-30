@@ -213,9 +213,9 @@ check(
           const closed = offerWorld.tradeService.delistOffer(delivered.profile, secondId, NOW + 4);
           check('offer: a delivered offer can be delisted', closed.ok);
           check(
-            'offer: delisting delivery does not return the sold hero',
+          'offer: delisting delivery returns the hero to its owner',
             closed.ok &&
-              !closed.profile.ownedHeroes.includes(hero.id) &&
+              closed.profile.ownedHeroes.includes(hero.id) &&
               closed.profile.tradeOffers?.find((offer) => offer.offerId === secondId)?.status === 'delisted',
           );
         }

@@ -146,7 +146,7 @@ export class TradeService {
     const closedOffer: TradeOffer = { ...offer, status: 'delisted', updatedAt: now };
     const closedOffers = offers.map((candidate) => candidate.offerId === offerId ? closedOffer : candidate);
 
-    if (offer.status === 'active' && offer.kind === 'hero') {
+    if (offer.kind === 'hero') {
       const owned = profile.ownedHeroes.includes(offer.heroId)
         ? profile.ownedHeroes
         : [...profile.ownedHeroes, offer.heroId];
@@ -210,6 +210,11 @@ export class TradeService {
     const hero = getHeroById(heroId);
     if (hero === undefined) return insufficient(profile, 'INVALID_HERO');
     if (profile.ownedHeroes.includes(heroId)) return insufficient(profile, 'ALREADY_OWNED');
+    if (this.offers(profile).some(
+      (offer) => offer.status === 'active' && offer.kind === 'hero' && offer.heroId === heroId,
+    )) {
+      return insufficient(profile, 'ALREADY_OFFERED');
+    }
 
     const price = heroTradePrice(hero, 0, currency, 'buy');
     const withHero: PlayerProfile = { ...profile, ownedHeroes: [...profile.ownedHeroes, heroId] };

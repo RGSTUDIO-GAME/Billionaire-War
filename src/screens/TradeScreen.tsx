@@ -142,7 +142,9 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
       delistOffer(offer.offerId),
       offer.status === 'active'
         ? 'Offer delisted and the asset returned.'
-        : 'Delivered offer removed from history.',
+        : offer.kind === 'hero'
+          ? 'Delivered offer delisted and the hero returned.'
+          : 'Delivered offer removed from history.',
     );
   };
 
@@ -386,8 +388,8 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
 
       <Card flat tight className="trade-rules">
         Offer moves the asset into escrow at your chosen price. Deliver completes the sale and
-        credits the proceeds; Delist returns an active asset. Delivered entries can also be
-        delisted from history. Mining heroes stay locked until unstacked.
+        credits the proceeds; Delist returns the hero or active Gold escrow. Delivered entries
+        can also be delisted. Mining heroes stay locked until unstacked.
       </Card>
     </div>
   );

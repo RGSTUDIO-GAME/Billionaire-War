@@ -73,10 +73,6 @@ export type PlayerActions = {
   claimMining: () => number;
   /** Claims accrued BWAR and removes the active mining hero. */
   unstackMining: () => number | null;
-  buyHero: (heroId: string, currency: 'gold' | 'bwar') => boolean;
-  sellHero: (heroId: string, currency: 'gold' | 'bwar') => boolean;
-  buyGold: (goldAmount: number) => boolean;
-  sellGold: (goldAmount: number) => boolean;
   createHeroOffer: (heroId: string, price: number, currency: TradeCurrency) => boolean;
   createGoldOffer: (goldAmount: number, price: number) => boolean;
   delistOffer: (offerId: string) => boolean;
@@ -185,34 +181,6 @@ export const createPlayerStore = (app: AppRuntime): PlayerStore => {
       if (!outcome.ok) return null;
       commit(set);
       return outcome.amount;
-    },
-
-    buyHero: (heroId, currency) => {
-      const outcome = app.tradeService.buyHero(currentProfile(app, get()), heroId, currency, Date.now());
-      if (!outcome.ok) return false;
-      commit(set);
-      return true;
-    },
-
-    sellHero: (heroId, currency) => {
-      const outcome = app.tradeService.sellHero(currentProfile(app, get()), heroId, currency, Date.now());
-      if (!outcome.ok) return false;
-      commit(set);
-      return true;
-    },
-
-    buyGold: (goldAmount) => {
-      const outcome = app.tradeService.buyGold(currentProfile(app, get()), goldAmount, Date.now());
-      if (!outcome.ok) return false;
-      commit(set);
-      return true;
-    },
-
-    sellGold: (goldAmount) => {
-      const outcome = app.tradeService.sellGold(currentProfile(app, get()), goldAmount, Date.now());
-      if (!outcome.ok) return false;
-      commit(set);
-      return true;
     },
 
     createHeroOffer: (heroId, price, currency) => {
