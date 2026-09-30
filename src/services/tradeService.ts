@@ -19,6 +19,7 @@ export type TradeFailure =
   | 'OFFER_NOT_FOUND'
   | 'OFFER_CLOSED'
   | 'OFFER_NOT_ACTIVE'
+  | 'SELF_DELIVER'
   | 'SAVE_FAILED';
 
 export type TradeOutcome =
@@ -83,6 +84,7 @@ export class TradeService {
     const heroLevel = profile.heroLevels[heroId] ?? 0;
     const offer: TradeOffer = {
       offerId: createOfferId(now),
+      sellerId: profile.playerId,
       kind: 'hero',
       heroId,
       heroLevel,
@@ -121,6 +123,7 @@ export class TradeService {
     }
     const offer: TradeOffer = {
       offerId: createOfferId(now),
+      sellerId: profile.playerId,
       kind: 'gold',
       goldAmount,
       currency: 'bwar',
@@ -181,27 +184,44 @@ export class TradeService {
     const offers = this.offers(profile);
     const offer = offers.find((candidate) => candidate.offerId === offerId);
     if (offer === undefined) return insufficient(profile, 'OFFER_NOT_FOUND');
+    if (offer.sellerId === profile.playerId) return insufficient(profile, 'SELF_DELIVER');
     if (offer.status !== 'active') return insufficient(profile, 'OFFER_NOT_ACTIVE');
 
     const deliveredOffer: TradeOffer = { ...offer, status: 'delivered', updatedAt: now };
     const deliveredOffers = offers.map((candidate) => candidate.offerId === offerId ? deliveredOffer : candidate);
 
-    if (offer.kind === 'hero' && offer.currency === 'gold') {
-      const delivered = this.goldService.credit(
-        { ...profile, tradeOffers: deliveredOffers },
-        offer.price,
-        { kind: 'GRANT' },
-        now,
-      );
-      if (!delivered.ok) return insufficient(profile, 'INVALID_PRICE');
-      return { ok: true, profile: delivered.profile };
+    const receivingProfile: PlayerProfile = {
+      ...profile,
+      tradeOffers: deliveredOffers,
+      ...(offer.kind === 'hero'
+        ? {
+            ownedHeroes: profile.ownedHeroes.includes(offer.heroId)
+              ? profile.ownedHeroes
+              : [...profile.ownedHeroes, offer.heroId],
+            heroLevels: {
+              ...profile.heroLevels,
+              [offer.heroId]: Math.max(profile.heroLevels[offer.heroId] ?? 0, offer.heroLevel),
+            },
+          }
+        : {}),
+    };
+
+    if (offer.currency === 'gold') {
+      const paid = this.goldService.debit(receivingProfile, offer.price, { kind: 'SPEND' }, now);
+      if (!paid.ok) return insufficient(profile, paid.reason === 'INSUFFICIENT_FUNDS' ? 'INSUFFICIENT_FUNDS' : 'INVALID_AMOUNT');
+      return { ok: true, profile: paid.profile };
     }
 
+    if (offer.price > profile.bwarBalance + 1e-9) return insufficient(profile, 'INSUFFICIENT_FUNDS');
     const next: PlayerProfile = {
-      ...profile,
-      bwarBalance: profile.bwarBalance + offer.price,
-      tradeOffers: deliveredOffers,
+      ...receivingProfile,
+      bwarBalance: profile.bwarBalance - offer.price,
     };
+    if (offer.kind === 'gold') {
+      const received = this.goldService.credit(next, offer.goldAmount, { kind: 'GRANT' }, now);
+      if (!received.ok) return insufficient(profile, 'INVALID_AMOUNT');
+      return { ok: true, profile: received.profile };
+    }
     if (!this.players.save(next)) return insufficient(profile, 'SAVE_FAILED');
     return { ok: true, profile: next };
   }

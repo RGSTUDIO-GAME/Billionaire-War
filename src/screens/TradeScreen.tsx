@@ -70,6 +70,7 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
   const heroLevels = usePlayerStore((state) => state.heroLevels);
   const mining = usePlayerStore((state) => state.mining);
   const tradeOffers = usePlayerStore((state) => state.tradeOffers);
+  const playerId = usePlayerStore((state) => state.playerId);
   const createHeroOffer = usePlayerStore((state) => state.createHeroOffer);
   const createGoldOffer = usePlayerStore((state) => state.createGoldOffer);
   const delistOffer = usePlayerStore((state) => state.delistOffer);
@@ -149,6 +150,10 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
   };
 
   const deliver = (offer: TradeOffer) => {
+    if (offer.sellerId === playerId) {
+      setNotice('You cannot buy your own offer. Cancel it instead.');
+      return;
+    }
     report(
       deliverOffer(offer.offerId),
       `Offer delivered for ${formatTradeAmount(offer.price, offer.currency)}.`,
@@ -334,7 +339,7 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
                 offer={offer}
                 actions={
                   <Button size="sm" variant="ghost" onClick={() => delist(offer)}>
-                    Delist
+                    Cancel
                   </Button>
                 }
               />
@@ -347,22 +352,29 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
         <div className="stack">
           <div className="trade-section-title">Ready to deliver</div>
           {activeOffers.length > 0 ? (
-            activeOffers.map((offer) => (
-              <OfferCard
-                key={offer.offerId}
-                offer={offer}
-                actions={
-                  <>
+            activeOffers.map((offer) =>
+              offer.sellerId === playerId ? (
+                <OfferCard
+                  key={offer.offerId}
+                  offer={offer}
+                  actions={
+                    <Button size="sm" variant="ghost" onClick={() => delist(offer)}>
+                      Cancel
+                    </Button>
+                  }
+                />
+              ) : (
+                <OfferCard
+                  key={offer.offerId}
+                  offer={offer}
+                  actions={
                     <Button size="sm" variant="gold" onClick={() => deliver(offer)}>
                       Deliver
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => delist(offer)}>
-                      Delist
-                    </Button>
-                  </>
-                }
-              />
-            ))
+                  }
+                />
+              ),
+            )
           ) : (
             <div className="empty-state">No offers ready for delivery.</div>
           )}
@@ -388,8 +400,9 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
 
       <Card flat tight className="trade-rules">
         Offer moves the asset into escrow at your chosen price. Deliver completes the sale and
-        credits the proceeds; Delist returns the hero or active Gold escrow. Delivered entries
-        can also be delisted. Mining heroes stay locked until unstacked.
+        credits proceeds only for offers from another seller; a player can never deliver their
+        own listing. Cancel returns the hero or active Gold escrow. Mining heroes stay locked
+        until unstacked.
       </Card>
     </div>
   );

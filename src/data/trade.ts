@@ -7,6 +7,7 @@ export type TradeOfferStatus = 'active' | 'delivered' | 'delisted';
 
 type TradeOfferBase = {
   offerId: string;
+  sellerId: string;
   currency: TradeCurrency;
   price: number;
   status: TradeOfferStatus;

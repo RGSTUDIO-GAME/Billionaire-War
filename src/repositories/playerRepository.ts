@@ -65,7 +65,11 @@ const knownOfferStatus = (value: unknown): TradeOfferStatus | null =>
 const knownOfferId = (value: unknown): string | null =>
   typeof value === 'string' && /^[A-Za-z0-9_-]{4,100}$/.test(value) ? value : null;
 
-const parseTradeOffers = (value: unknown, ownedHeroes: readonly string[]): TradeOffer[] => {
+const parseTradeOffers = (
+  value: unknown,
+  ownedHeroes: readonly string[],
+  playerId: string,
+): TradeOffer[] => {
   if (!Array.isArray(value)) return [];
   const offers: TradeOffer[] = [];
   const activeAssets = new Set<string>();
@@ -73,6 +77,9 @@ const parseTradeOffers = (value: unknown, ownedHeroes: readonly string[]): Trade
   for (const raw of value) {
     if (!isPlainObject(raw) || offers.length >= MAX_TRADE_OFFERS) continue;
     const offerId = knownOfferId(raw.offerId);
+    const sellerId = typeof raw.sellerId === 'string' && raw.sellerId.length > 0 && raw.sellerId.length <= 100
+      ? raw.sellerId
+      : playerId;
     const kind = knownOfferKind(raw.kind);
     const currency = knownCurrency(raw.currency);
     const storedStatus = knownOfferStatus(raw.status);
@@ -97,6 +104,7 @@ const parseTradeOffers = (value: unknown, ownedHeroes: readonly string[]): Trade
       if (status === 'active') activeAssets.add(activeKey);
       offer = {
         offerId,
+        sellerId,
         kind: 'hero',
         heroId,
         heroLevel,
@@ -117,6 +125,7 @@ const parseTradeOffers = (value: unknown, ownedHeroes: readonly string[]): Trade
       if (status === 'active') activeAssets.add(activeKey);
       offer = {
         offerId,
+        sellerId,
         kind: 'gold',
         goldAmount,
         currency,
@@ -242,7 +251,7 @@ export const parseProfile = (
     goldBalance,
     bwarBalance: asNonNegativeNumber(raw.bwarBalance) ?? STARTING_BWAR,
     mining: parseMiningSession(raw.mining, ownedHeroes, now),
-    tradeOffers: parseTradeOffers(raw.tradeOffers, ownedHeroes),
+    tradeOffers: parseTradeOffers(raw.tradeOffers, ownedHeroes, resolvedId),
     createdAt,
     updatedAt: asTimestamp(raw.updatedAt, createdAt),
   };

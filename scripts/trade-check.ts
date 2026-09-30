@@ -150,6 +150,32 @@ check(
 }
 
 {
+  const zeroWallet = {
+    ...fresh,
+    ownedHeroes: [HEROES[0].id],
+    equippedHeroId: HEROES[0].id,
+    heroLevels: {},
+    tradeOffers: [],
+    goldBalance: 0,
+    bwarBalance: 0,
+    mining: null,
+  };
+  const heroBwar = runtime.tradeService.buyHero(zeroWallet, HEROES[1].id, 'bwar', NOW);
+  const heroGold = runtime.tradeService.buyHero(zeroWallet, HEROES[1].id, 'gold', NOW);
+  const goldItem = runtime.tradeService.buyGold(zeroWallet, 100, NOW);
+  check('trade: zero BWAR cannot buy a hero', heroBwar.ok === false && heroBwar.reason === 'INSUFFICIENT_FUNDS');
+  check('trade: zero Gold cannot buy a hero', heroGold.ok === false && heroGold.reason === 'INSUFFICIENT_FUNDS');
+  check('trade: zero BWAR cannot buy Gold', goldItem.ok === false && goldItem.reason === 'INSUFFICIENT_FUNDS');
+  check(
+    'trade: refused zero-balance purchases move nothing',
+    heroBwar.profile.goldBalance === 0 &&
+      heroBwar.profile.bwarBalance === 0 &&
+      heroGold.profile.ownedHeroes.length === 1 &&
+      goldItem.profile.goldBalance === 0,
+  );
+}
+
+{
   const offerWorld = createRuntime(memoryStorage());
   const base = offerWorld.players.loadOrCreate();
   const hero = HEROES[0];
@@ -199,26 +225,27 @@ check(
       check('offer: the same hero can be offered again', secondOffer.ok);
       if (secondOffer.ok) {
         const secondId = secondOffer.profile.tradeOffers?.[0]?.offerId ?? '';
-        const delivered = offerWorld.tradeService.deliverOffer(secondOffer.profile, secondId, NOW + 3);
-        check('offer: Deliver completes an active offer', delivered.ok);
+        const blocked = offerWorld.tradeService.deliverOffer(secondOffer.profile, secondId, NOW + 3);
+        check('offer: a seller cannot deliver their own offer', blocked.ok === false && blocked.reason === 'SELF_DELIVER');
         check(
-          'offer: Deliver credits the player custom price',
-          delivered.ok && delivered.profile.goldBalance === base.goldBalance + 900,
+          'offer: blocked self-delivery never changes the balance',
+          blocked.profile.goldBalance === secondOffer.profile.goldBalance &&
+            blocked.profile.bwarBalance === secondOffer.profile.bwarBalance,
         );
+        const deliveredFixture = {
+          ...secondOffer.profile,
+          tradeOffers: secondOffer.profile.tradeOffers?.map((offer) =>
+            offer.offerId === secondId ? { ...offer, status: 'delivered' as const } : offer,
+          ),
+        };
+        const closed = offerWorld.tradeService.delistOffer(deliveredFixture, secondId, NOW + 4);
+        check('offer: a delivered offer can be delisted', closed.ok);
         check(
-          'offer: a delivered hero remains outside the roster',
-          delivered.ok && !delivered.profile.ownedHeroes.includes(hero.id),
-        );
-        if (delivered.ok) {
-          const closed = offerWorld.tradeService.delistOffer(delivered.profile, secondId, NOW + 4);
-          check('offer: a delivered offer can be delisted', closed.ok);
-          check(
           'offer: delisting delivery returns the hero to its owner',
-            closed.ok &&
-              closed.profile.ownedHeroes.includes(hero.id) &&
-              closed.profile.tradeOffers?.find((offer) => offer.offerId === secondId)?.status === 'delisted',
-          );
-        }
+          closed.ok &&
+            closed.profile.ownedHeroes.includes(hero.id) &&
+            closed.profile.tradeOffers?.find((offer) => offer.offerId === secondId)?.status === 'delisted',
+        );
       }
     }
   }
@@ -243,12 +270,12 @@ check(
       const secondOffer = offerWorld.tradeService.createGoldOffer(delisted.profile, 250, 12.5, NOW + 2);
       if (secondOffer.ok) {
         const secondId = secondOffer.profile.tradeOffers.find((offer) => offer.status === 'active')?.offerId ?? '';
-        const delivered = offerWorld.tradeService.deliverOffer(secondOffer.profile, secondId, NOW + 3);
-        check('offer: delivering a Gold offer credits its custom BWAR price', delivered.ok && close(delivered.profile.bwarBalance, base.bwarBalance + 12.5));
-        if (delivered.ok) {
-          const closed = offerWorld.tradeService.delistOffer(delivered.profile, secondId, NOW + 4);
-          check('offer: delivered Gold can be delisted from history', closed.ok);
-        }
+        const blocked = offerWorld.tradeService.deliverOffer(secondOffer.profile, secondId, NOW + 3);
+        check('offer: a seller cannot deliver their own Gold offer', blocked.ok === false && blocked.reason === 'SELF_DELIVER');
+        check(
+          'offer: blocked Gold delivery never adds BWAR',
+          close(blocked.profile.bwarBalance, secondOffer.profile.bwarBalance),
+        );
       }
     }
   }

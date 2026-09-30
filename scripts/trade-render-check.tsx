@@ -40,6 +40,7 @@ check('render: Trade screen is mounted', trade.includes('trade-screen'));
 check('render: Trade has Offer and Deliver tabs', (trade.match(/role="tablist"/g) ?? []).length === 2 && tradeWords.includes('Offer Deliver'));
 check('render: Trade starts on custom-price Offer', trade.includes('aria-selected="true"') && tradeWords.includes('Custom price'));
 check('render: Trade explains the mining lock', tradeWords.includes('Mining heroes stay locked until unstacked.'));
+check('render: Trade exposes no direct Buy button', !trade.includes('>Buy<'));
 
 if (failures.length > 0) {
   console.error(`\n${failures.length} trade render check(s) FAILED:\n`);
