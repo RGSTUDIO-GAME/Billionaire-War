@@ -37,9 +37,9 @@ check('render: Home offers Trade', readable(home).includes('Trade'));
 check('render: Home no longer says Trade is not built', !home.includes('not built yet'));
 check('render: Inventory links to Trade', readable(inventory).includes('Character trading Open'));
 check('render: Trade screen is mounted', trade.includes('trade-screen'));
-check('render: Trade has category tabs', (trade.match(/role="tablist"/g) ?? []).length === 2);
-check('render: Trade starts on Hero Buy', trade.includes('aria-selected="true"') && tradeWords.includes('Every hero is already owned.'));
-check('render: Trade explains the mining lock', tradeWords.includes('Unstack a mining hero before selling it.'));
+check('render: Trade has Offer and Deliver tabs', (trade.match(/role="tablist"/g) ?? []).length === 2 && tradeWords.includes('Offer Deliver'));
+check('render: Trade starts on custom-price Offer', trade.includes('aria-selected="true"') && tradeWords.includes('Custom price'));
+check('render: Trade explains the mining lock', tradeWords.includes('Mining heroes stay locked until unstacked.'));
 
 if (failures.length > 0) {
   console.error(`\n${failures.length} trade render check(s) FAILED:\n`);

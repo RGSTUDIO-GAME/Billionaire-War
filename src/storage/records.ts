@@ -1,5 +1,6 @@
 import { MAX_ROUNDS } from '../data/balance';
 import type { BattleMode } from '../engine/types';
+import type { TradeOffer } from '../data/trade';
 import type { RewardResult } from '../rewards/types';
 
 /**
@@ -24,6 +25,8 @@ export type PlayerProfile = {
   bwarBalance: number;
   /** The single active mining hero and its immutable 24-hour session snapshot. */
   mining: MiningSession | null;
+  /** Custom-price marketplace offers, including active and closed history. */
+  tradeOffers?: TradeOffer[];
   createdAt: number;
   updatedAt: number;
 };

@@ -279,8 +279,9 @@ the trophy button in the top bar, `WAR` from the big button on Home, and
 - **BWAR Mining** — choose one owned hero with positive hashrate, watch a local
   counter, and claim accrued $BWAR at any time. The counter reaches its full
   target after 24 hours and pauses until claimed.
-- **Trade** — buy and sell heroes in `$GOLD` or local `$BWAR`, or exchange Gold
-  for `$BWAR` at 100 Gold = 1 BWAR. A mining-stacked hero must be unstacked first.
+- **Trade** — create custom-price Hero and Gold offers in `$GOLD` or local `$BWAR`,
+  deliver completed sales, or delist an offer. Active assets stay in escrow and
+  mining-stacked heroes must be unstacked first.
 - **Quest**, **Inventory items**, **Leaderboard** — **COMING SOON** via the
   shared `ComingSoon` component.
 

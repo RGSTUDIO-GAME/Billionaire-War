@@ -761,12 +761,78 @@
   line-height: 1.55;
 }
 
+.trade-section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  margin-top: var(--s-2);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.trade-section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.trade-price-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.trade-price-input {
+  width: 124px;
+}
+
+.trade-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-2);
+}
+
+.trade-form-grid .trade-price-field {
+  display: grid;
+  justify-content: stretch;
+}
+
+.trade-form-grid .trade-amount__input {
+  width: 100%;
+}
+
+.trade-offer-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 88px;
+}
+
+.trade-offer-icon {
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
+}
+
 @media (max-width: 390px) {
   .trade-row {
     grid-template-columns: auto minmax(0, 1fr);
   }
 
   .trade-row > .btn {
+    grid-column: 2;
+    justify-self: end;
+  }
+
+  .trade-offer-actions {
     grid-column: 2;
     justify-self: end;
   }

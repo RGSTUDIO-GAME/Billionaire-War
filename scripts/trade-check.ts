@@ -149,6 +149,114 @@ check(
   check('trade: an unaffordable Gold purchase is refused', insufficient.ok === false);
 }
 
+{
+  const offerWorld = createRuntime(memoryStorage());
+  const base = offerWorld.players.loadOrCreate();
+  const hero = HEROES[0];
+  const firstOffer = offerWorld.tradeService.createHeroOffer(
+    { ...base, heroLevels: { [hero.id]: 5 } },
+    hero.id,
+    777,
+    'bwar',
+    NOW,
+  );
+  check('offer: a player can create a hero offer at a custom price', firstOffer.ok);
+  check(
+    'offer: an active hero is held outside the roster',
+    firstOffer.ok &&
+      !firstOffer.profile.ownedHeroes.includes(hero.id) &&
+      !(hero.id in firstOffer.profile.heroLevels),
+  );
+
+  if (firstOffer.ok) {
+    const offerId = firstOffer.profile.tradeOffers?.[0]?.offerId ?? '';
+    const reloaded = offerWorld.players.load();
+    check(
+      'offer: an active hero offer survives reload',
+      reloaded?.tradeOffers?.some((offer) => offer.offerId === offerId && offer.status === 'active') === true,
+    );
+    const delisted = offerWorld.tradeService.delistOffer(firstOffer.profile, offerId, NOW + 1);
+    check('offer: Delist returns an active hero', delisted.ok && delisted.profile.ownedHeroes.includes(hero.id));
+    check(
+      'offer: Delist restores the hero level and equipment',
+      delisted.ok &&
+        delisted.profile.heroLevels[hero.id] === 5 &&
+        delisted.profile.equippedHeroId === hero.id,
+    );
+    check(
+      'offer: Delisted offers leave the active market',
+      delisted.ok && delisted.profile.tradeOffers?.every((offer) => offer.status !== 'active') === true,
+    );
+
+    if (delisted.ok) {
+      const secondOffer = offerWorld.tradeService.createHeroOffer(
+        delisted.profile,
+        hero.id,
+        900,
+        'gold',
+        NOW + 2,
+      );
+      check('offer: the same hero can be offered again', secondOffer.ok);
+      if (secondOffer.ok) {
+        const secondId = secondOffer.profile.tradeOffers?.[0]?.offerId ?? '';
+        const delivered = offerWorld.tradeService.deliverOffer(secondOffer.profile, secondId, NOW + 3);
+        check('offer: Deliver completes an active offer', delivered.ok);
+        check(
+          'offer: Deliver credits the player custom price',
+          delivered.ok && delivered.profile.goldBalance === base.goldBalance + 900,
+        );
+        check(
+          'offer: a delivered hero remains outside the roster',
+          delivered.ok && !delivered.profile.ownedHeroes.includes(hero.id),
+        );
+        if (delivered.ok) {
+          const closed = offerWorld.tradeService.delistOffer(delivered.profile, secondId, NOW + 4);
+          check('offer: a delivered offer can be delisted', closed.ok);
+          check(
+            'offer: delisting delivery does not return the sold hero',
+            closed.ok &&
+              !closed.profile.ownedHeroes.includes(hero.id) &&
+              closed.profile.tradeOffers?.find((offer) => offer.offerId === secondId)?.status === 'delisted',
+          );
+        }
+      }
+    }
+  }
+}
+
+{
+  const offerWorld = createRuntime(memoryStorage());
+  const base = offerWorld.players.loadOrCreate();
+  const firstOffer = offerWorld.tradeService.createGoldOffer(base, 250, 12.5, NOW);
+  check('offer: Gold can be offered at a custom BWAR price', firstOffer.ok);
+  check(
+    'offer: Gold is escrowed when the offer is created',
+    firstOffer.ok && firstOffer.profile.goldBalance === base.goldBalance - 250,
+  );
+
+  if (firstOffer.ok) {
+    const offerId = firstOffer.profile.tradeOffers?.[0]?.offerId ?? '';
+    const delisted = offerWorld.tradeService.delistOffer(firstOffer.profile, offerId, NOW + 1);
+    check('offer: delisting a Gold offer refunds the escrow', delisted.ok && delisted.profile.goldBalance === base.goldBalance);
+
+    if (delisted.ok) {
+      const secondOffer = offerWorld.tradeService.createGoldOffer(delisted.profile, 250, 12.5, NOW + 2);
+      if (secondOffer.ok) {
+        const secondId = secondOffer.profile.tradeOffers.find((offer) => offer.status === 'active')?.offerId ?? '';
+        const delivered = offerWorld.tradeService.deliverOffer(secondOffer.profile, secondId, NOW + 3);
+        check('offer: delivering a Gold offer credits its custom BWAR price', delivered.ok && close(delivered.profile.bwarBalance, base.bwarBalance + 12.5));
+        if (delivered.ok) {
+          const closed = offerWorld.tradeService.delistOffer(delivered.profile, secondId, NOW + 4);
+          check('offer: delivered Gold can be delisted from history', closed.ok);
+        }
+      }
+    }
+  }
+
+  const invalid = offerWorld.tradeService.createGoldOffer(base, 100, 0, NOW + 5);
+  check('offer: a zero price is refused', invalid.ok === false && invalid.reason === 'INVALID_PRICE');
+}
+
 if (failures.length > 0) {
   console.error(`\n${failures.length} trade check(s) FAILED:\n`);
   for (const failure of failures) console.error(`  x ${failure}`);

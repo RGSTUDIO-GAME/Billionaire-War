@@ -6,6 +6,7 @@ import { getFreeHeroes, getHeroById } from '../data/heroes';
 import { withEquippedHero, withHero } from '../repositories/heroRepository';
 import type { GoldRef } from '../services/goldService';
 import type { MiningSession } from '../storage/records';
+import type { TradeCurrency, TradeOffer } from '../data/trade';
 import { STORAGE_VERSION } from '../storage/keys';
 import type { BattleRecord, GoldTransaction, PlayerProfile } from '../storage/records';
 import type { RewardOutcome } from '../rewards';
@@ -47,6 +48,7 @@ export type PlayerData = {
   equippedHeroId: string;
   /** Hero level per hero id. Missing heroes are Level 0. */
   heroLevels: Record<string, number>;
+  tradeOffers: TradeOffer[];
   /** The single active mining session, or null before the first Equip. */
   mining: MiningSession | null;
   createdAt: number;
@@ -75,6 +77,10 @@ export type PlayerActions = {
   sellHero: (heroId: string, currency: 'gold' | 'bwar') => boolean;
   buyGold: (goldAmount: number) => boolean;
   sellGold: (goldAmount: number) => boolean;
+  createHeroOffer: (heroId: string, price: number, currency: TradeCurrency) => boolean;
+  createGoldOffer: (goldAmount: number, price: number) => boolean;
+  delistOffer: (offerId: string) => boolean;
+  deliverOffer: (offerId: string) => boolean;
   grantHero: (heroId: string) => void;
   /**
    * Buys the next level for a hero with $GOLD. Refused at max level or when
@@ -108,6 +114,7 @@ const blankData = (): PlayerData => ({
   ownedHeroIds: getFreeHeroes().map((hero) => hero.id),
   equippedHeroId: getFreeHeroes()[0]?.id ?? 'durov',
   heroLevels: {},
+  tradeOffers: [],
   mining: null,
   createdAt: 0,
   updatedAt: 0,
@@ -133,6 +140,7 @@ export const createPlayerStore = (app: AppRuntime): PlayerStore => {
       ownedHeroIds: profile.ownedHeroes,
       equippedHeroId: profile.equippedHeroId,
       heroLevels: profile.heroLevels,
+      tradeOffers: profile.tradeOffers ?? [],
       mining: profile.mining,
       createdAt: profile.createdAt,
       updatedAt: profile.updatedAt,
@@ -202,6 +210,45 @@ export const createPlayerStore = (app: AppRuntime): PlayerStore => {
 
     sellGold: (goldAmount) => {
       const outcome = app.tradeService.sellGold(currentProfile(app, get()), goldAmount, Date.now());
+      if (!outcome.ok) return false;
+      commit(set);
+      return true;
+    },
+
+    createHeroOffer: (heroId, price, currency) => {
+      const outcome = app.tradeService.createHeroOffer(
+        currentProfile(app, get()),
+        heroId,
+        price,
+        currency,
+        Date.now(),
+      );
+      if (!outcome.ok) return false;
+      commit(set);
+      return true;
+    },
+
+    createGoldOffer: (goldAmount, price) => {
+      const outcome = app.tradeService.createGoldOffer(
+        currentProfile(app, get()),
+        goldAmount,
+        price,
+        Date.now(),
+      );
+      if (!outcome.ok) return false;
+      commit(set);
+      return true;
+    },
+
+    delistOffer: (offerId) => {
+      const outcome = app.tradeService.delistOffer(currentProfile(app, get()), offerId, Date.now());
+      if (!outcome.ok) return false;
+      commit(set);
+      return true;
+    },
+
+    deliverOffer: (offerId) => {
+      const outcome = app.tradeService.deliverOffer(currentProfile(app, get()), offerId, Date.now());
       if (!outcome.ok) return false;
       commit(set);
       return true;
@@ -307,6 +354,7 @@ const currentProfile = (app: AppRuntime, state: PlayerState): PlayerProfile =>
     equippedHeroId: state.equippedHeroId,
     ownedHeroes: state.ownedHeroIds,
     heroLevels: state.heroLevels,
+    tradeOffers: state.tradeOffers,
     mining: state.mining,
     goldBalance: state.gold,
     bwarBalance: state.bwar,

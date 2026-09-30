@@ -1,6 +1,8 @@
 import { MINING_DURATION_MS, STARTING_BWAR, STARTING_GOLD } from '../data/balance';
 import { clampHeroLevel } from '../data/economy';
 import { getFreeHeroes, getHeroById, HEROES } from '../data/heroes';
+import { isValidTradePrice, MAX_TRADE_OFFERS } from '../data/trade';
+import type { TradeCurrency, TradeOffer, TradeOfferKind, TradeOfferStatus } from '../data/trade';
 import type { StorageAdapter } from '../storage/StorageAdapter';
 import { STORAGE_KEYS, STORAGE_VERSION } from '../storage/keys';
 import type { MiningSession, PlayerProfile } from '../storage/records';
@@ -49,6 +51,84 @@ const knownHeroLevels = (value: unknown): Record<string, number> => {
     levels[heroId] = clampHeroLevel(level);
   }
   return levels;
+};
+
+const knownCurrency = (value: unknown): TradeCurrency | null =>
+  value === 'gold' || value === 'bwar' ? value : null;
+
+const knownOfferKind = (value: unknown): TradeOfferKind | null =>
+  value === 'hero' || value === 'gold' ? value : null;
+
+const knownOfferStatus = (value: unknown): TradeOfferStatus | null =>
+  value === 'active' || value === 'delivered' || value === 'delisted' ? value : null;
+
+const knownOfferId = (value: unknown): string | null =>
+  typeof value === 'string' && /^[A-Za-z0-9_-]{4,100}$/.test(value) ? value : null;
+
+const parseTradeOffers = (value: unknown, ownedHeroes: readonly string[]): TradeOffer[] => {
+  if (!Array.isArray(value)) return [];
+  const offers: TradeOffer[] = [];
+  const activeAssets = new Set<string>();
+
+  for (const raw of value) {
+    if (!isPlainObject(raw) || offers.length >= MAX_TRADE_OFFERS) continue;
+    const offerId = knownOfferId(raw.offerId);
+    const kind = knownOfferKind(raw.kind);
+    const currency = knownCurrency(raw.currency);
+    const storedStatus = knownOfferStatus(raw.status);
+    const price = typeof raw.price === 'number' ? raw.price : Number.NaN;
+    const createdAt = asTimestamp(raw.createdAt, 0);
+    const updatedAt = asTimestamp(raw.updatedAt, createdAt);
+    if (offerId === null || kind === null || currency === null || storedStatus === null) continue;
+    if (createdAt === 0 || !isValidTradePrice(price, currency)) continue;
+
+    let status = storedStatus;
+    let offer: TradeOffer;
+    if (kind === 'hero') {
+      const heroId = typeof raw.heroId === 'string' && getHeroById(raw.heroId) !== undefined ? raw.heroId : null;
+      const heroLevel = typeof raw.heroLevel === 'number' && Number.isInteger(raw.heroLevel)
+        ? clampHeroLevel(raw.heroLevel)
+        : 0;
+      if (heroId === null) continue;
+      const activeKey = `hero:${heroId}`;
+      if (status === 'active' && (ownedHeroes.includes(heroId) || activeAssets.has(activeKey))) {
+        status = 'delisted';
+      }
+      if (status === 'active') activeAssets.add(activeKey);
+      offer = {
+        offerId,
+        kind: 'hero',
+        heroId,
+        heroLevel,
+        wasEquipped: raw.wasEquipped === true,
+        currency,
+        price,
+        status,
+        createdAt,
+        updatedAt,
+      };
+    } else {
+      const goldAmount = typeof raw.goldAmount === 'number' && Number.isInteger(raw.goldAmount) && raw.goldAmount > 0
+        ? raw.goldAmount
+        : null;
+      if (goldAmount === null) continue;
+      const activeKey = 'gold';
+      if (status === 'active' && activeAssets.has(activeKey)) status = 'delisted';
+      if (status === 'active') activeAssets.add(activeKey);
+      offer = {
+        offerId,
+        kind: 'gold',
+        goldAmount,
+        currency,
+        price,
+        status,
+        createdAt,
+        updatedAt,
+      };
+    }
+    offers.push(offer);
+  }
+  return offers;
 };
 
 /** Free heroes are granted only when a profile has no usable roster. */
@@ -100,6 +180,7 @@ export const newProfile = (now: number): PlayerProfile => {
     equippedHeroId: getFreeHeroes()[0]?.id ?? HEROES[0]?.id ?? 'durov',
     ownedHeroes: withFreeHeroes([]),
     heroLevels: {},
+    tradeOffers: [],
     goldBalance: STARTING_GOLD,
     bwarBalance: STARTING_BWAR,
     mining: null,
@@ -161,6 +242,7 @@ export const parseProfile = (
     goldBalance,
     bwarBalance: asNonNegativeNumber(raw.bwarBalance) ?? STARTING_BWAR,
     mining: parseMiningSession(raw.mining, ownedHeroes, now),
+    tradeOffers: parseTradeOffers(raw.tradeOffers, ownedHeroes),
     createdAt,
     updatedAt: asTimestamp(raw.updatedAt, createdAt),
   };
