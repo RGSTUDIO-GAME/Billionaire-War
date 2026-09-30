@@ -10,7 +10,8 @@ export type Screen =
   | 'war-entry'
   | 'battle'
   | 'mining-select'
-  | 'mining';
+  | 'mining'
+  | 'trade';
 
 export type NavParams = Record<string, string>;
 

@@ -35,9 +35,12 @@ export const MiningScreen = ({ onBack, onChangeHero }: MiningScreenProps) => {
   const mining = usePlayerStore((state) => state.mining);
   const heroLevels = usePlayerStore((state) => state.heroLevels);
   const claimMining = usePlayerStore((state) => state.claimMining);
+  const unstackMining = usePlayerStore((state) => state.unstackMining);
   const [now, setNow] = useState(() => Date.now());
   const [confirmChange, setConfirmChange] = useState(false);
+  const [confirmUnstack, setConfirmUnstack] = useState(false);
   const [claimedAmount, setClaimedAmount] = useState<number | null>(null);
+  const [unstackedAmount, setUnstackedAmount] = useState<number | null>(null);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 500);
@@ -51,6 +54,11 @@ export const MiningScreen = ({ onBack, onChangeHero }: MiningScreenProps) => {
       <div className="anim-fade">
         <ScreenHeader title="Mining Token BWAR" subtitle="No hero equipped" onBack={onBack} />
         <Card>
+          {unstackedAmount !== null ? (
+            <div className="mining-claim-note" role="status" style={{ marginBottom: 'var(--s-3)' }}>
+              Unstacked and claimed {formatAmount(unstackedAmount)} $BWAR. The hero can now be sold.
+            </div>
+          ) : null}
           <div className="empty-state">Choose a hero with hashrate to start mining.</div>
           <div style={{ marginTop: 'var(--s-3)' }}>
             <Button variant="gold" block onClick={onChangeHero}>
@@ -72,6 +80,15 @@ export const MiningScreen = ({ onBack, onChangeHero }: MiningScreenProps) => {
       setClaimedAmount(amount);
       setNow(Date.now());
       window.setTimeout(() => setClaimedAmount(null), 5000);
+    }
+  };
+
+  const unstack = () => {
+    const amount = unstackMining();
+    if (amount !== null) {
+      setUnstackedAmount(amount);
+      setClaimedAmount(null);
+      setConfirmUnstack(false);
     }
   };
 
@@ -139,6 +156,9 @@ export const MiningScreen = ({ onBack, onChangeHero }: MiningScreenProps) => {
             <Button variant="ghost" block onClick={() => setConfirmChange(true)}>
               Change hero
             </Button>
+            <Button variant="ghost" block onClick={() => setConfirmUnstack(true)}>
+              Unstack &amp; claim
+            </Button>
           </div>
         </Card>
 
@@ -147,7 +167,8 @@ export const MiningScreen = ({ onBack, onChangeHero }: MiningScreenProps) => {
             <AssetImg assetId={iconIds.clock} alt="" style={{ width: 20, height: 20 }} />
             <p className="muted" style={{ fontSize: 12 }}>
               Claim any time to receive the amount accrued so far. At full, mining pauses until
-              you claim; every claim starts the same hero's next cycle automatically.
+              you claim. Unstack claims the current amount, stops mining and unlocks the hero for
+              Trade.
             </p>
           </div>
         </Card>
@@ -170,6 +191,21 @@ export const MiningScreen = ({ onBack, onChangeHero }: MiningScreenProps) => {
             Continue
           </Button>
           <Button variant="ghost" block onClick={() => setConfirmChange(false)}>
+            Cancel
+          </Button>
+        </div>
+      </Modal>
+
+      <Modal open={confirmUnstack} title="Unstack mining hero?" onClose={() => setConfirmUnstack(false)}>
+        <div className="stack">
+          <p className="muted" style={{ fontSize: 13 }}>
+            This claims {formatAmount(progress.amount)} $BWAR, stops mining and removes the hero
+            from the active stack. The hero can then be sold in Trade.
+          </p>
+          <Button variant="primary" block onClick={unstack}>
+            Unstack &amp; claim
+          </Button>
+          <Button variant="ghost" block onClick={() => setConfirmUnstack(false)}>
             Cancel
           </Button>
         </div>

@@ -10,6 +10,7 @@ import { WarEntryScreen } from '../screens/WarEntryScreen';
 import { BattleScreen } from '../screens/BattleScreen';
 import { MiningScreen } from '../screens/MiningScreen';
 import { MiningSelectScreen } from '../screens/MiningSelectScreen';
+import { TradeScreen } from '../screens/TradeScreen';
 import { prefetchAllAssets } from '../assets/resolve';
 import { initTelegram } from '../services/telegram';
 import { audio } from '../audio/audioManager';
@@ -77,10 +78,16 @@ export const App = () => {
       onBwarPress={openMining}
     >
       {entry.screen === 'home' ? (
-        <HomeScreen onWar={() => navigate('war-entry')} onMining={() => goTo('mining-select')} />
+        <HomeScreen
+          onWar={() => navigate('war-entry')}
+          onMining={() => goTo('mining-select')}
+          onTrade={() => navigate('trade')}
+        />
       ) : null}
       {entry.screen === 'quest' ? <QuestScreen onBack={back} /> : null}
-      {entry.screen === 'inventory' ? <InventoryScreen onBack={back} onBwarPress={openMining} /> : null}
+      {entry.screen === 'inventory' ? (
+        <InventoryScreen onBack={back} onBwarPress={openMining} onTrade={() => navigate('trade')} />
+      ) : null}
       {entry.screen === 'hero' ? <HeroScreen onBack={back} /> : null}
       {entry.screen === 'settings' ? <SettingsScreen onBack={back} /> : null}
       {entry.screen === 'leaderboard' ? <LeaderboardScreen onBack={back} /> : null}
@@ -93,6 +100,7 @@ export const App = () => {
       {entry.screen === 'mining' ? (
         <MiningScreen onBack={back} onChangeHero={() => navigate('mining-select')} />
       ) : null}
+      {entry.screen === 'trade' ? <TradeScreen onBack={back} /> : null}
     </AppShell>
   );
 };

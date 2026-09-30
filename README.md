@@ -99,10 +99,11 @@ src/
     goldRepository.ts     The append-only $GOLD ledger
     battleRepository.ts   The archive of finished battles
     heroRepository.ts     Ownership and equip rules, over a profile
-  services/             Game rules over the data: gold, battle identity, reward
-    goldService.ts        The only place a balance ever moves
+  services/             Game rules over the data: gold, mining, trade, battle
+    goldService.ts        The only place $GOLD ever moves
     battleService.ts      Battle ids and the battle archive
     rewardService.ts      BATTLE_RESULT -> $GOLD -> ledger -> history
+    tradeService.ts       Local hero ownership and Gold <-> BWAR exchange
     telegram.ts           The Telegram bridge
   state/                Zustand stores: player, ui/navigation, battle runtime
     runtime.ts           The one place the data layer is wired together
@@ -217,8 +218,8 @@ BATTLE_RESULT → RewardService → amount from config → GoldService → ledge
 
 The Battle Engine cannot move a balance — it knows nothing about rewards, and
 `npm run verify` fails if any file under `src/engine/` so much as mentions one.
-$BWAR wallets, chains, transfers and trade are deliberately absent; Mining only
-moves a local balance.
+$BWAR wallets, chains and on-chain transfers are deliberately absent. Mining and
+the local Trade menu only move balances saved on the device.
 
 ## The data layer
 
@@ -233,7 +234,7 @@ UI → store → service → repository → StorageAdapter → localStorage
 | --- | --- |
 | `storage/` | the only code that knows `localStorage` exists; it degrades to memory when storage is blocked, and a failed write is reported rather than thrown |
 | `repositories/` | one per record, and each one validates what it reads — junk, truncated JSON and hand-edited values are repaired or dropped, never fatal |
-| `services/` | the game rules over that data; `GoldService` is the only place a balance is ever computed or moved |
+| `services/` | the game rules over that data; `GoldService` is the only place `$GOLD` is moved, while `TradeService` moves the local `$BWAR` balance and hero ownership |
 | `state/` | mirrors the save so the UI can read it synchronously; a store action persists **before** the state changes |
 
 What that buys, and what `data-check` asserts:
@@ -267,7 +268,7 @@ production builds.
 
 ## Screens
 
-`HOME` · `QUEST` · `HERO` · `INVENTORY` · `SETTINGS`, plus `LEADERBOARD` from
+`HOME` · `QUEST` · `HERO` · `INVENTORY` · `TRADE` · `SETTINGS`, plus `LEADERBOARD` from
 the trophy button in the top bar, `WAR` from the big button on Home, and
 `MINING` from the BWAR Mining button.
 
@@ -278,8 +279,10 @@ the trophy button in the top bar, `WAR` from the big button on Home, and
 - **BWAR Mining** — choose one owned hero with positive hashrate, watch a local
   counter, and claim accrued $BWAR at any time. The counter reaches its full
   target after 24 hours and pauses until claimed.
-- **Quest**, **Inventory items**, **Leaderboard**, **Trade** — **COMING SOON**
-  via the shared `ComingSoon` component.
+- **Trade** — buy and sell heroes in `$GOLD` or local `$BWAR`, or exchange Gold
+  for `$BWAR` at 100 Gold = 1 BWAR. A mining-stacked hero must be unstacked first.
+- **Quest**, **Inventory items**, **Leaderboard** — **COMING SOON** via the
+  shared `ComingSoon` component.
 
 `$GOLD` is internal game currency. `$BWAR` is earned locally through Mining —
 there are no on-chain token transactions in this build.

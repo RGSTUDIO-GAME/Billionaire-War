@@ -6,6 +6,7 @@ import { GoldService } from '../services/goldService';
 import { BattleService } from '../services/battleService';
 import { RewardService } from '../services/rewardService';
 import { MiningService } from '../services/miningService';
+import { TradeService } from '../services/tradeService';
 import type { StorageAdapter } from '../storage/StorageAdapter';
 
 /**
@@ -27,6 +28,7 @@ export type AppRuntime = {
   battleService: BattleService;
   rewardService: RewardService;
   miningService: MiningService;
+  tradeService: TradeService;
 };
 
 export const createRuntime = (storage: StorageAdapter): AppRuntime => {
@@ -36,6 +38,7 @@ export const createRuntime = (storage: StorageAdapter): AppRuntime => {
   const goldService = new GoldService(players, gold);
   const battleService = new BattleService(battles);
   const miningService = new MiningService(players);
+  const tradeService = new TradeService(players, goldService);
 
   return {
     storage,
@@ -46,6 +49,7 @@ export const createRuntime = (storage: StorageAdapter): AppRuntime => {
     battleService,
     rewardService: new RewardService(players, goldService, battleService),
     miningService,
+    tradeService,
   };
 };
 

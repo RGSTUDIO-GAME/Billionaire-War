@@ -20,6 +20,10 @@ export type MiningClaimOutcome =
   | { ok: true; profile: PlayerProfile; amount: number }
   | { ok: false; reason: 'NO_SESSION' | 'NOT_READY' | 'INVALID_REWARD' | 'SAVE_FAILED'; profile: PlayerProfile };
 
+export type MiningUnstackOutcome =
+  | { ok: true; profile: PlayerProfile; amount: number }
+  | { ok: false; reason: 'NO_SESSION' | 'INVALID_REWARD' | 'SAVE_FAILED'; profile: PlayerProfile };
+
 /** Never lets an elapsed session display more than its configured target. */
 export const miningProgress = (session: MiningSession, now: number): MiningProgress => {
   const rawElapsed = Number.isFinite(now - session.startedAt) ? now - session.startedAt : 0;
@@ -89,5 +93,21 @@ export class MiningService {
     };
     if (!this.players.save(next)) return { ok: false, reason: 'SAVE_FAILED', profile };
     return { ok: true, profile: next, amount: progress.amount };
+  }
+
+  /** Settles whatever is accrued, removes the active hero and frees it for Trade. */
+  unstack(profile: PlayerProfile, now: number): MiningUnstackOutcome {
+    const session = profile.mining;
+    if (session === null) return { ok: false, reason: 'NO_SESSION', profile };
+
+    const amount = miningProgress(session, now).amount;
+    const balanceAfter = profile.bwarBalance + amount;
+    if (!Number.isFinite(balanceAfter) || balanceAfter < 0) {
+      return { ok: false, reason: 'INVALID_REWARD', profile };
+    }
+
+    const next: PlayerProfile = { ...profile, bwarBalance: balanceAfter, mining: null };
+    if (!this.players.save(next)) return { ok: false, reason: 'SAVE_FAILED', profile };
+    return { ok: true, profile: next, amount };
   }
 }

@@ -13,7 +13,7 @@ export const ELONMUSK: Hero = {
   hp: 1000,
   rarity: 'legendary',
   // TEST PHASE: free so the owner can equip it now. Flip to event-only
-  // (free: false, priceInGold: null) at launch - heroes are never sold.
+  // (free: false, priceInGold: null) at launch if Trade should stop granting it.
   free: true,
   priceInGold: null,
   skills: [],

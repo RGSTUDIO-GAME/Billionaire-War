@@ -1,14 +1,14 @@
 import { iconIds } from '../assets/manifest';
 import { usePlayerStore } from '../state/playerStore';
-import { Badge } from '../components/ui/Badge';
+import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { ComingSoon } from '../components/ui/ComingSoon';
 import { CurrencyPill } from '../components/ui/CurrencyPill';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 
-type InventoryScreenProps = { onBack: () => void; onBwarPress: () => void };
+type InventoryScreenProps = { onBack: () => void; onBwarPress: () => void; onTrade: () => void };
 
-export const InventoryScreen = ({ onBack, onBwarPress }: InventoryScreenProps) => {
+export const InventoryScreen = ({ onBack, onBwarPress, onTrade }: InventoryScreenProps) => {
   const gold = usePlayerStore((state) => state.gold);
   const bwar = usePlayerStore((state) => state.bwar);
 
@@ -49,7 +49,9 @@ export const InventoryScreen = ({ onBack, onBwarPress }: InventoryScreenProps) =
             <span className="muted" style={{ fontSize: 12 }}>
               Character trading
             </span>
-            <Badge tone="muted">Coming soon</Badge>
+            <Button size="sm" variant="ghost" onClick={onTrade}>
+              Open
+            </Button>
           </div>
         </Card>
       </div>

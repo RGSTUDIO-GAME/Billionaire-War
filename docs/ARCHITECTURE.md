@@ -234,10 +234,14 @@ remembered in memory.
 
 ### `services/` — the rules
 
-`GoldService` is the only place a balance is computed or moved. It refuses a
+`GoldService` is the only place a `$GOLD` balance is computed or moved. It refuses a
 debit larger than the balance outright rather than clamping it, because a
 clamped debit looks like a purchase that cost less than it should. Every
 movement writes through to storage before the caller sees the new profile.
+
+`TradeService` owns local hero and Gold marketplace rules. It updates `$BWAR`
+and hero ownership on the same profile, refuses a mining-stacked or final hero
+sale, and performs no wallet or on-chain transaction.
 
 `BattleService` mints battle ids and owns the archive. The ids carry a
 per-session token, so a battle started after a reload can never collide with one

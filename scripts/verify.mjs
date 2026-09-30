@@ -7,6 +7,8 @@
  *   scripts/render-check.ts - the battle screen, rendered for real
  *   scripts/reward-check.ts - $GOLD rewards, ledger and anti-duplicate rules
  *   scripts/data-check.ts   - the data layer: storage, repositories, services
+ *   scripts/trade-check.ts  - local hero and Gold marketplace rules
+ *   scripts/trade-render-check.tsx - the marketplace UI entry points
  */
 import { build } from 'esbuild';
 import { existsSync, mkdtempSync, rmSync } from 'node:fs';
@@ -49,6 +51,8 @@ const entries = [
   'asset-check',
   'render-check',
   'mining-check',
+  'trade-check',
+  'trade-render-check',
 ];
 
 /**

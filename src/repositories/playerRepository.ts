@@ -51,7 +51,7 @@ const knownHeroLevels = (value: unknown): Record<string, number> => {
   return levels;
 };
 
-/** Free heroes are always available, so a new player can always fight. */
+/** Free heroes are granted only when a profile has no usable roster. */
 const withFreeHeroes = (ids: string[]): string[] => {
   const free = getFreeHeroes().map((hero) => hero.id);
   return [...new Set([...ids, ...free])];
@@ -90,7 +90,7 @@ const mintPlayerId = (): string => {
 
 export const usernameFor = (playerId: string): string => `PLAYER-${playerId.replace(/^player_/, '').toUpperCase().slice(0, 6)}`;
 
-/** A brand new profile. DUROV is free, so it is owned from the first second. */
+/** A brand new profile with the initial free-hero roster. */
 export const newProfile = (now: number): PlayerProfile => {
   const playerId = mintPlayerId();
   return {
@@ -124,13 +124,17 @@ export const parseProfile = (
 
   const { now, rebuildGold } = options;
   const playerId = typeof raw.playerId === 'string' && PLAYER_ID_PATTERN.test(raw.playerId) ? raw.playerId : null;
-  const ownedHeroes = withFreeHeroes(knownHeroIds(raw.ownedHeroes));
+  const storedOwnedHeroes = knownHeroIds(raw.ownedHeroes);
+  const ownedHeroes =
+    Array.isArray(raw.ownedHeroes) && storedOwnedHeroes.length > 0
+      ? storedOwnedHeroes
+      : withFreeHeroes([]);
 
   const equipped = typeof raw.equippedHeroId === 'string' ? raw.equippedHeroId : '';
   const equippedHeroId =
     getHeroById(equipped) !== undefined && ownedHeroes.includes(equipped)
       ? equipped
-      : (getFreeHeroes()[0]?.id ?? ownedHeroes[0] ?? 'durov');
+      : (ownedHeroes[0] ?? getFreeHeroes()[0]?.id ?? HEROES[0]?.id ?? 'durov');
 
   const storedGold = asGold(raw.goldBalance);
   const rebuilt = playerId && rebuildGold ? rebuildGold(playerId) : null;

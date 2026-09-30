@@ -41,7 +41,7 @@ export type PlayerData = {
   username: string;
   /** $GOLD balance. Never negative. */
   gold: number;
-  /** Locally earned BWAR, credited by a completed mining claim. */
+  /** Local BWAR moved by Mining claims and Trade; no chain or wallet exists. */
   bwar: number;
   ownedHeroIds: string[];
   equippedHeroId: string;
@@ -69,6 +69,12 @@ export type PlayerActions = {
   equipMiningHero: (heroId: string) => boolean;
   /** Credits a full session and starts its next cycle. Returns the amount paid. */
   claimMining: () => number;
+  /** Claims accrued BWAR and removes the active mining hero. */
+  unstackMining: () => number | null;
+  buyHero: (heroId: string, currency: 'gold' | 'bwar') => boolean;
+  sellHero: (heroId: string, currency: 'gold' | 'bwar') => boolean;
+  buyGold: (goldAmount: number) => boolean;
+  sellGold: (goldAmount: number) => boolean;
   grantHero: (heroId: string) => void;
   /**
    * Buys the next level for a hero with $GOLD. Refused at max level or when
@@ -164,6 +170,41 @@ export const createPlayerStore = (app: AppRuntime): PlayerStore => {
       if (!outcome.ok) return 0;
       commit(set);
       return outcome.amount;
+    },
+
+    unstackMining: () => {
+      const outcome = app.miningService.unstack(currentProfile(app, get()), Date.now());
+      if (!outcome.ok) return null;
+      commit(set);
+      return outcome.amount;
+    },
+
+    buyHero: (heroId, currency) => {
+      const outcome = app.tradeService.buyHero(currentProfile(app, get()), heroId, currency, Date.now());
+      if (!outcome.ok) return false;
+      commit(set);
+      return true;
+    },
+
+    sellHero: (heroId, currency) => {
+      const outcome = app.tradeService.sellHero(currentProfile(app, get()), heroId, currency, Date.now());
+      if (!outcome.ok) return false;
+      commit(set);
+      return true;
+    },
+
+    buyGold: (goldAmount) => {
+      const outcome = app.tradeService.buyGold(currentProfile(app, get()), goldAmount, Date.now());
+      if (!outcome.ok) return false;
+      commit(set);
+      return true;
+    },
+
+    sellGold: (goldAmount) => {
+      const outcome = app.tradeService.sellGold(currentProfile(app, get()), goldAmount, Date.now());
+      if (!outcome.ok) return false;
+      commit(set);
+      return true;
     },
 
     grantHero: (heroId) => {

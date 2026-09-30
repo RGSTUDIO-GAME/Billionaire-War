@@ -20,7 +20,7 @@ export type PlayerProfile = {
   /** Hero level per hero id. Missing heroes are Level 0. */
   heroLevels: Record<string, number>;
   goldBalance: number;
-  /** Locally earned BWAR balance. Mining claims are the only current source. */
+  /** Local BWAR balance moved by Mining and Trade; no chain or wallet exists. */
   bwarBalance: number;
   /** The single active mining hero and its immutable 24-hour session snapshot. */
   mining: MiningSession | null;

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { AssetImg } from '../assets/AssetImg';
 import { RarityBadge } from '../components/hero/RarityBadge';
 import { backgroundIds, iconIds, uiIds } from '../assets/manifest';
@@ -11,18 +10,16 @@ import { SceneCard } from '../components/ui/SceneCard';
 import { heroPortraitIds } from '../assets/manifest';
 import { Icon } from '../components/ui/Icon';
 import { StatBar } from '../components/ui/StatBar';
-import { ComingSoon } from '../components/ui/ComingSoon';
-import { Modal } from '../components/ui/Modal';
 
 type HomeScreenProps = {
   onWar: () => void;
   onMining: () => void;
+  onTrade: () => void;
 };
 
-export const HomeScreen = ({ onWar, onMining }: HomeScreenProps) => {
+export const HomeScreen = ({ onWar, onMining, onTrade }: HomeScreenProps) => {
   const equippedHeroId = usePlayerStore((state) => state.equippedHeroId);
   const hero = getHeroById(equippedHeroId);
-  const [tradeOpen, setTradeOpen] = useState(false);
 
   if (!hero) return null;
 
@@ -60,26 +57,13 @@ export const HomeScreen = ({ onWar, onMining }: HomeScreenProps) => {
       </Button>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--s-3)' }}>
-        <Button variant="ghost" icon={iconIds.coin} onClick={() => setTradeOpen(true)}>
+        <Button variant="ghost" icon={iconIds.coin} onClick={onTrade}>
           Trade
         </Button>
         <Button variant="ghost" icon={iconIds.bwar} onClick={onMining}>
           BWAR Mining
         </Button>
       </div>
-
-      <Modal
-        open={tradeOpen}
-        title="Trade"
-        onClose={() => setTradeOpen(false)}
-      >
-        <ComingSoon
-          icon={iconIds.coin}
-          title="Trade"
-          description="Trading heroes and items is not built yet. The marketplace opens in a later season."
-          onBack={() => setTradeOpen(false)}
-        />
-      </Modal>
 
       <Card flat>
         <div className="row" style={{ gap: 'var(--s-3)' }}>
@@ -104,8 +88,8 @@ export const HomeScreen = ({ onWar, onMining }: HomeScreenProps) => {
         <div className="row" style={{ gap: 'var(--s-2)', fontSize: 12 }}>
           <AssetImg assetId={iconIds.bwar} alt="" style={{ width: 18, height: 18 }} />
           <span className="muted">
-            BWAR Mining is live locally. Trading and Web3 features are marked COMING SOON. No
-            wallet, no chain.
+            BWAR Mining and local Trade are live. Web3 features remain COMING SOON. No wallet,
+            no chain.
           </span>
         </div>
       </Card>
