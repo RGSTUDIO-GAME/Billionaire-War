@@ -1,8 +1,10 @@
+import { heroCopiesOf, heroSerialOf, heroStarsOf } from '../data/fusion';
 import { getHeroById } from '../data/heroes';
 import { goldItemPrice, heroTradePrice, isValidTradePrice, MAX_TRADE_OFFERS } from '../data/trade';
 import type { TradeCurrency, TradeOffer } from '../data/trade';
 import type { PlayerRepository } from '../repositories/playerRepository';
 import type { PlayerProfile } from '../storage/records';
+import { withCopyGranted } from './fusionService';
 import type { GoldService } from './goldService';
 
 export type TradeFailure =
@@ -82,12 +84,18 @@ export class TradeService {
     const remainingHeroes = profile.ownedHeroes.filter((ownedHeroId) => ownedHeroId !== heroId);
     if (remainingHeroes.length === 0) return insufficient(profile, 'LAST_HERO');
     const heroLevel = profile.heroLevels[heroId] ?? 0;
+    const heroStars = heroStarsOf(profile.heroStars, heroId);
+    const heroCopies = heroCopiesOf(profile.heroCopies, heroId);
+    const heroSerial = heroSerialOf(profile.heroSerials, heroId);
     const offer: TradeOffer = {
       offerId: createOfferId(now),
       sellerId: profile.playerId,
       kind: 'hero',
       heroId,
       heroLevel,
+      heroStars,
+      heroCopies,
+      heroSerial,
       wasEquipped: profile.equippedHeroId === heroId,
       currency,
       price,
@@ -100,6 +108,15 @@ export class TradeService {
       ownedHeroes: remainingHeroes,
       heroLevels: Object.fromEntries(
         Object.entries(profile.heroLevels).filter(([ownedHeroId]) => ownedHeroId !== heroId),
+      ),
+      heroStars: Object.fromEntries(
+        Object.entries(profile.heroStars ?? {}).filter(([starredHeroId]) => starredHeroId !== heroId),
+      ),
+      heroCopies: Object.fromEntries(
+        Object.entries(profile.heroCopies ?? {}).filter(([copiedHeroId]) => copiedHeroId !== heroId),
+      ),
+      heroSerials: Object.fromEntries(
+        Object.entries(profile.heroSerials ?? {}).filter(([serialHeroId]) => serialHeroId !== heroId),
       ),
       equippedHeroId: profile.equippedHeroId === heroId ? remainingHeroes[0] : profile.equippedHeroId,
       tradeOffers: [offer, ...offers],
@@ -153,10 +170,17 @@ export class TradeService {
       const owned = profile.ownedHeroes.includes(offer.heroId)
         ? profile.ownedHeroes
         : [...profile.ownedHeroes, offer.heroId];
+      const restoredCopies = Array.isArray(offer.heroCopies) ? offer.heroCopies : [];
       const next: PlayerProfile = {
         ...profile,
         ownedHeroes: owned,
         heroLevels: { ...profile.heroLevels, [offer.heroId]: offer.heroLevel },
+        heroStars: { ...(profile.heroStars ?? {}), [offer.heroId]: offer.heroStars },
+        heroCopies: { ...(profile.heroCopies ?? {}), [offer.heroId]: restoredCopies },
+        heroSerials:
+          typeof offer.heroSerial === 'number'
+            ? { ...(profile.heroSerials ?? {}), [offer.heroId]: offer.heroSerial }
+            : profile.heroSerials,
         equippedHeroId: offer.wasEquipped ? offer.heroId : profile.equippedHeroId,
         tradeOffers: closedOffers,
       };
@@ -190,17 +214,25 @@ export class TradeService {
     const deliveredOffer: TradeOffer = { ...offer, status: 'delivered', updatedAt: now };
     const deliveredOffers = offers.map((candidate) => candidate.offerId === offerId ? deliveredOffer : candidate);
 
+    const copyBase =
+      offer.kind === 'hero' && profile.ownedHeroes.includes(offer.heroId)
+        ? withCopyGranted(profile, offer.heroId)
+        : profile;
     const receivingProfile: PlayerProfile = {
-      ...profile,
+      ...copyBase,
       tradeOffers: deliveredOffers,
       ...(offer.kind === 'hero'
         ? {
-            ownedHeroes: profile.ownedHeroes.includes(offer.heroId)
-              ? profile.ownedHeroes
-              : [...profile.ownedHeroes, offer.heroId],
+            ownedHeroes: copyBase.ownedHeroes.includes(offer.heroId)
+              ? copyBase.ownedHeroes
+              : [...copyBase.ownedHeroes, offer.heroId],
             heroLevels: {
-              ...profile.heroLevels,
-              [offer.heroId]: Math.max(profile.heroLevels[offer.heroId] ?? 0, offer.heroLevel),
+              ...copyBase.heroLevels,
+              [offer.heroId]: Math.max(copyBase.heroLevels[offer.heroId] ?? 0, offer.heroLevel),
+            },
+            heroStars: {
+              ...(copyBase.heroStars ?? {}),
+              [offer.heroId]: Math.max(heroStarsOf(copyBase.heroStars, offer.heroId), offer.heroStars),
             },
           }
         : {}),
@@ -229,7 +261,9 @@ export class TradeService {
   buyHero(profile: PlayerProfile, heroId: string, currency: TradeCurrency, now: number): TradeOutcome {
     const hero = getHeroById(heroId);
     if (hero === undefined) return insufficient(profile, 'INVALID_HERO');
-    if (profile.ownedHeroes.includes(heroId)) return insufficient(profile, 'ALREADY_OWNED');
+    const duplicateBase = profile.ownedHeroes.includes(heroId)
+      ? withCopyGranted(profile, heroId)
+      : profile;
     if (this.offers(profile).some(
       (offer) => offer.status === 'active' && offer.kind === 'hero' && offer.heroId === heroId,
     )) {
@@ -237,7 +271,9 @@ export class TradeService {
     }
 
     const price = heroTradePrice(hero, 0, currency, 'buy');
-    const withHero: PlayerProfile = { ...profile, ownedHeroes: [...profile.ownedHeroes, heroId] };
+    const withHero: PlayerProfile = duplicateBase.ownedHeroes.includes(heroId)
+      ? duplicateBase
+      : { ...duplicateBase, ownedHeroes: [...duplicateBase.ownedHeroes, heroId] };
 
     if (currency === 'gold') {
       const paid = this.goldService.debit(withHero, price, { kind: 'SPEND' }, now);
@@ -264,6 +300,15 @@ export class TradeService {
       ownedHeroes: remainingHeroes,
       heroLevels: Object.fromEntries(
         Object.entries(profile.heroLevels).filter(([ownedHeroId]) => ownedHeroId !== heroId),
+      ),
+      heroStars: Object.fromEntries(
+        Object.entries(profile.heroStars ?? {}).filter(([starredHeroId]) => starredHeroId !== heroId),
+      ),
+      heroCopies: Object.fromEntries(
+        Object.entries(profile.heroCopies ?? {}).filter(([copiedHeroId]) => copiedHeroId !== heroId),
+      ),
+      heroSerials: Object.fromEntries(
+        Object.entries(profile.heroSerials ?? {}).filter(([serialHeroId]) => serialHeroId !== heroId),
       ),
       equippedHeroId:
         profile.equippedHeroId === heroId

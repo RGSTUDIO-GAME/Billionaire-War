@@ -1,5 +1,6 @@
 import { MINING_DURATION_MS, STARTING_BWAR, STARTING_GOLD } from '../data/balance';
 import { clampHeroLevel } from '../data/economy';
+import { clampStars } from '../data/fusion';
 import { getFreeHeroes, getHeroById, HEROES } from '../data/heroes';
 import { isValidTradePrice, MAX_TRADE_OFFERS } from '../data/trade';
 import type { TradeCurrency, TradeOffer, TradeOfferKind, TradeOfferStatus } from '../data/trade';
@@ -39,6 +40,75 @@ const asTimestamp = (value: unknown, fallback: number): number =>
 const knownHeroIds = (value: unknown): string[] => {
   const ids = Array.isArray(value) ? value.filter((id): id is string => typeof id === 'string') : [];
   return [...new Set(ids.filter((id) => getHeroById(id) !== undefined))];
+};
+
+/** Star tiers that survived sanitising: known heroes only, clamped to 1..6. */
+const knownHeroStars = (value: unknown): Record<string, number> => {
+  if (!isPlainObject(value)) return {};
+  const stars: Record<string, number> = {};
+  for (const [heroId, tier] of Object.entries(value)) {
+    if (getHeroById(heroId) === undefined) continue;
+    if (typeof tier !== 'number' || !Number.isInteger(tier)) continue;
+    stars[heroId] = clampStars(tier);
+  }
+  return stars;
+};
+
+/** Spare-copy serials that survived sanitising: known heroes, positive ids. */
+const knownHeroCopies = (value: unknown): Record<string, number[]> => {
+  if (!isPlainObject(value)) return {};
+  const copies: Record<string, number[]> = {};
+  for (const [heroId, serials] of Object.entries(value)) {
+    if (getHeroById(heroId) === undefined || !Array.isArray(serials)) continue;
+    const ids = [...new Set(serials.filter(
+      (serial): serial is number => typeof serial === 'number' && Number.isInteger(serial) && serial > 0,
+    ))].slice(0, 200_000);
+    if (ids.length > 0) copies[heroId] = ids;
+  }
+  return copies;
+};
+
+/** Roster serials that survived sanitising: owned known heroes, positive ids. */
+const knownHeroSerials = (value: unknown, ownedHeroes: readonly string[]): Record<string, number> => {
+  if (!isPlainObject(value)) return {};
+  const serials: Record<string, number> = {};
+  for (const [heroId, serial] of Object.entries(value)) {
+    if (!ownedHeroes.includes(heroId) || getHeroById(heroId) === undefined) continue;
+    if (typeof serial !== 'number' || !Number.isInteger(serial) || serial <= 0) continue;
+    serials[heroId] = serial;
+  }
+  return serials;
+};
+
+/** Every owned hero instance carries its own unique serial number. */
+export const ensureHeroIdentity = (profile: PlayerProfile): PlayerProfile => {
+  const serials: Record<string, number> = { ...(profile.heroSerials ?? {}) };
+  const used = new Set<number>([
+    ...Object.values(serials),
+    ...Object.values(profile.heroCopies ?? {}).flat(),
+  ]);
+  let counter = typeof profile.heroSerialCounter === 'number' && Number.isInteger(profile.heroSerialCounter)
+    ? Math.max(profile.heroSerialCounter, 0)
+    : 0;
+  for (const usedSerial of used) {
+    if (usedSerial > counter) counter = usedSerial;
+  }
+  let changed = false;
+  for (const heroId of profile.ownedHeroes) {
+    if (getHeroById(heroId) === undefined) continue;
+    const current = serials[heroId];
+    if (typeof current === 'number' && Number.isInteger(current) && current > 0 && !used.has(current)) {
+      used.add(current);
+      if (current > counter) counter = current;
+      continue;
+    }
+    counter += 1;
+    serials[heroId] = counter;
+    used.add(counter);
+    changed = true;
+  }
+  if (!changed && counter === (profile.heroSerialCounter ?? 0)) return profile;
+  return { ...profile, heroSerials: serials, heroSerialCounter: counter };
 };
 
 /** Levels that survived sanitising: known heroes only, clamped to 0..MAX. */
@@ -96,18 +166,31 @@ const parseTradeOffers = (
       const heroLevel = typeof raw.heroLevel === 'number' && Number.isInteger(raw.heroLevel)
         ? clampHeroLevel(raw.heroLevel)
         : 0;
+      const heroStars = typeof raw.heroStars === 'number' && Number.isInteger(raw.heroStars)
+        ? clampStars(raw.heroStars)
+        : 1;
       if (heroId === null) continue;
       const activeKey = `hero:${heroId}`;
       if (status === 'active' && (ownedHeroes.includes(heroId) || activeAssets.has(activeKey))) {
         status = 'delisted';
       }
       if (status === 'active') activeAssets.add(activeKey);
+      const heroCopies = Array.isArray(raw.heroCopies)
+        ? raw.heroCopies.filter((serial): serial is number => typeof serial === 'number' && Number.isInteger(serial) && serial > 0)
+        : [];
+      const heroSerial =
+        typeof raw.heroSerial === 'number' && Number.isInteger(raw.heroSerial) && raw.heroSerial > 0
+          ? raw.heroSerial
+          : null;
       offer = {
         offerId,
         sellerId,
         kind: 'hero',
         heroId,
         heroLevel,
+        heroStars,
+        heroCopies,
+        heroSerial,
         wasEquipped: raw.wasEquipped === true,
         currency,
         price,
@@ -189,6 +272,10 @@ export const newProfile = (now: number): PlayerProfile => {
     equippedHeroId: getFreeHeroes()[0]?.id ?? HEROES[0]?.id ?? 'durov',
     ownedHeroes: withFreeHeroes([]),
     heroLevels: {},
+    heroStars: {},
+    heroCopies: {},
+    heroSerials: Object.fromEntries(withFreeHeroes([]).map((heroId, index) => [heroId, index + 1])),
+    heroSerialCounter: withFreeHeroes([]).length,
     tradeOffers: [],
     goldBalance: STARTING_GOLD,
     bwarBalance: STARTING_BWAR,
@@ -238,7 +325,7 @@ export const parseProfile = (
   // player, so a new identity is minted and the rest of the data is kept.
   const resolvedId = playerId ?? mintPlayerId();
 
-  return {
+  return ensureHeroIdentity({
     version: STORAGE_VERSION,
     playerId: resolvedId,
     username:
@@ -248,13 +335,19 @@ export const parseProfile = (
     equippedHeroId,
     ownedHeroes,
     heroLevels: knownHeroLevels(raw.heroLevels),
+    heroStars: knownHeroStars(raw.heroStars),
+    heroCopies: knownHeroCopies(raw.heroCopies),
+    heroSerials: knownHeroSerials(raw.heroSerials, ownedHeroes),
+    heroSerialCounter: typeof raw.heroSerialCounter === 'number' && Number.isInteger(raw.heroSerialCounter) && raw.heroSerialCounter >= 0
+      ? raw.heroSerialCounter
+      : 0,
     goldBalance,
     bwarBalance: asNonNegativeNumber(raw.bwarBalance) ?? STARTING_BWAR,
     mining: parseMiningSession(raw.mining, ownedHeroes, now),
     tradeOffers: parseTradeOffers(raw.tradeOffers, ownedHeroes, resolvedId),
     createdAt,
     updatedAt: asTimestamp(raw.updatedAt, createdAt),
-  };
+  });
 };
 
 export class PlayerRepository {
@@ -286,7 +379,8 @@ export class PlayerRepository {
 
   save(profile: PlayerProfile): boolean {
     try {
-      return this.storage.write(STORAGE_KEYS.player, JSON.stringify({ ...profile, updatedAt: Date.now() }));
+      const identified = ensureHeroIdentity(profile);
+      return this.storage.write(STORAGE_KEYS.player, JSON.stringify({ ...identified, updatedAt: Date.now() }));
     } catch {
       return false;
     }

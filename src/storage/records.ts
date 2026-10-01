@@ -20,6 +20,14 @@ export type PlayerProfile = {
   ownedHeroes: string[];
   /** Hero level per hero id. Missing heroes are Level 0. */
   heroLevels: Record<string, number>;
+  /** Star tier per hero id (1-6). Missing heroes are 1 star. */
+  heroStars?: Record<string, number>;
+  /** Spare same-hero copies per hero id, as unique serial numbers. Fusion fuel. */
+  heroCopies?: Record<string, number[]>;
+  /** Unique serial number of the roster (main) instance per owned hero id. */
+  heroSerials?: Record<string, number>;
+  /** Monotonic counter that mints hero serial numbers. */
+  heroSerialCounter?: number;
   goldBalance: number;
   /** Local BWAR balance moved by Mining and Trade; no chain or wallet exists. */
   bwarBalance: number;

@@ -19,6 +19,9 @@ export type HeroTradeOffer = TradeOfferBase & {
   kind: 'hero';
   heroId: string;
   heroLevel: number;
+  heroStars: number;
+  heroCopies?: number[];
+  heroSerial?: number | null;
   wasEquipped: boolean;
 };
 

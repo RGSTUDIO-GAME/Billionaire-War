@@ -8,6 +8,8 @@
  *   scripts/reward-check.ts - $GOLD rewards, ledger and anti-duplicate rules
  *   scripts/data-check.ts   - the data layer: storage, repositories, services
  *   scripts/trade-check.ts  - local hero and Gold marketplace rules
+ *   scripts/fusion-check.ts - star tiers, serials, copies and fusion costs
+ *   scripts/fusion-render-check.tsx - the Hero screen star and Fusion UI
  *   scripts/trade-render-check.tsx - the marketplace UI entry points
  */
 import { build } from 'esbuild';
@@ -53,6 +55,8 @@ const entries = [
   'mining-check',
   'trade-check',
   'trade-render-check',
+  'fusion-check',
+  'fusion-render-check',
 ];
 
 /**

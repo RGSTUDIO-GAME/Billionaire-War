@@ -5,6 +5,7 @@ import { BattleRepository } from '../repositories/battleRepository';
 import { GoldService } from '../services/goldService';
 import { BattleService } from '../services/battleService';
 import { RewardService } from '../services/rewardService';
+import { FusionService } from '../services/fusionService';
 import { MiningService } from '../services/miningService';
 import { TradeService } from '../services/tradeService';
 import type { StorageAdapter } from '../storage/StorageAdapter';
@@ -28,6 +29,7 @@ export type AppRuntime = {
   battleService: BattleService;
   rewardService: RewardService;
   miningService: MiningService;
+  fusionService: FusionService;
   tradeService: TradeService;
 };
 
@@ -37,6 +39,7 @@ export const createRuntime = (storage: StorageAdapter): AppRuntime => {
   const battles = new BattleRepository(storage);
   const goldService = new GoldService(players, gold);
   const battleService = new BattleService(battles);
+  const fusionService = new FusionService(players);
   const miningService = new MiningService(players);
   const tradeService = new TradeService(players, goldService);
 
@@ -49,6 +52,7 @@ export const createRuntime = (storage: StorageAdapter): AppRuntime => {
     battleService,
     rewardService: new RewardService(players, goldService, battleService),
     miningService,
+    fusionService,
     tradeService,
   };
 };

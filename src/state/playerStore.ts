@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { StoreApi, UseBoundStore } from 'zustand';
 import { STARTING_BWAR, STARTING_GOLD } from '../data/balance';
 import { heroLevelOf, upgradeCost } from '../data/economy';
+import { heroStarsOf, maxLevelForStars } from '../data/fusion';
 import { getFreeHeroes, getHeroById } from '../data/heroes';
 import { withEquippedHero, withHero } from '../repositories/heroRepository';
 import type { GoldRef } from '../services/goldService';
@@ -48,6 +49,12 @@ export type PlayerData = {
   equippedHeroId: string;
   /** Hero level per hero id. Missing heroes are Level 0. */
   heroLevels: Record<string, number>;
+  /** Star tier per hero id. Missing heroes are 1 star. */
+  heroStars: Record<string, number>;
+  /** Spare same-hero copies per hero id, as unique serial numbers. */
+  heroCopies: Record<string, number[]>;
+  /** Unique serial of the roster instance per owned hero id. */
+  heroSerials: Record<string, number>;
   tradeOffers: TradeOffer[];
   /** The single active mining session, or null before the first Equip. */
   mining: MiningSession | null;
@@ -78,6 +85,8 @@ export type PlayerActions = {
   delistOffer: (offerId: string) => boolean;
   deliverOffer: (offerId: string) => boolean;
   grantHero: (heroId: string) => void;
+  /** Burns spare copies to lift a hero one star tier. False when refused. */
+  fuseHero: (heroId: string) => boolean;
   /**
    * Buys the next level for a hero with $GOLD. Refused at max level or when
    * the balance cannot cover the linear price - the ledger is the only thing
@@ -110,6 +119,9 @@ const blankData = (): PlayerData => ({
   ownedHeroIds: getFreeHeroes().map((hero) => hero.id),
   equippedHeroId: getFreeHeroes()[0]?.id ?? 'durov',
   heroLevels: {},
+  heroStars: {},
+  heroCopies: {},
+  heroSerials: {},
   tradeOffers: [],
   mining: null,
   createdAt: 0,
@@ -136,6 +148,9 @@ export const createPlayerStore = (app: AppRuntime): PlayerStore => {
       ownedHeroIds: profile.ownedHeroes,
       equippedHeroId: profile.equippedHeroId,
       heroLevels: profile.heroLevels,
+      heroStars: profile.heroStars ?? {},
+      heroCopies: profile.heroCopies ?? {},
+      heroSerials: profile.heroSerials ?? {},
       tradeOffers: profile.tradeOffers ?? [],
       mining: profile.mining,
       createdAt: profile.createdAt,
@@ -230,8 +245,19 @@ export const createPlayerStore = (app: AppRuntime): PlayerStore => {
       commit(set);
     },
 
+    fuseHero: (heroId) => {
+      if (getHeroById(heroId) === undefined) return false;
+      const outcome = app.fusionService.fuse(currentProfile(app, get()), heroId, Date.now());
+      if (!outcome.ok) return false;
+      commit(set);
+      return true;
+    },
+
     upgradeHero: (heroId) => {
       if (getHeroById(heroId) === undefined) return false;
+      if (heroLevelOf(get().heroLevels, heroId) >= maxLevelForStars(heroStarsOf(get().heroStars, heroId))) {
+        return false;
+      }
       const cost = upgradeCost(heroLevelOf(get().heroLevels, heroId));
       if (cost === null) return false;
       const paid = app.goldService.debit(currentProfile(app, get()), cost, { kind: 'SPEND' }, Date.now());
@@ -322,6 +348,9 @@ const currentProfile = (app: AppRuntime, state: PlayerState): PlayerProfile =>
     equippedHeroId: state.equippedHeroId,
     ownedHeroes: state.ownedHeroIds,
     heroLevels: state.heroLevels,
+    heroStars: state.heroStars,
+    heroCopies: state.heroCopies,
+    heroSerials: state.heroSerials,
     tradeOffers: state.tradeOffers,
     mining: state.mining,
     goldBalance: state.gold,
