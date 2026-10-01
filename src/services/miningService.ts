@@ -1,4 +1,4 @@
-import { MINING_DURATION_MS } from '../data/balance';
+import { HASHRATE_PERIOD_MS, MINING_DURATION_MS } from '../data/balance';
 import { hashrateFor, heroLevelOf } from '../data/economy';
 import { getHeroById } from '../data/heroes';
 import type { PlayerRepository } from '../repositories/playerRepository';
@@ -24,11 +24,14 @@ export type MiningUnstackOutcome =
   | { ok: true; profile: PlayerProfile; amount: number }
   | { ok: false; reason: 'NO_SESSION' | 'INVALID_REWARD' | 'SAVE_FAILED'; profile: PlayerProfile };
 
-/** Never lets an elapsed session display more than its configured target. */
+const COMPLETED_PERIODS_PER_SESSION = Math.floor(MINING_DURATION_MS / HASHRATE_PERIOD_MS);
+
+/** Pays only completed 10-minute blocks and never exceeds the session target. */
 export const miningProgress = (session: MiningSession, now: number): MiningProgress => {
   const rawElapsed = Number.isFinite(now - session.startedAt) ? now - session.startedAt : 0;
   const elapsedMs = Math.max(0, Math.min(rawElapsed, MINING_DURATION_MS));
-  const ratio = elapsedMs / MINING_DURATION_MS;
+  const completedPeriods = Math.floor(elapsedMs / HASHRATE_PERIOD_MS);
+  const ratio = Math.min(completedPeriods / COMPLETED_PERIODS_PER_SESSION, 1);
   return {
     elapsedMs,
     remainingMs: MINING_DURATION_MS - elapsedMs,
@@ -42,8 +45,8 @@ export const miningProgress = (session: MiningSession, now: number): MiningProgr
  * The one service allowed to start, pause and settle BWAR Mining.
  *
  * A session snapshots its rate and target when equipped, writes the profile
- * before the store changes, and can be claimed at any time. Claim credits the
- * accrued amount and immediately starts the same hero's next cycle.
+ * before the store changes. Claim credits completed 10-minute blocks and
+ * immediately starts the same hero's next cycle.
  */
 export class MiningService {
   private readonly players: PlayerRepository;
@@ -64,7 +67,7 @@ export class MiningService {
     const mining: MiningSession = {
       heroId,
       hashrate,
-      rewardAmount: (hashrate * MINING_DURATION_MS) / 1000,
+      rewardAmount: (hashrate * MINING_DURATION_MS) / HASHRATE_PERIOD_MS,
       startedAt: now,
     };
     const next = { ...profile, mining };

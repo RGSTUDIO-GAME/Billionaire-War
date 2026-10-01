@@ -7,6 +7,7 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { formatHashrate, hashrateFor, heroLevelOf } from '../data/economy';
+import { HASHRATE_PERIOD_MS, MINING_DURATION_MS } from '../data/balance';
 import { HEROES } from '../data/heroes';
 import type { Hero } from '../data/heroes/types';
 import { usePlayerStore } from '../state/playerStore';
@@ -52,7 +53,7 @@ export const MiningSelectScreen = ({ onBack, onEquip }: MiningSelectScreenProps)
           eligibleHeroes.map((hero) => {
             const level = heroLevelOf(heroLevels, hero.id);
             const hashrate = hashrateFor(hero.rarity, level);
-            const dailyReward = (hashrate * 24 * 60 * 60);
+            const dailyReward = (hashrate * MINING_DURATION_MS) / HASHRATE_PERIOD_MS;
             const active = activeMining?.heroId === hero.id;
             return (
               <Card key={hero.id}>
@@ -74,7 +75,7 @@ export const MiningSelectScreen = ({ onBack, onEquip }: MiningSelectScreenProps)
                     </div>
                     <div className="row-between" style={{ fontSize: 12 }}>
                       <span className="muted">Hashrate</span>
-                      <strong>{formatHashrate(hashrate)} BWAR/s</strong>
+                      <strong>{formatHashrate(hashrate)} BWAR/10m</strong>
                     </div>
                     <div className="row-between" style={{ fontSize: 12 }}>
                       <span className="muted">24h target</span>
@@ -106,8 +107,8 @@ export const MiningSelectScreen = ({ onBack, onEquip }: MiningSelectScreenProps)
             Mining rules
           </div>
           <div className="muted" style={{ fontSize: 12 }}>
-            One session lasts 24 hours. Mining pauses when full; claim the full amount to add it
-            to your local $BWAR balance. Equipping another hero starts a new session.
+            One session lasts 24 hours. Each completed 10-minute block pays the hero's hashrate
+            in $BWAR. Mining pauses when full; claim to add it to your local balance.
           </div>
         </Card>
       </div>

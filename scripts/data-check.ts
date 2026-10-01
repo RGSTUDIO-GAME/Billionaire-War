@@ -585,12 +585,12 @@ function rewardOf(outcome: { transaction: GoldTransaction } | null): number {
     BASE_HASHRATE.epic === 0.001 &&
     BASE_HASHRATE.legendary === 0.01);
   check(
-    'economy: Legendary Level 0 mines 0.001 BWAR/s',
+    'economy: Legendary Level 0 mines 0.001 BWAR/10m',
     close(hashrateFor('legendary', 0), LEGENDARY_LEVEL_0_HASHRATE),
   );
   check('economy: other Level 0 heroes mine nothing', hashrateFor('epic', 0) === 0);
-  check('economy: legendary Lv1 mines 0.01 BWAR/s', close(hashrateFor('legendary', 1), 0.01));
-  check('economy: legendary Lv100 mines 1 BWAR/s', close(hashrateFor('legendary', 100), 1));
+  check('economy: legendary Lv1 mines 0.01 BWAR/10m', close(hashrateFor('legendary', 1), 0.01));
+  check('economy: legendary Lv100 mines 1 BWAR/10m', close(hashrateFor('legendary', 100), 1));
   check('economy: max table matches spec',
     close(hashrateFor('common', 100), 0.0001) &&
     close(hashrateFor('uncommon', 100), 0.001) &&

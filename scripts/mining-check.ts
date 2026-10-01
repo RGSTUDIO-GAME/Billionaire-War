@@ -3,7 +3,7 @@
  * ========================
  * Checks the local mining lifecycle independently of the battle suites.
  */
-import { MINING_DURATION_MS } from '../src/data/balance';
+import { HASHRATE_PERIOD_MS, MINING_DURATION_MS } from '../src/data/balance';
 import { hashrateFor } from '../src/data/economy';
 import { memoryStorage } from '../src/storage/StorageAdapter';
 import { createRuntime } from '../src/state/runtime';
@@ -38,13 +38,24 @@ const started = runtime.miningService.start(profile, 'elonmusk', NOW);
 check('mining: a Legendary hero can start at Level 0', started.ok);
 check('mining: one hero is active after Equip', started.ok && started.profile.mining?.heroId === 'elonmusk');
 check(
-  'mining: the 24-hour target is snapshotted from hashrate',
-  started.ok && close(started.profile.mining?.rewardAmount ?? 0, (hashrateFor('legendary', 0) * MINING_DURATION_MS) / 1000),
+  'mining: the 24-hour target is snapshotted in 10-minute hashrate blocks',
+  started.ok &&
+    close(
+      started.profile.mining?.rewardAmount ?? 0,
+      (hashrateFor('legendary', 0) * MINING_DURATION_MS) / HASHRATE_PERIOD_MS,
+    ),
 );
 
 if (started.ok) {
   const session = started.profile.mining;
   if (session !== null) {
+    const beforePeriod = miningProgress(session, NOW + HASHRATE_PERIOD_MS - 1);
+    const firstPeriod = miningProgress(session, NOW + HASHRATE_PERIOD_MS);
+    check('mining: nothing is earned before a full 10-minute block', beforePeriod.amount === 0);
+    check(
+      'mining: the first full block pays one character hashrate',
+      close(firstPeriod.amount, hashrateFor('legendary', 0)),
+    );
     const half = miningProgress(session, NOW + MINING_DURATION_MS / 2);
     check('mining: halfway progress pays halfway', close(half.amount, session.rewardAmount / 2));
     check('mining: an exact-start claim has nothing to credit', runtime.miningService.claim(started.profile, NOW).ok === false);

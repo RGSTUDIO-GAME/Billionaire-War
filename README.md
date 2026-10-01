@@ -277,8 +277,8 @@ the trophy button in the top bar, `WAR` from the big button on Home, and
   implemented and no fake queue or fake opponent is simulated.
 - **Hero** — DUROV with LOCKED / OWNED / EQUIPPED states and the equip button.
 - **BWAR Mining** — choose one owned hero with positive hashrate, watch a local
-  counter, and claim accrued $BWAR at any time. The counter reaches its full
-  target after 24 hours and pauses until claimed.
+  counter, and claim one character hashrate after each completed 10-minute
+  block. The counter reaches its full target after 24 hours and pauses until claimed.
 - **Trade** — create custom-price Hero and Gold offers in `$GOLD` or local `$BWAR`,
   deliver completed sales, or delist an offer. Active assets stay in escrow and
   mining-stacked heroes must be unstacked first.

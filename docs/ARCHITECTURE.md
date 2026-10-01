@@ -331,7 +331,8 @@ HOME / BWAR BALANCE ──> MINING SELECT ──(Equip)──> MiningService ─
 ```
 
 `MiningService.start` snapshots the selected hero's hashrate and its exact
-24-hour target into the single `profile.mining` session. The UI derives its
+24-hour target into the single `profile.mining` session. Reward progress advances
+only after each completed 10-minute block, paying one character hashrate per block. The UI derives its
 moving counter from `startedAt`; it never writes the balance. Once elapsed
 reaches `MINING_DURATION_MS`, progress clamps at the target and the Claim button
 becomes available.

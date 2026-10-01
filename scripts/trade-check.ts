@@ -87,7 +87,7 @@ check(
     mining: {
       heroId: HEROES[1].id,
       hashrate: 0.01,
-      rewardAmount: 864,
+      rewardAmount: 1.44,
       startedAt: NOW,
     },
   };

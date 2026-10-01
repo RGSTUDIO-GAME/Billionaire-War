@@ -122,7 +122,7 @@ export const MiningScreen = ({ onBack, onChangeHero }: MiningScreenProps) => {
               </div>
               <div className="row-between" style={{ fontSize: 12 }}>
                 <span className="muted">Hashrate</span>
-                <strong>{formatHashrate(mining.hashrate)} BWAR/s</strong>
+                <strong>{formatHashrate(mining.hashrate)} BWAR/10m</strong>
               </div>
             </div>
           </div>
@@ -151,7 +151,9 @@ export const MiningScreen = ({ onBack, onChangeHero }: MiningScreenProps) => {
           ) : null}
           <div className="stack" style={{ marginTop: 'var(--s-4)' }}>
             <Button variant="gold" block disabled={progress.amount <= 0} onClick={claim}>
-              {progress.amount > 0 ? `Claim ${formatAmount(progress.amount)} $BWAR` : 'Claim after mining starts'}
+              {progress.amount > 0
+                ? `Claim ${formatAmount(progress.amount)} $BWAR`
+                : 'Claim after the first 10 minutes'}
             </Button>
             <Button variant="ghost" block onClick={() => setConfirmChange(true)}>
               Change hero
@@ -166,9 +168,9 @@ export const MiningScreen = ({ onBack, onChangeHero }: MiningScreenProps) => {
           <div className="row">
             <AssetImg assetId={iconIds.clock} alt="" style={{ width: 20, height: 20 }} />
             <p className="muted" style={{ fontSize: 12 }}>
-              Claim any time to receive the amount accrued so far. At full, mining pauses until
-              you claim. Unstack claims the current amount, stops mining and unlocks the hero for
-              Trade.
+              Claim after a completed 10-minute block to receive its hashrate reward. At full,
+              mining pauses until you claim. Unstack claims completed blocks, stops mining and
+              unlocks the hero for Trade.
             </p>
           </div>
         </Card>

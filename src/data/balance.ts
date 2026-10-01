@@ -40,6 +40,9 @@ export const STARTING_BWAR = 0;
 /** One BWAR Mining cycle fills after exactly 24 hours. */
 export const MINING_DURATION_MS = 24 * 60 * 60 * 1000;
 
+/** Mining credits one character hashrate after each completed 10-minute block. */
+export const HASHRATE_PERIOD_MS = 10 * 60 * 1000;
+
 /**
  * Presentation timing only - none of these can change a result. They exist so
  * each beat of the battle is readable rather than instant.

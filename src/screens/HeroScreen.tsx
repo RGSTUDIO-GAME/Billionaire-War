@@ -73,7 +73,7 @@ const HeroRow = ({
             {!isLocked && serial !== null ? <Badge>ID #{serial}</Badge> : null}
           </div>
           <div className="muted" style={{ fontSize: 12 }}>
-            Hashrate {formatHashrate(rate)} BWAR/s
+            Hashrate {formatHashrate(rate)} BWAR/10m
           </div>
         </div>
       </div>
@@ -81,7 +81,7 @@ const HeroRow = ({
       {!isLocked ? (
         <div style={{ marginTop: 'var(--s-3)' }}>
           {cost === null || (capped && stars >= MAX_STARS) ? (
-            <div className="empty-state">MAX LEVEL - {formatHashrate(rate)} BWAR/s</div>
+            <div className="empty-state">MAX LEVEL - {formatHashrate(rate)} BWAR/10m</div>
           ) : capped ? (
             <div className="stack" style={{ gap: 'var(--s-2)' }}>
               <div className="empty-state">
