@@ -864,7 +864,7 @@
   aspect-ratio: 3 / 4;
   align-self: center;
   transform: none;
-  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.4));
+  filter: drop-shadow(0 4px 5px rgba(0, 0, 0, 0.28));
 }
 
 .gacha-stage__cards--results .gacha-card__float,
@@ -883,7 +883,7 @@
 
 .gacha-stage__cards--results .gacha-card__hero-copy {
   gap: 1px;
-  padding: 20px 3px 4px;
+  padding: 20px 3px 7px;
   background: linear-gradient(
     180deg,
     transparent 0%,
@@ -891,6 +891,7 @@
     rgba(4, 6, 12, 0.96) 58%,
     rgba(4, 6, 12, 0.99) 100%
   );
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.82);
 }
 
 .gacha-stage__cards--results .gacha-card__hero-copy img {
@@ -898,7 +899,7 @@
 }
 
 .gacha-stage__cards--results .gacha-card__hero-copy strong {
-  font-size: clamp(7px, 1.8vw, 9px);
+  font-size: clamp(6px, 1.6vw, 8px);
   line-height: 1;
   letter-spacing: 0;
 }
