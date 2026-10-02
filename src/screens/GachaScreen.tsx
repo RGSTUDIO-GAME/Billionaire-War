@@ -16,13 +16,16 @@ type GachaScreenProps = {
 };
 
 type GachaPhase = 'idle' | 'spinning' | 'revealed';
+type GachaCount = 1 | 10;
 
-const CARD_COUNT = 5;
+const MYSTERY_CARD_COUNT = 5;
+const MULTI_PULL_COUNT = 10;
 const REVEAL_DELAY_MS = 1800;
 
 export const GachaScreen = ({ onBack }: GachaScreenProps) => {
   const [phase, setPhase] = useState<GachaPhase>('idle');
-  const [result, setResult] = useState<Hero | null>(null);
+  const [results, setResults] = useState<Hero[]>([]);
+  const [pullCount, setPullCount] = useState<GachaCount>(1);
   const revealTimer = useRef<number | null>(null);
 
   useEffect(
@@ -32,18 +35,24 @@ export const GachaScreen = ({ onBack }: GachaScreenProps) => {
     [],
   );
 
-  const startGacha = () => {
+  const startGacha = (count: GachaCount) => {
     if (phase === 'spinning') return;
 
+    const pulledResults: Hero[] = [];
+    for (let index = 0; index < count; index += 1) {
+      const hero = HEROES[Math.floor(Math.random() * HEROES.length)];
+      if (hero) pulledResults.push(hero);
+    }
+    if (pulledResults.length !== count) return;
+
     if (revealTimer.current !== null) window.clearTimeout(revealTimer.current);
-    setResult(null);
+    setResults([]);
+    setPullCount(count);
     setPhase('spinning');
     audio.playSfx(soundIds.uiConfirm, 0.45);
 
     revealTimer.current = window.setTimeout(() => {
-      const hero = HEROES[Math.floor(Math.random() * HEROES.length)];
-      if (!hero) return;
-      setResult(hero);
+      setResults(pulledResults);
       setPhase('revealed');
       audio.playSfx(soundIds.victory, 0.55);
       haptic.notify('success');
@@ -51,75 +60,109 @@ export const GachaScreen = ({ onBack }: GachaScreenProps) => {
     }, REVEAL_DELAY_MS);
   };
 
+  const renderHeroResult = (hero: Hero) => (
+    <div className="gacha-card__hero">
+      <AssetImg
+        assetId={heroPortraitIds[hero.id] ?? heroPortraitIds.durov}
+        alt={hero.name}
+        className="gacha-card__portrait"
+      />
+      <div className="gacha-card__hero-copy">
+        <RarityBadge rarity={hero.rarity} height={18} />
+        <strong>{hero.name}</strong>
+        <span>{hero.title}</span>
+      </div>
+    </div>
+  );
+
+  const isMultiResult = phase === 'revealed' && results.length === MULTI_PULL_COUNT;
+  const singleResult = results.length === 1 ? results[0] : null;
   const status =
     phase === 'spinning'
-      ? 'Spinning... hold tight!'
-      : phase === 'revealed' && result
-        ? `${result.name} · ${result.rarity.toUpperCase()} HERO`
-        : 'Tap Gacha to reveal a random hero.';
+      ? `Spinning ${pullCount === 1 ? '1X' : '10X'}... hold tight!`
+      : phase === 'revealed' && isMultiResult
+        ? '10 heroes revealed'
+        : phase === 'revealed' && singleResult
+          ? `${singleResult.name} · ${singleResult.rarity.toUpperCase()} HERO`
+          : pullCount === 10
+            ? 'Tap 10X Gacha to reveal ten random heroes.'
+            : 'Tap Gacha to reveal a random hero.';
 
   return (
     <div className="gacha-screen anim-fade">
       <ScreenHeader title="Gacha" subtitle="Free preview · visual only" onBack={onBack} />
 
-      <section className={`gacha-stage is-${phase}`} aria-live="polite">
+      <section
+        className={`gacha-stage is-${phase}${isMultiResult ? ' has-ten-results' : ''}`}
+        aria-live="polite"
+      >
         <div className="gacha-stage__halo" aria-hidden="true" />
-        <div className="gacha-stage__cards">
-          {Array.from({ length: CARD_COUNT }, (_, stackIndex) => {
-            const isFront = stackIndex === 0;
-            const isRevealed = isFront && phase === 'revealed' && result !== null;
-            const cardOrder = CARD_COUNT - stackIndex;
-
-            return (
+        <div
+          className={`gacha-stage__cards${isMultiResult ? ' gacha-stage__cards--results' : ''}`}
+        >
+          {isMultiResult ? (
+            results.map((hero, resultIndex) => (
               <div
-                key={stackIndex}
-                className={[
-                  'gacha-card',
-                  isFront ? 'gacha-card--front' : '',
-                  isRevealed ? 'is-revealed' : '',
-                ]
-                  .filter(Boolean)
-                  .join(' ')}
-                data-rarity={isRevealed ? result?.rarity : undefined}
-                style={{ '--stack-index': cardOrder } as CSSProperties}
-                aria-hidden={!isFront}
-                aria-label={
-                  isFront
-                    ? isRevealed && result
-                      ? `${result.name}, ${result.rarity} hero`
-                      : phase === 'spinning'
-                        ? 'Gacha card spinning'
-                        : 'Mystery hero card'
-                    : undefined
-                }
+                key={`${hero.id}-${resultIndex}`}
+                className="gacha-card is-revealed"
+                data-rarity={hero.rarity}
+                style={{ '--reveal-index': resultIndex } as CSSProperties}
+                aria-label={`${hero.name}, ${hero.rarity} hero`}
               >
                 <div className="gacha-card__float">
                   <div className="gacha-card__surface">
-                    {isRevealed && result ? (
-                      <div className="gacha-card__hero">
-                        <AssetImg
-                          assetId={heroPortraitIds[result.id] ?? heroPortraitIds.durov}
-                          alt={result.name}
-                          className="gacha-card__portrait"
-                        />
-                        <div className="gacha-card__hero-copy">
-                          <RarityBadge rarity={result.rarity} height={18} />
-                          <strong>{result.name}</strong>
-                          <span>{result.title}</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="gacha-card__mystery">
-                        <span aria-hidden="true">?</span>
-                        <small>HERO CARD</small>
-                      </div>
-                    )}
+                    {renderHeroResult(hero)}
                     <span className="gacha-card__shine" aria-hidden="true" />
                   </div>
                 </div>
               </div>
-            );
-          })}
+            ))
+          ) : (
+            Array.from({ length: MYSTERY_CARD_COUNT }, (_, stackIndex) => {
+              const isFront = stackIndex === 0;
+              const isRevealed = isFront && phase === 'revealed' && singleResult !== null;
+              const cardOrder = MYSTERY_CARD_COUNT - stackIndex;
+
+              return (
+                <div
+                  key={stackIndex}
+                  className={[
+                    'gacha-card',
+                    isFront ? 'gacha-card--front' : '',
+                    isRevealed ? 'is-revealed' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                  data-rarity={isRevealed ? singleResult?.rarity : undefined}
+                  style={{ '--stack-index': cardOrder } as CSSProperties}
+                  aria-hidden={!isFront}
+                  aria-label={
+                    isFront
+                      ? isRevealed && singleResult
+                        ? `${singleResult.name}, ${singleResult.rarity} hero`
+                        : phase === 'spinning'
+                          ? 'Gacha card spinning'
+                          : 'Mystery hero card'
+                      : undefined
+                  }
+                >
+                  <div className="gacha-card__float">
+                    <div className="gacha-card__surface">
+                      {isRevealed && singleResult ? (
+                        renderHeroResult(singleResult)
+                      ) : (
+                        <div className="gacha-card__mystery">
+                          <span aria-hidden="true">?</span>
+                          <small>HERO CARD</small>
+                        </div>
+                      )}
+                      <span className="gacha-card__shine" aria-hidden="true" />
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
         <div className="gacha-stage__sparkles" aria-hidden="true" />
       </section>
@@ -128,14 +171,30 @@ export const GachaScreen = ({ onBack }: GachaScreenProps) => {
         {status}
       </div>
 
-      <Button
-        variant="gold"
-        block
-        onClick={startGacha}
-        disabled={phase === 'spinning'}
-      >
-        {phase === 'spinning' ? 'Spinning...' : phase === 'revealed' ? 'Gacha again' : 'Gacha'}
-      </Button>
+      <div className="gacha-actions">
+        <Button
+          variant="gold"
+          onClick={() => startGacha(1)}
+          disabled={phase === 'spinning'}
+        >
+          {phase === 'spinning' && pullCount === 1
+            ? 'Spinning...'
+            : phase === 'revealed'
+              ? 'Gacha again'
+              : 'Gacha'}
+        </Button>
+        <Button
+          variant="primary"
+          onClick={() => startGacha(10)}
+          disabled={phase === 'spinning'}
+        >
+          {phase === 'spinning' && pullCount === 10
+            ? '10X Spinning...'
+            : phase === 'revealed'
+              ? '10X again'
+              : '10X Gacha'}
+        </Button>
+      </div>
     </div>
   );
 };

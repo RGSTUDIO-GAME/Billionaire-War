@@ -36,7 +36,7 @@ npm run dev        # http://localhost:5173
 | `npm run build` | Typecheck + production build to `dist/` |
 | `npm run preview` | Serve the production build |
 | `npm run typecheck` | TypeScript only |
-| `npm run verify` | **1,094 assertions** — engine rules, store flow, presentation, rewards, data layer, animation, rendered screens, mining, trade, fusion and gacha |
+| `npm run verify` | **1,096 assertions** — engine rules, store flow, presentation, rewards, data layer, animation, rendered screens, mining, trade, fusion and gacha |
 | `npm run assets:check` | Report which registered assets exist on disk |
 | `npm run assets:placeholder` | Regenerate the bundled placeholder art/audio |
 | `npm run lint` | oxlint |
@@ -282,9 +282,9 @@ the trophy button in the top bar, `WAR` from the big button on Home, and
 - **Trade** — create custom-price Hero and Gold offers in `$GOLD` or local `$BWAR`,
   deliver completed sales, or delist an offer. Active assets stay in escrow and
   mining-stacked heroes must be unstacked first.
-- **Gacha** — free preview reveal with a floating mystery-card stack, fast spin,
-  and rarity-colored hero frame and glow. It does not spend currency or change
-  the roster yet.
+- **Gacha** — free 1X and 10X preview pulls with a floating mystery-card stack,
+  fast spin, rarity-colored hero frame and glow, and ten results arranged as two
+  rows of five. It does not spend currency or change the roster yet.
 - **Quest**, **Inventory items**, **Leaderboard** — **COMING SOON** via the
   shared `ComingSoon` component.
 
@@ -328,4 +328,4 @@ The Battle Engine does not change. See [docs/ASSETS.md](docs/ASSETS.md).
 | `trade-render-check` | marketplace entry points, offer cards and player-facing notices |
 | `fusion-check` | star tiers, serials, duplicate copies, costs and six-star limits |
 | `fusion-render-check` | the Hero screen star and Fusion UI |
-| `gacha-render-check` | the reveal screen, mystery stack, Home entry point and rarity effects |
+| `gacha-render-check` | 1X/10X controls, reveal screen, mystery stack, five-by-two result grid, Home entry point and rarity effects |

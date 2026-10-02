@@ -37,6 +37,7 @@ const homeWords = readable(home);
 check('gacha: the screen mounts with its header', gachaWords.includes('Gacha Free preview · visual only'));
 check('gacha: the floating stack starts with five mystery cards', (gacha.match(/\?/g) ?? []).length === 5);
 check('gacha: the reveal button is available', gachaWords.includes('Gacha'));
+check('gacha: the 10X reveal button is available', gachaWords.includes('10X Gacha'));
 check('gacha: the demo scope is disclosed', gachaWords.includes('visual only'));
 check('home: the Gacha entry point is shown', homeWords.includes('Gacha'));
 
@@ -64,6 +65,12 @@ check(
   ),
 );
 
+check(
+  'style: 10X results use a five-column, two-row grid',
+  /\.gacha-stage__cards--results\s*\{[^}]*grid-template-columns:\s*repeat\(5,[^}]*grid-template-rows:\s*auto auto/s.test(
+    styles,
+  ),
+);
 check('style: the mystery cards animate horizontally', styles.includes('@keyframes gacha-float'));
 
 if (failures.length > 0) {
