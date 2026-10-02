@@ -34,7 +34,7 @@ const home = renderToStaticMarkup(
 );
 const homeWords = readable(home);
 
-check('gacha: the screen mounts with its header', gachaWords.includes('Gacha Free demo reveal'));
+check('gacha: the screen mounts with its header', gachaWords.includes('Gacha Free preview · visual only'));
 check('gacha: the floating stack starts with five mystery cards', (gacha.match(/\?/g) ?? []).length === 5);
 check('gacha: the reveal button is available', gachaWords.includes('Gacha'));
 check('gacha: the demo scope is disclosed', gachaWords.includes('visual only'));
@@ -47,11 +47,15 @@ check(
 );
 
 const styles = readFileSync(join(process.cwd(), 'src', 'styles', 'components.css'), 'utf8');
+const rarityEffectsPresent = ['common', 'uncommon', 'rare', 'epic', 'legendary'].every((rarity) =>
+  styles.includes(`data-rarity='${rarity}'`),
+);
+const resultLayersAboveStack =
+  /\.gacha-card--front\s*\{[^}]*z-index:\s*20;/s.test(styles) &&
+  /\.gacha-card\.is-revealed\s*\{[^}]*z-index:\s*30;/s.test(styles);
 check(
-  'style: all five rarities have reveal effects',
-  ['common', 'uncommon', 'rare', 'epic', 'legendary'].every((rarity) =>
-    styles.includes(`data-rarity='${rarity}'`),
-  ),
+  'style: rarity effects render above the mystery stack',
+  rarityEffectsPresent && resultLayersAboveStack,
 );
 
 check('style: the mystery cards animate horizontally', styles.includes('@keyframes gacha-float'));

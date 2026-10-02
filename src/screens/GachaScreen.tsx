@@ -3,7 +3,6 @@ import type { CSSProperties } from 'react';
 import { AssetImg } from '../assets/AssetImg';
 import { heroPortraitIds } from '../assets/manifest';
 import { RarityBadge } from '../components/hero/RarityBadge';
-import { Card } from '../components/ui/Card';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { Button } from '../components/ui/Button';
 import { HEROES } from '../data/heroes';
@@ -60,8 +59,8 @@ export const GachaScreen = ({ onBack }: GachaScreenProps) => {
         : 'Tap Gacha to reveal a random hero.';
 
   return (
-    <div className="stack-lg anim-fade">
-      <ScreenHeader title="Gacha" subtitle="Free demo reveal" onBack={onBack} />
+    <div className="gacha-screen anim-fade">
+      <ScreenHeader title="Gacha" subtitle="Free preview · visual only" onBack={onBack} />
 
       <section className={`gacha-stage is-${phase}`} aria-live="polite">
         <div className="gacha-stage__halo" aria-hidden="true" />
@@ -131,20 +130,12 @@ export const GachaScreen = ({ onBack }: GachaScreenProps) => {
 
       <Button
         variant="gold"
-        size="lg"
         block
         onClick={startGacha}
         disabled={phase === 'spinning'}
       >
         {phase === 'spinning' ? 'Spinning...' : phase === 'revealed' ? 'Gacha again' : 'Gacha'}
       </Button>
-
-      <Card flat tight>
-        <div className="muted center" style={{ fontSize: 12 }}>
-          Free preview spin. The revealed hero and rarity are visual only for now — no currency or
-          roster changes.
-        </div>
-      </Card>
     </div>
   );
 };
