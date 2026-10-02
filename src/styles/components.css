@@ -667,44 +667,63 @@
 }
 
 .gacha-card__portrait {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
   width: 100%;
-  height: 64%;
+  height: 100%;
   object-fit: cover;
   object-position: center top;
   filter: saturate(1.1) contrast(1.04);
 }
 
 .gacha-card__hero-copy {
-  position: relative;
+  position: absolute;
+  inset: 0 0 auto;
   z-index: 4;
   display: flex;
-  flex: 1;
+  flex: none;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
-  gap: 2px;
+  justify-content: flex-start;
+  gap: 4px;
   min-height: 0;
-  padding: 4px 8px 6px;
+  padding: 14px 12px 34px;
   text-align: center;
-  background: linear-gradient(180deg, rgba(7, 9, 15, 0.2), rgba(7, 9, 15, 0.96) 34%);
+  background: linear-gradient(
+    180deg,
+    rgba(4, 6, 12, 0.98) 0%,
+    rgba(4, 6, 12, 0.9) 58%,
+    rgba(4, 6, 12, 0.5) 82%,
+    transparent 100%
+  );
+  text-shadow: 0 2px 4px #000, 0 0 8px rgba(0, 0, 0, 0.9);
 }
 
 .gacha-card__hero-copy strong {
   max-width: 100%;
   color: #fff;
   font-family: var(--font-display);
-  font-size: clamp(15px, 5.2vw, 20px);
-  line-height: 1.05;
-  letter-spacing: 0.06em;
+  font-size: clamp(21px, 7vw, 28px);
+  line-height: 0.98;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   overflow-wrap: anywhere;
   white-space: normal;
 }
 
 .gacha-card__hero-copy span {
   max-width: 100%;
-  color: var(--text-dim);
-  font-size: 10px;
-  line-height: 1.15;
+  padding: 3px 8px;
+  border: 1px solid rgba(245, 197, 66, 0.42);
+  border-radius: var(--r-pill);
+  background: rgba(7, 9, 15, 0.84);
+  color: var(--gold-soft);
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   overflow-wrap: anywhere;
   white-space: normal;
 }
