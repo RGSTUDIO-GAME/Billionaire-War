@@ -679,33 +679,33 @@
 
 .gacha-card__hero-copy {
   position: absolute;
-  inset: 0 0 auto;
+  inset: auto 0 0;
   z-index: 4;
   display: flex;
   flex: none;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  gap: 4px;
+  justify-content: flex-end;
+  gap: 3px;
   min-height: 0;
-  padding: 14px 12px 34px;
+  padding: 34px 10px 9px;
   text-align: center;
   background: linear-gradient(
     180deg,
-    rgba(4, 6, 12, 0.98) 0%,
-    rgba(4, 6, 12, 0.9) 58%,
-    rgba(4, 6, 12, 0.5) 82%,
-    transparent 100%
+    transparent 0%,
+    rgba(4, 6, 12, 0.72) 24%,
+    rgba(4, 6, 12, 0.94) 62%,
+    rgba(4, 6, 12, 0.98) 100%
   );
-  text-shadow: 0 2px 4px #000, 0 0 8px rgba(0, 0, 0, 0.9);
+  text-shadow: 0 2px 4px #000, 0 0 7px rgba(0, 0, 0, 0.9);
 }
 
 .gacha-card__hero-copy strong {
   max-width: 100%;
   color: #fff;
   font-family: var(--font-display);
-  font-size: clamp(21px, 7vw, 28px);
-  line-height: 0.98;
+  font-size: clamp(16px, 5.3vw, 20px);
+  line-height: 1.04;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   overflow-wrap: anywhere;
@@ -714,15 +714,15 @@
 
 .gacha-card__hero-copy span {
   max-width: 100%;
-  padding: 3px 8px;
-  border: 1px solid rgba(245, 197, 66, 0.42);
+  padding: 2px 7px;
+  border: 1px solid rgba(245, 197, 66, 0.38);
   border-radius: var(--r-pill);
-  background: rgba(7, 9, 15, 0.84);
+  background: rgba(7, 9, 15, 0.82);
   color: var(--gold-soft);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 900;
   line-height: 1.1;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   overflow-wrap: anywhere;
   white-space: normal;

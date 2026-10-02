@@ -103,7 +103,7 @@ export const GachaScreen = ({ onBack }: GachaScreenProps) => {
                           className="gacha-card__portrait"
                         />
                         <div className="gacha-card__hero-copy">
-                          <RarityBadge rarity={result.rarity} height={20} />
+                          <RarityBadge rarity={result.rarity} height={18} />
                           <strong>{result.name}</strong>
                           <span>{result.title}</span>
                         </div>
