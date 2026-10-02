@@ -57,6 +57,12 @@ check(
   'style: rarity effects render above the mystery stack',
   rarityEffectsPresent && resultLayersAboveStack,
 );
+check(
+  'style: hero names wrap instead of clipping',
+  /\.gacha-card__hero-copy strong\s*\{[^}]*overflow-wrap:\s*anywhere;[^}]*white-space:\s*normal;/s.test(
+    styles,
+  ),
+);
 
 check('style: the mystery cards animate horizontally', styles.includes('@keyframes gacha-float'));
 
