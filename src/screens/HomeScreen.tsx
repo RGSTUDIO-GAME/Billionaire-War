@@ -13,11 +13,12 @@ import { StatBar } from '../components/ui/StatBar';
 
 type HomeScreenProps = {
   onWar: () => void;
+  onGacha: () => void;
   onMining: () => void;
   onTrade: () => void;
 };
 
-export const HomeScreen = ({ onWar, onMining, onTrade }: HomeScreenProps) => {
+export const HomeScreen = ({ onWar, onGacha, onMining, onTrade }: HomeScreenProps) => {
   const equippedHeroId = usePlayerStore((state) => state.equippedHeroId);
   const hero = getHeroById(equippedHeroId);
 
@@ -54,6 +55,10 @@ export const HomeScreen = ({ onWar, onMining, onTrade }: HomeScreenProps) => {
 
       <Button variant="primary" size="lg" block icon={iconIds.swords} onClick={onWar}>
         War
+      </Button>
+
+      <Button variant="gold" block icon={iconIds.star} onClick={onGacha}>
+        Gacha
       </Button>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--s-3)' }}>

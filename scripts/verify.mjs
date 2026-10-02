@@ -11,6 +11,7 @@
  *   scripts/fusion-check.ts - star tiers, serials, copies and fusion costs
  *   scripts/fusion-render-check.tsx - the Hero screen star and Fusion UI
  *   scripts/trade-render-check.tsx - the marketplace UI entry points
+ *   scripts/gacha-render-check.tsx - the reveal screen and Home entry point
  */
 import { build } from 'esbuild';
 import { existsSync, mkdtempSync, rmSync } from 'node:fs';
@@ -57,6 +58,7 @@ const entries = [
   'trade-render-check',
   'fusion-check',
   'fusion-render-check',
+  'gacha-render-check',
 ];
 
 /**

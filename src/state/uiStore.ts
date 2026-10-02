@@ -11,7 +11,8 @@ export type Screen =
   | 'battle'
   | 'mining-select'
   | 'mining'
-  | 'trade';
+  | 'trade'
+  | 'gacha';
 
 export type NavParams = Record<string, string>;
 

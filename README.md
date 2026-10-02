@@ -36,7 +36,7 @@ npm run dev        # http://localhost:5173
 | `npm run build` | Typecheck + production build to `dist/` |
 | `npm run preview` | Serve the production build |
 | `npm run typecheck` | TypeScript only |
-| `npm run verify` | **995 assertions** — engine rules, store flow, presentation, rewards, data layer, animation, rendered screen, mining |
+| `npm run verify` | **1,093 assertions** — engine rules, store flow, presentation, rewards, data layer, animation, rendered screens, mining, trade, fusion and gacha |
 | `npm run assets:check` | Report which registered assets exist on disk |
 | `npm run assets:placeholder` | Regenerate the bundled placeholder art/audio |
 | `npm run lint` | oxlint |
@@ -268,7 +268,7 @@ production builds.
 
 ## Screens
 
-`HOME` · `QUEST` · `HERO` · `INVENTORY` · `TRADE` · `SETTINGS`, plus `LEADERBOARD` from
+`HOME` · `QUEST` · `HERO` · `INVENTORY` · `TRADE` · `GACHA` · `SETTINGS`, plus `LEADERBOARD` from
 the trophy button in the top bar, `WAR` from the big button on Home, and
 `MINING` from the BWAR Mining button.
 
@@ -282,6 +282,9 @@ the trophy button in the top bar, `WAR` from the big button on Home, and
 - **Trade** — create custom-price Hero and Gold offers in `$GOLD` or local `$BWAR`,
   deliver completed sales, or delist an offer. Active assets stay in escrow and
   mining-stacked heroes must be unstacked first.
+- **Gacha** — free preview reveal with a floating mystery-card stack, fast spin,
+  and rarity-colored hero frame and glow. It does not spend currency or change
+  the roster yet.
 - **Quest**, **Inventory items**, **Leaderboard** — **COMING SOON** via the
   shared `ComingSoon` component.
 
@@ -309,7 +312,7 @@ The Battle Engine does not change. See [docs/ASSETS.md](docs/ASSETS.md).
 
 ## Verification
 
-`npm run verify` bundles eight suites and runs them on Node — **995 assertions**:
+`npm run verify` bundles thirteen suites and runs them on Node — **1,093 assertions**:
 
 | Suite | Covers |
 | --- | --- |
@@ -321,3 +324,8 @@ The Battle Engine does not change. See [docs/ASSETS.md](docs/ASSETS.md).
 | `asset-check` | the animation controller, hero-agnostic mapping, fallback chains |
 | `render-check` | `BattleScreen` rendered for real at every phase of a battle |
 | `mining-check` | eligible heroes, 24-hour timing, anytime claim, pause at full, one active session, and reload persistence |
+| `trade-check` | local Hero and Gold offers, escrow, delivery, delisting and self-buy protection |
+| `trade-render-check` | marketplace entry points, offer cards and player-facing notices |
+| `fusion-check` | star tiers, serials, duplicate copies, costs and six-star limits |
+| `fusion-render-check` | the Hero screen star and Fusion UI |
+| `gacha-render-check` | the reveal screen, mystery stack, Home entry point and rarity effects |

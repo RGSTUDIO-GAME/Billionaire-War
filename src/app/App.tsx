@@ -11,6 +11,7 @@ import { BattleScreen } from '../screens/BattleScreen';
 import { MiningScreen } from '../screens/MiningScreen';
 import { MiningSelectScreen } from '../screens/MiningSelectScreen';
 import { TradeScreen } from '../screens/TradeScreen';
+import { GachaScreen } from '../screens/GachaScreen';
 import { prefetchAllAssets } from '../assets/resolve';
 import { initTelegram } from '../services/telegram';
 import { audio } from '../audio/audioManager';
@@ -80,10 +81,12 @@ export const App = () => {
       {entry.screen === 'home' ? (
         <HomeScreen
           onWar={() => navigate('war-entry')}
+          onGacha={() => navigate('gacha')}
           onMining={() => goTo('mining-select')}
           onTrade={() => navigate('trade')}
         />
       ) : null}
+      {entry.screen === 'gacha' ? <GachaScreen onBack={back} /> : null}
       {entry.screen === 'quest' ? <QuestScreen onBack={back} /> : null}
       {entry.screen === 'inventory' ? (
         <InventoryScreen onBack={back} onBwarPress={openMining} onTrade={() => navigate('trade')} />
