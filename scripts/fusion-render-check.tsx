@@ -30,6 +30,7 @@ check('render: Hero screen is mounted', words.includes('Hero'));
 check('render: owned heroes show their star tier', hero.includes('★'));
 check('render: a fresh hero shows its 1-star cap', words.includes('Lv 0/20'));
 check('render: owned heroes expose a Fusion entry point', words.includes('Fusion'));
+check('render: owned heroes show their stacked quantity', words.includes('×1'));
 
 if (failures.length > 0) {
   console.error(`\n${failures.length} fusion render check(s) FAILED:\n`);

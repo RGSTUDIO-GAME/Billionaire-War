@@ -85,6 +85,8 @@ export type PlayerActions = {
   delistOffer: (offerId: string) => boolean;
   deliverOffer: (offerId: string) => boolean;
   grantHero: (heroId: string) => void;
+  /** Saves a complete Gacha pull as roster entries and duplicate copies. */
+  grantGachaHeroes: (heroIds: string[]) => boolean;
   /** Burns spare copies to lift a hero one star tier. False when refused. */
   fuseHero: (heroId: string) => boolean;
   /**
@@ -243,6 +245,14 @@ export const createPlayerStore = (app: AppRuntime): PlayerStore => {
       if (profile.ownedHeroes.length === get().ownedHeroIds.length) return;
       app.players.save(profile);
       commit(set);
+    },
+
+    grantGachaHeroes: (heroIds) => {
+      if (heroIds.length === 0) return false;
+      const outcome = app.fusionService.grantCopies(currentProfile(app, get()), heroIds);
+      if (!outcome.ok) return false;
+      commit(set);
+      return true;
     },
 
     fuseHero: (heroId) => {

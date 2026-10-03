@@ -10,6 +10,7 @@ import {
   fusionCostCopies,
   heroCopiesOf,
   heroSerialOf,
+  heroStackCountOf,
   heroStarsOf,
   maxLevelForStars,
   maxSixStarCount,
@@ -106,6 +107,58 @@ const heroId = HEROES[0].id;
         heroCopiesOf(unlocked.profile.heroCopies, lockedId).length === 0,
     );
   }
+}
+
+/* A complete Gacha pull saves atomically and updates the Hero stack count. */
+{
+  const runtime = createRuntime(memoryStorage());
+  const fresh = runtime.players.loadOrCreate();
+  const secondHeroId = HEROES[1].id;
+  const batch = runtime.fusionService.grantCopies(
+    fresh,
+    [heroId, heroId, secondHeroId],
+    NOW + 10,
+  );
+  check(
+    'fusion: a Gacha batch stacks duplicate heroes',
+    batch.ok &&
+      heroStackCountOf(batch.profile.heroCopies, heroId) === 3 &&
+      heroStackCountOf(batch.profile.heroCopies, secondHeroId) === 2,
+  );
+
+  const persisted = runtime.players.load();
+  check(
+    'fusion: a Gacha batch persists every copy in one save',
+    persisted !== null &&
+      heroStackCountOf(persisted.heroCopies, heroId) === 3 &&
+      heroStackCountOf(persisted.heroCopies, secondHeroId) === 2,
+  );
+
+  const atomicRuntime = createRuntime(memoryStorage());
+  const atomicFresh = atomicRuntime.players.loadOrCreate();
+  const refusedBatch = atomicRuntime.fusionService.grantCopies(
+    atomicFresh,
+    [heroId, 'nope'],
+    NOW + 11,
+  );
+  const atomicStored = atomicRuntime.players.load();
+  check(
+    'fusion: an invalid Gacha batch changes nothing',
+    refusedBatch.ok === false &&
+      heroStackCountOf(atomicFresh.heroCopies, heroId) === 1 &&
+      heroStackCountOf(atomicStored?.heroCopies, heroId) === 1,
+  );
+
+  const storeRuntime = createRuntime(memoryStorage());
+  storeRuntime.players.loadOrCreate();
+  const gachaStore = createPlayerStore(storeRuntime);
+  gachaStore.getState().hydrate();
+  check(
+    'store: the Gacha action refreshes duplicate counts',
+    gachaStore.getState().grantGachaHeroes([heroId, heroId]) &&
+      heroStackCountOf(gachaStore.getState().heroCopies, heroId) === 3 &&
+      heroStackCountOf(storeRuntime.players.load()?.heroCopies, heroId) === 3,
+  );
 }
 
 /* Fusion burns exactly the step cost and lifts one tier. */

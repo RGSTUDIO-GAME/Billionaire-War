@@ -26,7 +26,7 @@ const refused = (profile: PlayerProfile, reason: FusionFailure): FusionOutcome =
  * Copies are the fusion material: duplicates of a hero the player already
  * fields. Granting a hero that is not owned yet unlocks its roster (main)
  * instance instead of a spare copy, so this is the single acquisition
- * primitive the future ticket Gacha will call.
+ * primitive used by Gacha.
  */
 export const withCopyGranted = (profile: PlayerProfile, heroId: string): PlayerProfile => {
   if (getHeroById(heroId) === undefined) return profile;
@@ -63,12 +63,22 @@ export class FusionService {
     this.players = players;
   }
 
-  grantCopy(profile: PlayerProfile, heroId: string, _now?: number): FusionOutcome {
+  /** Grants a whole pull atomically and persists it with one save. */
+  grantCopies(profile: PlayerProfile, heroIds: string[], _now?: number): FusionOutcome {
     void _now;
-    if (getHeroById(heroId) === undefined) return refused(profile, 'UNKNOWN_HERO');
-    const next = withCopyGranted(profile, heroId);
+    if (heroIds.length === 0) return { ok: true, profile };
+
+    let next = profile;
+    for (const heroId of heroIds) {
+      if (getHeroById(heroId) === undefined) return refused(profile, 'UNKNOWN_HERO');
+      next = withCopyGranted(next, heroId);
+    }
     if (!this.players.save(next)) return refused(profile, 'SAVE_FAILED');
     return { ok: true, profile: next };
+  }
+
+  grantCopy(profile: PlayerProfile, heroId: string, _now?: number): FusionOutcome {
+    return this.grantCopies(profile, [heroId], _now);
   }
 
   fuse(profile: PlayerProfile, heroId: string, _now?: number): FusionOutcome {

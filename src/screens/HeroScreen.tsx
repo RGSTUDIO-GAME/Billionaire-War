@@ -3,7 +3,14 @@ import { HEROES, getOwnedState } from '../data/heroes';
 import type { Hero, HeroRarity } from '../data/heroes/types';
 import { MAX_ROUNDS, ROUND_DAMAGE } from '../data/balance';
 import { formatGold, formatHashrate, hashrateFor, heroLevelOf, upgradeCost } from '../data/economy';
-import { formatStars, heroSerialOf, heroStarsOf, maxLevelForStars, MAX_STARS } from '../data/fusion';
+import {
+  formatStars,
+  heroSerialOf,
+  heroStackCountOf,
+  heroStarsOf,
+  maxLevelForStars,
+  MAX_STARS,
+} from '../data/fusion';
 import { usePlayerStore } from '../state/playerStore';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
@@ -35,11 +42,13 @@ const HeroRow = ({
   const heroLevels = usePlayerStore((state) => state.heroLevels);
   const heroStars = usePlayerStore((state) => state.heroStars);
   const heroSerials = usePlayerStore((state) => state.heroSerials);
+  const heroCopies = usePlayerStore((state) => state.heroCopies);
   const upgradeHero = usePlayerStore((state) => state.upgradeHero);
   const isLocked = ownership === 'locked';
   const level = heroLevelOf(heroLevels, hero.id);
   const stars = heroStarsOf(heroStars, hero.id);
   const serial = heroSerialOf(heroSerials, hero.id);
+  const stackCount = isLocked ? 0 : heroStackCountOf(heroCopies, hero.id);
   const levelCap = maxLevelForStars(stars);
   const capped = level >= levelCap;
   const rate = hashrateFor(hero.rarity, level);
@@ -55,7 +64,10 @@ const HeroRow = ({
             <h3 className="display" style={{ fontSize: 20, color: isLocked ? 'var(--text-muted)' : 'var(--gold)' }}>
               {hero.name}
             </h3>
-            <Badge tone={OWNERSHIP_TONE[ownership]}>{OWNERSHIP_LABEL[ownership]}</Badge>
+            <div className="row" style={{ gap: 6 }} aria-label={isLocked ? undefined : `${stackCount} copies`}>
+              <Badge tone={OWNERSHIP_TONE[ownership]}>{OWNERSHIP_LABEL[ownership]}</Badge>
+              {!isLocked ? <Badge>×{stackCount}</Badge> : null}
+            </div>
           </div>
           <div className="row" style={{ gap: 6, alignItems: 'center' }}>
             <RarityBadge rarity={hero.rarity} />

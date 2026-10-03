@@ -90,6 +90,15 @@ export const heroCopiesOf = (
   return Array.isArray(stored) ? [...stored] : [];
 };
 
+/**
+ * Total instances in one hero's stack: the roster copy plus every spare.
+ * Callers should only use this for an owned hero.
+ */
+export const heroStackCountOf = (
+  copies: Record<string, number[]> | undefined,
+  heroId: string,
+): number => 1 + heroCopiesOf(copies, heroId).length;
+
 /** Serial number of the roster (main) instance of one hero. Null when unknown. */
 export const heroSerialOf = (
   serials: Record<string, number> | undefined,

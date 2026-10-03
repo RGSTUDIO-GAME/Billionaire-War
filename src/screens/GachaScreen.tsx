@@ -10,6 +10,7 @@ import type { Hero } from '../data/heroes/types';
 import { audio } from '../audio/audioManager';
 import { soundIds } from '../assets/manifest';
 import { haptic } from '../services/telegram';
+import { usePlayerStore } from '../state/playerStore';
 
 type GachaScreenProps = {
   onBack: () => void;
@@ -26,7 +27,9 @@ export const GachaScreen = ({ onBack }: GachaScreenProps) => {
   const [phase, setPhase] = useState<GachaPhase>('idle');
   const [results, setResults] = useState<Hero[]>([]);
   const [pullCount, setPullCount] = useState<GachaCount>(1);
+  const [saveFailed, setSaveFailed] = useState(false);
   const revealTimer = useRef<number | null>(null);
+  const grantGachaHeroes = usePlayerStore((state) => state.grantGachaHeroes);
 
   useEffect(
     () => () => {
@@ -48,14 +51,17 @@ export const GachaScreen = ({ onBack }: GachaScreenProps) => {
     if (revealTimer.current !== null) window.clearTimeout(revealTimer.current);
     setResults([]);
     setPullCount(count);
+    setSaveFailed(false);
     setPhase('spinning');
     audio.playSfx(soundIds.uiConfirm, 0.45);
 
     revealTimer.current = window.setTimeout(() => {
+      const saved = grantGachaHeroes(pulledResults.map((hero) => hero.id));
       setResults(pulledResults);
+      setSaveFailed(!saved);
       setPhase('revealed');
       audio.playSfx(soundIds.victory, 0.55);
-      haptic.notify('success');
+      haptic.notify(saved ? 'success' : 'error');
       revealTimer.current = null;
     }, REVEAL_DELAY_MS);
   };
@@ -80,17 +86,19 @@ export const GachaScreen = ({ onBack }: GachaScreenProps) => {
   const status =
     phase === 'spinning'
       ? `Spinning ${pullCount === 1 ? '1X' : '10X'}... hold tight!`
-      : phase === 'revealed' && isMultiResult
-        ? '10 heroes revealed'
-        : phase === 'revealed' && singleResult
-          ? `${singleResult.name} · ${singleResult.rarity.toUpperCase()} HERO`
-          : pullCount === 10
-            ? 'Tap 10X Gacha to reveal ten random heroes.'
-            : 'Tap Gacha to reveal a random hero.';
+      : phase === 'revealed' && saveFailed
+        ? 'Heroes revealed · save failed'
+        : phase === 'revealed' && isMultiResult
+          ? '10 heroes saved to Hero'
+          : phase === 'revealed' && singleResult
+            ? `${singleResult.name} · ${singleResult.rarity.toUpperCase()} HERO · SAVED`
+            : pullCount === 10
+              ? 'Tap 10X Gacha to reveal ten random heroes.'
+              : 'Tap Gacha to reveal a random hero.';
 
   return (
     <div className="gacha-screen anim-fade">
-      <ScreenHeader title="Gacha" subtitle="Free preview · visual only" onBack={onBack} />
+      <ScreenHeader title="Gacha" subtitle="Free pulls · saved to Hero" onBack={onBack} />
 
       <section
         className={`gacha-stage is-${phase}${isMultiResult ? ' has-ten-results' : ''}`}

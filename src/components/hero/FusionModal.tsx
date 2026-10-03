@@ -89,8 +89,7 @@ export const FusionModal = ({ hero, onClose }: { hero: Hero; onClose: () => void
             </div>
           ) : (
             <div className="muted" style={{ fontSize: 12, marginTop: 'var(--s-2)' }}>
-              No duplicates yet. Ticket-based Gacha rewards arrive later; the current preview does
-              not change the roster.
+              No duplicates yet. Pull the same hero in Gacha to add it to this stack.
             </div>
           )}
         </Card>

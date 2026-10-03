@@ -34,12 +34,18 @@ const home = renderToStaticMarkup(
 );
 const homeWords = readable(home);
 
-check('gacha: the screen mounts with its header', gachaWords.includes('Gacha Free preview · visual only'));
+check('gacha: the screen mounts with its header', gachaWords.includes('Gacha Free pulls · saved to Hero'));
 check('gacha: the floating stack starts with five mystery cards', (gacha.match(/\?/g) ?? []).length === 5);
 check('gacha: the reveal button is available', gachaWords.includes('Gacha'));
 check('gacha: the 10X reveal button is available', gachaWords.includes('10X Gacha'));
-check('gacha: the demo scope is disclosed', gachaWords.includes('visual only'));
+check('gacha: the save scope is disclosed', gachaWords.includes('saved to Hero'));
 check('home: the Gacha entry point is shown', homeWords.includes('Gacha'));
+
+const gachaSource = readFileSync(join(process.cwd(), 'src', 'screens', 'GachaScreen.tsx'), 'utf8');
+check(
+  'gacha: revealed heroes are saved through the player store',
+  gachaSource.includes('grantGachaHeroes(pulledResults.map((hero) => hero.id))'),
+);
 
 const app = readFileSync(join(process.cwd(), 'src', 'app', 'App.tsx'), 'utf8');
 check(
