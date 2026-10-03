@@ -161,6 +161,75 @@ const heroId = HEROES[0].id;
   );
 }
 
+/* A duplicate of a maxed roster hero remains a separate sellable copy. */
+{
+  const runtime = createRuntime(memoryStorage());
+  const fresh = runtime.players.loadOrCreate();
+  const maxed = {
+    ...fresh,
+    ownedHeroes: [heroId],
+    equippedHeroId: heroId,
+    heroLevels: { [heroId]: 100 },
+    heroStars: { [heroId]: MAX_STARS },
+    heroCopies: {},
+  };
+  runtime.players.save(maxed);
+  const storedMaxed = runtime.players.load() ?? maxed;
+  const granted = runtime.fusionService.grantCopy(storedMaxed, heroId, NOW + 20);
+  check(
+    'gacha: a duplicate of a maxed hero stays separate from the Level 100 main',
+    granted.ok &&
+      granted.profile.ownedHeroes.includes(heroId) &&
+      granted.profile.heroLevels[heroId] === 100 &&
+      heroCopiesOf(granted.profile.heroCopies, heroId).length === 1,
+  );
+
+  if (granted.ok) {
+    const mainSerial = heroSerialOf(granted.profile.heroSerials, heroId);
+    const copySerial = heroCopiesOf(granted.profile.heroCopies, heroId)[0];
+    const offered = runtime.tradeService.createHeroOffer(granted.profile, heroId, 42, 'gold', NOW + 21);
+    check(
+      'trade: Gacha duplicate is offered as a Level 0 copy',
+      offered.ok &&
+        offered.profile.ownedHeroes.includes(heroId) &&
+        offered.profile.heroLevels[heroId] === 100 &&
+        offered.profile.tradeOffers?.[0]?.kind === 'hero' &&
+        offered.profile.tradeOffers[0].kind === 'hero' &&
+        offered.profile.tradeOffers[0].heroLevel === 0 &&
+        offered.profile.tradeOffers[0].heroCopySerial === copySerial,
+    );
+    check(
+      'trade: offering the duplicate never escrows the maxed main hero',
+      offered.ok &&
+        heroSerialOf(offered.profile.heroSerials, heroId) === mainSerial &&
+        heroCopiesOf(offered.profile.heroCopies, heroId).length === 0,
+    );
+
+    if (offered.ok) {
+      const offerId = offered.profile.tradeOffers?.[0]?.offerId ?? '';
+      const reloaded = runtime.players.load();
+      check(
+        'trade: an active copy offer survives reload beside its owned main',
+        reloaded?.ownedHeroes.includes(heroId) === true &&
+          reloaded?.tradeOffers?.some((offer) =>
+            offer.offerId === offerId &&
+            offer.status === 'active' &&
+            offer.kind === 'hero' &&
+            offer.heroCopySerial === copySerial,
+          ) === true,
+      );
+      const delisted = runtime.tradeService.delistOffer(offered.profile, offerId, NOW + 22);
+      check(
+        'trade: delisting returns only the same duplicate serial',
+        delisted.ok &&
+          delisted.profile.ownedHeroes.includes(heroId) &&
+          delisted.profile.heroLevels[heroId] === 100 &&
+          heroCopiesOf(delisted.profile.heroCopies, heroId).includes(copySerial),
+      );
+    }
+  }
+}
+
 /* Fusion burns exactly the step cost and lifts one tier. */
 {
   const runtime = createRuntime(memoryStorage());
@@ -250,6 +319,10 @@ const heroId = HEROES[0].id;
   const richBuyer = {
     ...buyer,
     goldBalance: 10_000_000,
+    ownedHeroes: [heroId],
+    equippedHeroId: heroId,
+    heroSerials: { [heroId]: 10 },
+    heroSerialCounter: 10,
     tradeOffers: [
       {
         offerId: 'offer_foreign_1',
@@ -258,6 +331,8 @@ const heroId = HEROES[0].id;
         heroId,
         heroLevel: 3,
         heroStars: 2,
+        heroSerial: 9_001,
+        heroCopies: [9_002, 9_003],
         wasEquipped: false,
         currency: 'gold' as const,
         price: 100,
@@ -272,7 +347,15 @@ const heroId = HEROES[0].id;
     'fusion: delivering a duplicate grants a serialised copy, not a second roster slot',
     delivered.ok &&
       delivered.profile.ownedHeroes.filter((owned) => owned === heroId).length === 1 &&
-      heroCopiesOf(delivered.profile.heroCopies, heroId).length === 1,
+      heroCopiesOf(delivered.profile.heroCopies, heroId).length === 3,
+  );
+  check(
+    'fusion: delivering a main offer transfers its serial and every escrowed copy',
+    delivered.ok &&
+      delivered.profile.ownedHeroes.filter((owned) => owned === heroId).length === 1 &&
+      [9_001, 9_002, 9_003].every((serial) =>
+        heroCopiesOf(delivered.profile.heroCopies, heroId).includes(serial),
+      ),
   );
 }
 

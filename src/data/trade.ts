@@ -20,6 +20,12 @@ export type HeroTradeOffer = TradeOfferBase & {
   heroId: string;
   heroLevel: number;
   heroStars: number;
+  /**
+   * Serial of one spare copy when the listing escrows only that copy.
+   * Missing/null means the offer escrows the roster (main) instance.
+   */
+  heroCopySerial?: number | null;
+  /** Remaining spare copies escrowed with a main-instance offer. */
   heroCopies?: number[];
   heroSerial?: number | null;
   wasEquipped: boolean;

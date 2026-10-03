@@ -10,6 +10,7 @@ import { Card } from '../components/ui/Card';
 import { CurrencyPill } from '../components/ui/CurrencyPill';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { heroLevelOf } from '../data/economy';
+import { heroCopiesOf, heroStackCountOf } from '../data/fusion';
 import { HEROES } from '../data/heroes';
 import { formatTradeAmount, heroTradePrice, isValidTradePrice } from '../data/trade';
 import type { TradeCurrency, TradeOffer } from '../data/trade';
@@ -51,7 +52,10 @@ const OfferCard = ({ offer, actions }: { offer: TradeOffer; actions: ReactNode }
         {offer.kind === 'hero' ? (
           <>
             <RarityBadge rarity={HEROES.find((hero) => hero.id === offer.heroId)?.rarity ?? 'common'} height={16} />
-            <span>Lv {offer.heroLevel}</span>
+            <span>
+              {offer.heroCopySerial === null || offer.heroCopySerial === undefined ? 'Main' : 'Copy'} · Lv{' '}
+              {offer.heroLevel}
+            </span>
           </>
         ) : (
           <span>Gold offer</span>
@@ -68,6 +72,7 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
   const bwar = usePlayerStore((state) => state.bwar);
   const ownedHeroIds = usePlayerStore((state) => state.ownedHeroIds);
   const heroLevels = usePlayerStore((state) => state.heroLevels);
+  const heroCopies = usePlayerStore((state) => state.heroCopies);
   const mining = usePlayerStore((state) => state.mining);
   const tradeOffers = usePlayerStore((state) => state.tradeOffers);
   const playerId = usePlayerStore((state) => state.playerId);
@@ -116,13 +121,19 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
   const availableHeroes = HEROES.filter(
     (hero) =>
       ownedHeroIds.includes(hero.id) &&
-      !activeOffers.some((offer) => offer.kind === 'hero' && offer.heroId === hero.id),
+      !activeOffers.some((offer) =>
+        offer.kind === 'hero' &&
+        offer.heroId === hero.id &&
+        (offer.heroCopySerial === null || offer.heroCopySerial === undefined),
+      ),
   );
 
   const offerHero = (heroId: string, price: number) => {
+    const hero = HEROES.find((candidate) => candidate.id === heroId);
+    const sellsCopy = heroCopiesOf(heroCopies, heroId).length > 0;
     report(
       createHeroOffer(heroId, price, offerCurrency),
-      `Offer created for ${HEROES.find((hero) => hero.id === heroId)?.name ?? 'hero'}.`,
+      `${sellsCopy ? 'Copy offer' : 'Hero offer'} created for ${hero?.name ?? 'hero'}.`,
     );
   };
 
@@ -231,10 +242,13 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
               {availableHeroes.length > 0 ? (
                 availableHeroes.map((hero) => {
                   const level = heroLevelOf(heroLevels, hero.id);
-                  const suggested = heroTradePrice(hero, level, offerCurrency, 'sell');
+                  const copies = heroCopiesOf(heroCopies, hero.id);
+                  const sellsCopy = copies.length > 0;
+                  const sellableLevel = sellsCopy ? 0 : level;
+                  const suggested = heroTradePrice(hero, sellableLevel, offerCurrency, 'sell');
                   const price = parseAmount(heroPriceDrafts[hero.id] ?? String(suggested));
-                  const miningLocked = mining?.heroId === hero.id;
-                  const lastHero = ownedHeroIds.length <= 1;
+                  const miningLocked = !sellsCopy && mining?.heroId === hero.id;
+                  const lastHero = !sellsCopy && ownedHeroIds.length <= 1;
                   return (
                     <Card className="trade-row" key={hero.id}>
                       <HeroAvatar hero={hero} size="sm" />
@@ -242,7 +256,10 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
                         <div className="trade-row__title">{hero.name}</div>
                         <div className="trade-row__meta">
                           <RarityBadge rarity={hero.rarity} height={16} />
-                          <span>Lv {level}</span>
+                          <span>
+                            ×{heroStackCountOf(heroCopies, hero.id)} ·{' '}
+                            {sellsCopy ? `Copy · Lv ${sellableLevel}` : `Main · Lv ${level}`}
+                          </span>
                           {miningLocked ? <Badge tone="danger">Mining</Badge> : null}
                         </div>
                         <label className="trade-price-field">
@@ -268,7 +285,13 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
                         }
                         onClick={() => offerHero(hero.id, price)}
                       >
-                        {miningLocked ? 'Unstack first' : lastHero ? 'Last hero' : 'Offer'}
+                        {miningLocked
+                          ? 'Unstack first'
+                          : lastHero
+                            ? 'Last hero'
+                            : sellsCopy
+                              ? 'Offer copy'
+                              : 'Offer hero'}
                       </Button>
                     </Card>
                   );

@@ -4,6 +4,7 @@
  * Checks hero and Gold marketplace rules independently of the UI.
  */
 import { heroTradePrice, goldItemPrice } from '../src/data/trade';
+import { heroCopiesOf } from '../src/data/fusion';
 import { HEROES } from '../src/data/heroes';
 import { memoryStorage } from '../src/storage/StorageAdapter';
 import { createRuntime } from '../src/state/runtime';
@@ -113,6 +114,32 @@ check(
   const refused = runtime.tradeService.sellHero(onlyHero, HEROES[0].id, 'gold', NOW);
   check('trade: the last hero cannot be sold', refused.ok === false);
   check('trade: the last hero remains equipped', refused.profile.equippedHeroId === HEROES[0].id);
+}
+
+/* A spare copy is sold first; the roster hero stays intact. */
+{
+  const copyWorld = createRuntime(memoryStorage());
+  const onlyMain = copyWorld.players.loadOrCreate();
+  const maxedHero = {
+    ...onlyMain,
+    ownedHeroes: [HEROES[0].id],
+    equippedHeroId: HEROES[0].id,
+    heroLevels: { [HEROES[0].id]: 100 },
+    heroStars: { [HEROES[0].id]: 6 },
+    heroCopies: { [HEROES[0].id]: [99_001] },
+    goldBalance: 0,
+  };
+  copyWorld.players.save(maxedHero);
+  const stored = copyWorld.players.load() ?? maxedHero;
+  const sold = copyWorld.tradeService.sellHero(stored, HEROES[0].id, 'gold', NOW);
+  check(
+    'trade: direct sale spends one spare copy before the roster hero',
+    sold.ok &&
+      sold.profile.ownedHeroes.includes(HEROES[0].id) &&
+      sold.profile.heroLevels[HEROES[0].id] === 100 &&
+      heroCopiesOf(sold.profile.heroCopies, HEROES[0].id).length === 0 &&
+      sold.profile.goldBalance > 0,
+  );
 }
 
 /* Gold is quoted in BWAR in both directions at 100:1. */

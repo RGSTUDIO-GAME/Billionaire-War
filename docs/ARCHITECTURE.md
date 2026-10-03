@@ -239,11 +239,12 @@ debit larger than the balance outright rather than clamping it, because a
 clamped debit looks like a purchase that cost less than it should. Every
 movement writes through to storage before the caller sees the new profile.
 
-`TradeService` owns local custom-price marketplace rules. Offers escrow a hero
-or Gold balance, Delist returns an active asset, and Deliver credits the chosen
-price while closing the listing. Delivered history can also be delisted. It
-refuses a mining-stacked or final hero offer and performs no wallet or on-chain
-transaction.
+`TradeService` owns local custom-price marketplace rules. A Hero offer can escrow
+either the roster instance or one serialised duplicate, so a maxed main Hero can
+remain equipped while its new Gacha copy is traded. Delist returns exactly that
+asset, and Deliver credits the chosen price while closing the listing. Delivered
+history can also be delisted. It refuses a mining-stacked main Hero or the final
+roster Hero and performs no wallet or on-chain transaction.
 
 `BattleService` mints battle ids and owns the archive. The ids carry a
 per-session token, so a battle started after a reload can never collide with one

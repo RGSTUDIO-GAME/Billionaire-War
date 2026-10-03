@@ -138,6 +138,7 @@ const knownOfferId = (value: unknown): string | null =>
 const parseTradeOffers = (
   value: unknown,
   ownedHeroes: readonly string[],
+  ownedCopies: Record<string, readonly number[]>,
   playerId: string,
 ): TradeOffer[] => {
   if (!Array.isArray(value)) return [];
@@ -170,8 +171,17 @@ const parseTradeOffers = (
         ? clampStars(raw.heroStars)
         : 1;
       if (heroId === null) continue;
-      const activeKey = `hero:${heroId}`;
-      if (status === 'active' && (ownedHeroes.includes(heroId) || activeAssets.has(activeKey))) {
+      const heroCopySerial =
+        typeof raw.heroCopySerial === 'number' && Number.isInteger(raw.heroCopySerial) && raw.heroCopySerial > 0
+          ? raw.heroCopySerial
+          : null;
+      const activeKey = heroCopySerial === null
+        ? `hero:main:${heroId}`
+        : `hero:copy:${heroId}:${heroCopySerial}`;
+      const listedInstanceIsStillOwned = heroCopySerial === null
+        ? ownedHeroes.includes(heroId)
+        : (ownedCopies[heroId] ?? []).includes(heroCopySerial);
+      if (status === 'active' && (listedInstanceIsStillOwned || activeAssets.has(activeKey))) {
         status = 'delisted';
       }
       if (status === 'active') activeAssets.add(activeKey);
@@ -189,6 +199,7 @@ const parseTradeOffers = (
         heroId,
         heroLevel,
         heroStars,
+        heroCopySerial,
         heroCopies,
         heroSerial,
         wasEquipped: raw.wasEquipped === true,
@@ -325,6 +336,7 @@ export const parseProfile = (
   // player, so a new identity is minted and the rest of the data is kept.
   const resolvedId = playerId ?? mintPlayerId();
 
+  const heroCopies = knownHeroCopies(raw.heroCopies);
   return ensureHeroIdentity({
     version: STORAGE_VERSION,
     playerId: resolvedId,
@@ -336,7 +348,7 @@ export const parseProfile = (
     ownedHeroes,
     heroLevels: knownHeroLevels(raw.heroLevels),
     heroStars: knownHeroStars(raw.heroStars),
-    heroCopies: knownHeroCopies(raw.heroCopies),
+    heroCopies,
     heroSerials: knownHeroSerials(raw.heroSerials, ownedHeroes),
     heroSerialCounter: typeof raw.heroSerialCounter === 'number' && Number.isInteger(raw.heroSerialCounter) && raw.heroSerialCounter >= 0
       ? raw.heroSerialCounter
@@ -344,7 +356,7 @@ export const parseProfile = (
     goldBalance,
     bwarBalance: asNonNegativeNumber(raw.bwarBalance) ?? STARTING_BWAR,
     mining: parseMiningSession(raw.mining, ownedHeroes, now),
-    tradeOffers: parseTradeOffers(raw.tradeOffers, ownedHeroes, resolvedId),
+    tradeOffers: parseTradeOffers(raw.tradeOffers, ownedHeroes, heroCopies, resolvedId),
     createdAt,
     updatedAt: asTimestamp(raw.updatedAt, createdAt),
   });

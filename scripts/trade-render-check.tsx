@@ -3,6 +3,8 @@
  * =========================
  * Renders the real entry points and checks the player-facing marketplace UI.
  */
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { HomeScreen } from '../src/screens/HomeScreen';
 import { InventoryScreen } from '../src/screens/InventoryScreen';
@@ -41,6 +43,16 @@ check('render: Trade has Offer and Deliver tabs', (trade.match(/role="tablist"/g
 check('render: Trade starts on custom-price Offer', trade.includes('aria-selected="true"') && tradeWords.includes('Custom price'));
 check('render: Trade explains the mining lock', tradeWords.includes('Mining heroes stay locked until unstacked.'));
 check('render: Trade exposes no direct Buy button', !trade.includes('>Buy<'));
+
+const tradeSource = readFileSync(join(process.cwd(), 'src', 'screens', 'TradeScreen.tsx'), 'utf8');
+check(
+  'render: Trade shows each hero stack quantity',
+  tradeSource.includes('×{heroStackCountOf(heroCopies, hero.id)}'),
+);
+check(
+  'render: Trade offers an available duplicate as a copy',
+  tradeSource.includes("'Offer copy'"),
+);
 
 if (failures.length > 0) {
   console.error(`\n${failures.length} trade render check(s) FAILED:\n`);

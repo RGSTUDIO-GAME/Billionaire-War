@@ -36,7 +36,7 @@ npm run dev        # http://localhost:5173
 | `npm run build` | Typecheck + production build to `dist/` |
 | `npm run preview` | Serve the production build |
 | `npm run typecheck` | TypeScript only |
-| `npm run verify` | **1,102 assertions** — engine rules, store flow, presentation, rewards, data layer, animation, rendered screens, mining, trade, fusion and gacha |
+| `npm run verify` | **1,111 assertions** — engine rules, store flow, presentation, rewards, data layer, animation, rendered screens, mining, trade, fusion and gacha |
 | `npm run assets:check` | Report which registered assets exist on disk |
 | `npm run assets:placeholder` | Regenerate the bundled placeholder art/audio |
 | `npm run lint` | oxlint |
@@ -280,8 +280,9 @@ the trophy button in the top bar, `WAR` from the big button on Home, and
   counter, and claim one character hashrate after each completed 10-minute
   block. The counter reaches its full target after 24 hours and pauses until claimed.
 - **Trade** — create custom-price Hero and Gold offers in `$GOLD` or local `$BWAR`,
-  deliver completed sales, or delist an offer. Active assets stay in escrow and
-  mining-stacked heroes must be unstacked first.
+  deliver completed sales, or delist an offer. A stacked duplicate can be offered
+  as its own Level 0 serial while the main Hero remains equipped; the main Hero
+  stays locked while Mining.
 - **Gacha** — free 1X and 10X pulls with a floating mystery-card stack, fast
   spin, rarity-colored hero frame and glow, and ten results arranged as two rows
   of five. Results save locally; duplicate heroes stack as `Hero × count` in the

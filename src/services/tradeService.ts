@@ -37,6 +37,83 @@ const insufficient = (profile: PlayerProfile, reason: TradeFailure): TradeOutcom
 const closeEnough = (left: number, right: number): boolean => Math.abs(left - right) < 1e-9;
 let offerSequence = 0;
 
+const heroOfferInstanceKey = (offer: TradeOffer): string =>
+  offer.kind === 'hero'
+    ? offer.heroCopySerial === null || offer.heroCopySerial === undefined
+      ? `hero:main:${offer.heroId}`
+      : `hero:copy:${offer.heroId}:${offer.heroCopySerial}`
+    : 'gold';
+
+const positiveSerials = (serials: Array<number | null | undefined>): number[] => [
+  ...new Set(serials.filter((serial): serial is number =>
+    typeof serial === 'number' && Number.isInteger(serial) && serial > 0,
+  )),
+];
+
+const withHeroOfferGranted = (profile: PlayerProfile, offer: TradeOffer): PlayerProfile => {
+  if (offer.kind !== 'hero') return profile;
+
+  const sourceIsCopy = offer.heroCopySerial !== null && offer.heroCopySerial !== undefined;
+  const sourceMainSerial = sourceIsCopy ? null : positiveSerials([offer.heroSerial])[0] ?? null;
+  const sourceCopySerials = sourceIsCopy
+    ? positiveSerials([offer.heroCopySerial])
+    : positiveSerials(offer.heroCopies ?? []);
+  const ownsHero = profile.ownedHeroes.includes(offer.heroId);
+
+  if (!ownsHero) {
+    const mainSerial = sourceIsCopy ? sourceCopySerials[0] ?? null : sourceMainSerial;
+    return {
+      ...profile,
+      ownedHeroes: [...profile.ownedHeroes, offer.heroId],
+      heroSerials: mainSerial === null
+        ? profile.heroSerials
+        : { ...(profile.heroSerials ?? {}), [offer.heroId]: mainSerial },
+      heroCopies: {
+        ...(profile.heroCopies ?? {}),
+        [offer.heroId]: sourceIsCopy ? [] : sourceCopySerials,
+      },
+      heroLevels: { ...profile.heroLevels, [offer.heroId]: offer.heroLevel },
+      heroStars: {
+        ...(profile.heroStars ?? {}),
+        [offer.heroId]: offer.heroStars,
+      },
+    };
+  }
+
+  const mainSerial = heroSerialOf(profile.heroSerials, offer.heroId);
+  const currentCopies = heroCopiesOf(profile.heroCopies, offer.heroId);
+  const receivedSerials = positiveSerials([
+    sourceMainSerial,
+    ...sourceCopySerials,
+  ]).filter((serial) => serial !== mainSerial && !currentCopies.includes(serial));
+  const needsMintedSource = !sourceIsCopy && sourceMainSerial === null;
+  const withReceived = receivedSerials.length > 0
+    ? {
+      ...profile,
+      heroCopies: {
+        ...(profile.heroCopies ?? {}),
+        [offer.heroId]: [...currentCopies, ...receivedSerials],
+      },
+    }
+    : profile;
+  const withFallback = needsMintedSource ? withCopyGranted(withReceived, offer.heroId) : withReceived;
+
+  return {
+    ...withFallback,
+    heroLevels: {
+      ...withFallback.heroLevels,
+      [offer.heroId]: Math.max(withFallback.heroLevels[offer.heroId] ?? 0, offer.heroLevel),
+    },
+    heroStars: {
+      ...(withFallback.heroStars ?? {}),
+      [offer.heroId]: Math.max(
+        heroStarsOf(withFallback.heroStars, offer.heroId),
+        offer.heroStars,
+      ),
+    },
+  };
+};
+
 const createOfferId = (now: number): string => {
   offerSequence += 1;
   const token = globalThis.crypto?.randomUUID?.().slice(0, 8) ?? Math.random().toString(36).slice(2, 10);
@@ -69,41 +146,69 @@ export class TradeService {
     price: number,
     currency: TradeCurrency,
     now: number,
+    copySerial?: number | null,
   ): TradeOutcome {
     if (!isValidTradePrice(price, currency)) return insufficient(profile, 'INVALID_PRICE');
     const hero = getHeroById(heroId);
     if (hero === undefined) return insufficient(profile, 'INVALID_HERO');
     if (!profile.ownedHeroes.includes(heroId)) return insufficient(profile, 'NOT_OWNED');
-    if (profile.mining?.heroId === heroId) return insufficient(profile, 'MINING_LOCKED');
     const offers = this.offers(profile);
     if (offers.length >= MAX_TRADE_OFFERS) return insufficient(profile, 'TOO_MANY_OFFERS');
-    if (offers.some((offer) => offer.status === 'active' && offer.kind === 'hero' && offer.heroId === heroId)) {
+
+    const copies = heroCopiesOf(profile.heroCopies, heroId);
+    const selectedCopySerial = copySerial === undefined
+      ? copies[copies.length - 1] ?? null
+      : copySerial;
+    const sellsCopy = selectedCopySerial !== null;
+    if (sellsCopy && !copies.includes(selectedCopySerial)) {
+      return insufficient(profile, 'NOT_OWNED');
+    }
+    const selectedInstanceKey = sellsCopy
+      ? `hero:copy:${heroId}:${selectedCopySerial}`
+      : `hero:main:${heroId}`;
+    if (offers.some((offer) =>
+      offer.status === 'active' &&
+      offer.kind === 'hero' &&
+      heroOfferInstanceKey(offer) === selectedInstanceKey,
+    )) {
       return insufficient(profile, 'ALREADY_OFFERED');
+    }
+    if (!sellsCopy && profile.mining?.heroId === heroId) {
+      return insufficient(profile, 'MINING_LOCKED');
     }
 
     const remainingHeroes = profile.ownedHeroes.filter((ownedHeroId) => ownedHeroId !== heroId);
-    if (remainingHeroes.length === 0) return insufficient(profile, 'LAST_HERO');
+    if (!sellsCopy && remainingHeroes.length === 0) return insufficient(profile, 'LAST_HERO');
     const heroLevel = profile.heroLevels[heroId] ?? 0;
     const heroStars = heroStarsOf(profile.heroStars, heroId);
-    const heroCopies = heroCopiesOf(profile.heroCopies, heroId);
     const heroSerial = heroSerialOf(profile.heroSerials, heroId);
     const offer: TradeOffer = {
       offerId: createOfferId(now),
       sellerId: profile.playerId,
       kind: 'hero',
       heroId,
-      heroLevel,
-      heroStars,
-      heroCopies,
-      heroSerial,
-      wasEquipped: profile.equippedHeroId === heroId,
+      heroLevel: sellsCopy ? 0 : heroLevel,
+      heroStars: sellsCopy ? 1 : heroStars,
+      heroCopySerial: selectedCopySerial,
+      heroCopies: sellsCopy ? [] : copies,
+      heroSerial: sellsCopy ? null : heroSerial,
+      wasEquipped: !sellsCopy && profile.equippedHeroId === heroId,
       currency,
       price,
       status: 'active',
       createdAt: now,
       updatedAt: now,
     };
-    const next: PlayerProfile = {
+    const next: PlayerProfile = sellsCopy
+      ? {
+        ...profile,
+        heroCopies: {
+          ...(profile.heroCopies ?? {}),
+          [heroId]: copies.filter((serial) => serial !== selectedCopySerial),
+        },
+        tradeOffers: [offer, ...offers],
+      }
+      : {
       ...profile,
       ownedHeroes: remainingHeroes,
       heroLevels: Object.fromEntries(
@@ -120,7 +225,7 @@ export class TradeService {
       ),
       equippedHeroId: profile.equippedHeroId === heroId ? remainingHeroes[0] : profile.equippedHeroId,
       tradeOffers: [offer, ...offers],
-    };
+      };
     if (!this.players.save(next)) return insufficient(profile, 'SAVE_FAILED');
     return { ok: true, profile: next };
   }
@@ -167,6 +272,23 @@ export class TradeService {
     const closedOffers = offers.map((candidate) => candidate.offerId === offerId ? closedOffer : candidate);
 
     if (offer.kind === 'hero') {
+      if (offer.heroCopySerial !== null && offer.heroCopySerial !== undefined) {
+        const currentCopies = heroCopiesOf(profile.heroCopies, offer.heroId);
+        const restoredCopies = currentCopies.includes(offer.heroCopySerial)
+          ? currentCopies
+          : [...currentCopies, offer.heroCopySerial];
+        const next: PlayerProfile = {
+          ...profile,
+          heroCopies: {
+            ...(profile.heroCopies ?? {}),
+            [offer.heroId]: restoredCopies,
+          },
+          tradeOffers: closedOffers,
+        };
+        if (!this.players.save(next)) return insufficient(profile, 'SAVE_FAILED');
+        return { ok: true, profile: next };
+      }
+
       const owned = profile.ownedHeroes.includes(offer.heroId)
         ? profile.ownedHeroes
         : [...profile.ownedHeroes, offer.heroId];
@@ -214,28 +336,9 @@ export class TradeService {
     const deliveredOffer: TradeOffer = { ...offer, status: 'delivered', updatedAt: now };
     const deliveredOffers = offers.map((candidate) => candidate.offerId === offerId ? deliveredOffer : candidate);
 
-    const copyBase =
-      offer.kind === 'hero' && profile.ownedHeroes.includes(offer.heroId)
-        ? withCopyGranted(profile, offer.heroId)
-        : profile;
     const receivingProfile: PlayerProfile = {
-      ...copyBase,
+      ...withHeroOfferGranted(profile, offer),
       tradeOffers: deliveredOffers,
-      ...(offer.kind === 'hero'
-        ? {
-            ownedHeroes: copyBase.ownedHeroes.includes(offer.heroId)
-              ? copyBase.ownedHeroes
-              : [...copyBase.ownedHeroes, offer.heroId],
-            heroLevels: {
-              ...copyBase.heroLevels,
-              [offer.heroId]: Math.max(copyBase.heroLevels[offer.heroId] ?? 0, offer.heroLevel),
-            },
-            heroStars: {
-              ...(copyBase.heroStars ?? {}),
-              [offer.heroId]: Math.max(heroStarsOf(copyBase.heroStars, offer.heroId), offer.heroStars),
-            },
-          }
-        : {}),
     };
 
     if (offer.currency === 'gold') {
@@ -291,9 +394,32 @@ export class TradeService {
     const hero = getHeroById(heroId);
     if (hero === undefined) return insufficient(profile, 'INVALID_HERO');
     if (!profile.ownedHeroes.includes(heroId)) return insufficient(profile, 'NOT_OWNED');
-    if (profile.mining?.heroId === heroId) return insufficient(profile, 'MINING_LOCKED');
 
+    const copies = heroCopiesOf(profile.heroCopies, heroId);
+    const sellsCopy = copies.length > 0;
     const remainingHeroes = profile.ownedHeroes.filter((ownedHeroId) => ownedHeroId !== heroId);
+    if (sellsCopy) {
+      const remainingCopies = copies.slice(0, -1);
+      const withoutCopy: PlayerProfile = {
+        ...profile,
+        heroCopies: {
+          ...(profile.heroCopies ?? {}),
+          [heroId]: remainingCopies,
+        },
+      };
+      const price = heroTradePrice(hero, 0, currency, 'sell');
+      if (currency === 'gold') {
+        const credited = this.goldService.credit(withoutCopy, price, { kind: 'GRANT' }, now);
+        if (!credited.ok) return insufficient(profile, 'INVALID_AMOUNT');
+        return { ok: true, profile: credited.profile };
+      }
+
+      const next = { ...withoutCopy, bwarBalance: profile.bwarBalance + price };
+      if (!this.players.save(next)) return insufficient(profile, 'SAVE_FAILED');
+      return { ok: true, profile: next };
+    }
+
+    if (profile.mining?.heroId === heroId) return insufficient(profile, 'MINING_LOCKED');
     if (remainingHeroes.length === 0) return insufficient(profile, 'LAST_HERO');
     const withoutHero: PlayerProfile = {
       ...profile,
