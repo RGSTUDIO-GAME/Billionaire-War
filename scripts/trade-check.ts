@@ -32,6 +32,11 @@ check(
   'trade: selling returns 60 percent of buy value',
   close(heroTradePrice(HEROES[0], 10, 'gold', 'sell'), heroTradePrice(HEROES[0], 10, 'gold', 'buy') * 0.6),
 );
+check(
+  'trade: star tiers raise the quoted Hero value',
+  heroTradePrice(HEROES[0], 0, 'bwar', 'sell', 6) >
+    heroTradePrice(HEROES[0], 0, 'bwar', 'sell', 1),
+);
 
 /* A saved one-hero roster must not be repaired back to every free hero. */
 {
@@ -139,6 +144,140 @@ check(
       sold.profile.heroLevels[HEROES[0].id] === 100 &&
       heroCopiesOf(sold.profile.heroCopies, HEROES[0].id).length === 0 &&
       sold.profile.goldBalance > 0,
+  );
+}
+
+/* Buy requests escrow BWAR, fill highest-first, and can be cancelled. */
+{
+  const requestWorld = createRuntime(memoryStorage());
+  const requester = requestWorld.players.loadOrCreate();
+  const fundedRequester = { ...requester, bwarBalance: 20 };
+  const heroRequest = requestWorld.tradeService.createHeroRequest(fundedRequester, HEROES[0].id, 7, NOW);
+  check(
+    'request: creating a Hero request escrows the chosen BWAR price',
+    heroRequest.ok &&
+      heroRequest.profile.bwarBalance === fundedRequester.bwarBalance - 7 &&
+      heroRequest.profile.tradeRequests?.[0]?.kind === 'hero' &&
+      heroRequest.profile.tradeRequests[0].status === 'active',
+  );
+  if (heroRequest.ok) {
+    const requestId = heroRequest.profile.tradeRequests?.[0]?.requestId ?? '';
+    const cancelled = requestWorld.tradeService.cancelRequest(heroRequest.profile, requestId, NOW + 1);
+    check(
+      'request: cancelling returns the exact escrow',
+      cancelled.ok && cancelled.profile.bwarBalance === fundedRequester.bwarBalance,
+    );
+  }
+
+  const goldRequester = { ...requestWorld.players.loadOrCreate(), bwarBalance: 20 };
+  const goldRequest = requestWorld.tradeService.createGoldRequest(goldRequester, 250, 11, NOW + 2);
+  check(
+    'request: Gold requests also escrow a custom BWAR price',
+    goldRequest.ok &&
+      goldRequest.profile.bwarBalance === goldRequester.bwarBalance - 11 &&
+      goldRequest.profile.tradeRequests?.some((request) =>
+        request.kind === 'gold' && request.goldAmount === 250 && request.price === 11,
+      ),
+  );
+}
+
+/* Instant Sell always chooses the highest matching active request. */
+{
+  const fillWorld = createRuntime(memoryStorage());
+  const base = fillWorld.players.loadOrCreate();
+  const mainSerial = base.heroSerials?.[HEROES[0].id] ?? 1;
+  const heroFixture = {
+    ...base,
+    ownedHeroes: [HEROES[0].id, HEROES[1].id],
+    tradeRequests: [
+      {
+        requestId: 'request_low',
+        requesterId: 'buyer-low',
+        kind: 'hero' as const,
+        heroId: HEROES[0].id,
+        price: 10,
+        status: 'active' as const,
+        createdAt: NOW,
+        updatedAt: NOW,
+      },
+      {
+        requestId: 'request_high',
+        requesterId: 'buyer-high',
+        kind: 'hero' as const,
+        heroId: HEROES[0].id,
+        price: 20,
+        status: 'active' as const,
+        createdAt: NOW + 1,
+        updatedAt: NOW + 1,
+      },
+    ],
+  };
+  const filled = fillWorld.tradeService.instantSellHero(
+    heroFixture,
+    HEROES[0].id,
+    mainSerial,
+    NOW + 2,
+  );
+  check(
+    'request: Hero Instant Sell credits the highest matching price',
+    filled.ok &&
+      filled.profile.bwarBalance === base.bwarBalance + 20 &&
+      !filled.profile.ownedHeroes.includes(HEROES[0].id) &&
+      filled.profile.tradeRequests?.find((request) => request.requestId === 'request_high')?.status ===
+        'fulfilled' &&
+      filled.profile.tradeRequests?.find((request) => request.requestId === 'request_low')?.status ===
+        'active',
+  );
+  check(
+    'request: the selected Hero instance is removed exactly once',
+    filled.ok && filled.profile.ownedHeroes.filter((id) => id === HEROES[0].id).length === 0,
+  );
+
+  const afterHeroFill = filled.ok ? filled.profile : base;
+  const goldFixture = {
+    ...afterHeroFill,
+    ownedHeroes: [HEROES[0].id],
+    goldBalance: 1_000,
+    tradeRequests: [
+      ...(afterHeroFill.tradeRequests ?? []),
+      {
+        requestId: 'gold_low',
+        requesterId: 'gold-low',
+        kind: 'gold' as const,
+        goldAmount: 500,
+        price: 5,
+        status: 'active' as const,
+        createdAt: NOW,
+        updatedAt: NOW,
+      },
+      {
+        requestId: 'gold_high',
+        requesterId: 'gold-high',
+        kind: 'gold' as const,
+        goldAmount: 500,
+        price: 9,
+        status: 'active' as const,
+        createdAt: NOW + 1,
+        updatedAt: NOW + 1,
+      },
+    ],
+  };
+  const goldFilled = fillWorld.tradeService.instantSellGold(goldFixture, 500, NOW + 3);
+  check(
+    'request: Gold Instant Sell debits Gold and credits the highest request',
+    goldFilled.ok &&
+      goldFilled.profile.goldBalance === 500 &&
+      goldFilled.profile.bwarBalance === afterHeroFill.bwarBalance + 9 &&
+      goldFilled.profile.tradeRequests?.find((request) => request.requestId === 'gold_high')?.status ===
+        'fulfilled',
+  );
+
+  const reloaded = fillWorld.players.load();
+  check(
+    'request: request history and statuses survive reload',
+    reloaded?.tradeRequests?.some((request) =>
+      request.requestId === 'request_low' && request.status === 'active',
+    ) === true,
   );
 }
 

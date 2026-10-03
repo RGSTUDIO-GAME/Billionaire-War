@@ -7,7 +7,7 @@ import { getFreeHeroes, getHeroById } from '../data/heroes';
 import { withEquippedHero, withHero } from '../repositories/heroRepository';
 import type { GoldRef } from '../services/goldService';
 import type { MiningSession } from '../storage/records';
-import type { TradeCurrency, TradeOffer } from '../data/trade';
+import type { TradeCurrency, TradeOffer, TradeRequest } from '../data/trade';
 import { STORAGE_VERSION } from '../storage/keys';
 import type { BattleRecord, GoldTransaction, PlayerProfile } from '../storage/records';
 import type { RewardOutcome } from '../rewards';
@@ -55,7 +55,12 @@ export type PlayerData = {
   heroCopies: Record<string, number[]>;
   /** Unique serial of the roster instance per owned hero id. */
   heroSerials: Record<string, number>;
+  /** Optional Level state for non-roster Hero serials. */
+  heroInstanceLevels: Record<string, number>;
+  /** Optional star state for non-roster Hero serials. */
+  heroInstanceStars: Record<string, number>;
   tradeOffers: TradeOffer[];
+  tradeRequests: TradeRequest[];
   /** The single active mining session, or null before the first Equip. */
   mining: MiningSession | null;
   createdAt: number;
@@ -80,8 +85,18 @@ export type PlayerActions = {
   claimMining: () => number;
   /** Claims accrued BWAR and removes the active mining hero. */
   unstackMining: () => number | null;
-  createHeroOffer: (heroId: string, price: number, currency: TradeCurrency) => boolean;
+  createHeroOffer: (
+    heroId: string,
+    price: number,
+    currency: TradeCurrency,
+    instanceSerial?: number,
+  ) => boolean;
   createGoldOffer: (goldAmount: number, price: number) => boolean;
+  createHeroRequest: (heroId: string, price: number) => boolean;
+  createGoldRequest: (goldAmount: number, price: number) => boolean;
+  cancelRequest: (requestId: string) => boolean;
+  instantSellHero: (heroId: string, instanceSerial: number) => boolean;
+  instantSellGold: (goldAmount: number) => boolean;
   delistOffer: (offerId: string) => boolean;
   deliverOffer: (offerId: string) => boolean;
   grantHero: (heroId: string) => void;
@@ -124,7 +139,10 @@ const blankData = (): PlayerData => ({
   heroStars: {},
   heroCopies: {},
   heroSerials: {},
+  heroInstanceLevels: {},
+  heroInstanceStars: {},
   tradeOffers: [],
+  tradeRequests: [],
   mining: null,
   createdAt: 0,
   updatedAt: 0,
@@ -153,7 +171,10 @@ export const createPlayerStore = (app: AppRuntime): PlayerStore => {
       heroStars: profile.heroStars ?? {},
       heroCopies: profile.heroCopies ?? {},
       heroSerials: profile.heroSerials ?? {},
+      heroInstanceLevels: profile.heroInstanceLevels ?? {},
+      heroInstanceStars: profile.heroInstanceStars ?? {},
       tradeOffers: profile.tradeOffers ?? [],
+      tradeRequests: profile.tradeRequests ?? [],
       mining: profile.mining,
       createdAt: profile.createdAt,
       updatedAt: profile.updatedAt,
@@ -200,13 +221,14 @@ export const createPlayerStore = (app: AppRuntime): PlayerStore => {
       return outcome.amount;
     },
 
-    createHeroOffer: (heroId, price, currency) => {
+    createHeroOffer: (heroId, price, currency, instanceSerial) => {
       const outcome = app.tradeService.createHeroOffer(
         currentProfile(app, get()),
         heroId,
         price,
         currency,
         Date.now(),
+        instanceSerial,
       );
       if (!outcome.ok) return false;
       commit(set);
@@ -218,6 +240,64 @@ export const createPlayerStore = (app: AppRuntime): PlayerStore => {
         currentProfile(app, get()),
         goldAmount,
         price,
+        Date.now(),
+      );
+      if (!outcome.ok) return false;
+      commit(set);
+      return true;
+    },
+
+    createHeroRequest: (heroId, price) => {
+      const outcome = app.tradeService.createHeroRequest(
+        currentProfile(app, get()),
+        heroId,
+        price,
+        Date.now(),
+      );
+      if (!outcome.ok) return false;
+      commit(set);
+      return true;
+    },
+
+    createGoldRequest: (goldAmount, price) => {
+      const outcome = app.tradeService.createGoldRequest(
+        currentProfile(app, get()),
+        goldAmount,
+        price,
+        Date.now(),
+      );
+      if (!outcome.ok) return false;
+      commit(set);
+      return true;
+    },
+
+    cancelRequest: (requestId) => {
+      const outcome = app.tradeService.cancelRequest(
+        currentProfile(app, get()),
+        requestId,
+        Date.now(),
+      );
+      if (!outcome.ok) return false;
+      commit(set);
+      return true;
+    },
+
+    instantSellHero: (heroId, instanceSerial) => {
+      const outcome = app.tradeService.instantSellHero(
+        currentProfile(app, get()),
+        heroId,
+        instanceSerial,
+        Date.now(),
+      );
+      if (!outcome.ok) return false;
+      commit(set);
+      return true;
+    },
+
+    instantSellGold: (goldAmount) => {
+      const outcome = app.tradeService.instantSellGold(
+        currentProfile(app, get()),
+        goldAmount,
         Date.now(),
       );
       if (!outcome.ok) return false;
@@ -273,9 +353,16 @@ export const createPlayerStore = (app: AppRuntime): PlayerStore => {
       const paid = app.goldService.debit(currentProfile(app, get()), cost, { kind: 'SPEND' }, Date.now());
       if (!paid.ok) return false;
       const profile = paid.profile;
+      const mainSerial = profile.heroSerials?.[heroId];
       app.players.save({
         ...profile,
         heroLevels: { ...profile.heroLevels, [heroId]: heroLevelOf(profile.heroLevels, heroId) + 1 },
+        heroInstanceLevels: mainSerial === undefined
+          ? profile.heroInstanceLevels
+          : {
+            ...profile.heroInstanceLevels,
+            [String(mainSerial)]: heroLevelOf(profile.heroLevels, heroId) + 1,
+          },
       });
       commit(set);
       return true;
@@ -361,7 +448,10 @@ const currentProfile = (app: AppRuntime, state: PlayerState): PlayerProfile =>
     heroStars: state.heroStars,
     heroCopies: state.heroCopies,
     heroSerials: state.heroSerials,
+    heroInstanceLevels: state.heroInstanceLevels,
+    heroInstanceStars: state.heroInstanceStars,
     tradeOffers: state.tradeOffers,
+    tradeRequests: state.tradeRequests,
     mining: state.mining,
     goldBalance: state.gold,
     bwarBalance: state.bwar,

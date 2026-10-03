@@ -1,4 +1,4 @@
-import { fusionCostCopies, heroCopiesOf, heroStarsOf, MAX_STARS } from '../data/fusion';
+import { fusionCostCopies, heroCopiesOf, heroSerialOf, heroStarsOf, MAX_STARS } from '../data/fusion';
 import { getHeroById } from '../data/heroes';
 import type { PlayerRepository } from '../repositories/playerRepository';
 import type { PlayerProfile } from '../storage/records';
@@ -90,10 +90,24 @@ export class FusionService {
     const cost = fusionCostCopies(stars) ?? 0;
     const copies = heroCopiesOf(profile.heroCopies, heroId);
     if (copies.length < cost) return refused(profile, 'NOT_ENOUGH_COPIES');
+    const mainSerial = heroSerialOf(profile.heroSerials, heroId);
+    const burnedSerials = new Set(copies.slice(0, cost));
     const next: PlayerProfile = {
       ...profile,
       heroStars: { ...(profile.heroStars ?? {}), [heroId]: stars + 1 },
       heroCopies: { ...(profile.heroCopies ?? {}), [heroId]: copies.slice(cost) },
+      heroInstanceLevels: Object.fromEntries(
+        Object.entries(profile.heroInstanceLevels ?? {}).filter(
+          ([serial]) => !burnedSerials.has(Number(serial)),
+        ),
+      ),
+      heroInstanceStars: Object.fromEntries(
+        Object.entries(
+          mainSerial === null
+            ? profile.heroInstanceStars ?? {}
+            : { ...(profile.heroInstanceStars ?? {}), [String(mainSerial)]: stars + 1 },
+        ).filter(([serial]) => !burnedSerials.has(Number(serial))),
+      ),
     };
     if (!this.players.save(next)) return refused(profile, 'SAVE_FAILED');
     return { ok: true, profile: next };

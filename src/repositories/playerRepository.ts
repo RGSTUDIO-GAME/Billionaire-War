@@ -2,8 +2,16 @@ import { HASHRATE_PERIOD_MS, MINING_DURATION_MS, STARTING_BWAR, STARTING_GOLD } 
 import { clampHeroLevel } from '../data/economy';
 import { clampStars } from '../data/fusion';
 import { getFreeHeroes, getHeroById, HEROES } from '../data/heroes';
-import { isValidTradePrice, MAX_TRADE_OFFERS } from '../data/trade';
-import type { TradeCurrency, TradeOffer, TradeOfferKind, TradeOfferStatus } from '../data/trade';
+import { isValidTradePrice, MAX_TRADE_OFFERS, MAX_TRADE_REQUESTS } from '../data/trade';
+import type {
+  TradeCurrency,
+  TradeOffer,
+  TradeOfferKind,
+  TradeOfferStatus,
+  TradeRequest,
+  TradeRequestKind,
+  TradeRequestStatus,
+} from '../data/trade';
 import type { StorageAdapter } from '../storage/StorageAdapter';
 import { STORAGE_KEYS, STORAGE_VERSION } from '../storage/keys';
 import type { MiningSession, PlayerProfile } from '../storage/records';
@@ -80,6 +88,22 @@ const knownHeroSerials = (value: unknown, ownedHeroes: readonly string[]): Recor
   return serials;
 };
 
+const knownHeroInstanceValues = (
+  value: unknown,
+  validSerials: ReadonlySet<number>,
+  field: 'level' | 'stars',
+): Record<string, number> => {
+  if (!isPlainObject(value)) return {};
+  const values: Record<string, number> = {};
+  for (const [rawSerial, rawValue] of Object.entries(value)) {
+    const serial = Number(rawSerial);
+    if (!Number.isInteger(serial) || serial <= 0 || !validSerials.has(serial)) continue;
+    if (typeof rawValue !== 'number' || !Number.isInteger(rawValue)) continue;
+    values[String(serial)] = field === 'level' ? clampHeroLevel(rawValue) : clampStars(rawValue);
+  }
+  return values;
+};
+
 /** Every owned hero instance carries its own unique serial number. */
 export const ensureHeroIdentity = (profile: PlayerProfile): PlayerProfile => {
   const serials: Record<string, number> = { ...(profile.heroSerials ?? {}) };
@@ -132,6 +156,12 @@ const knownOfferKind = (value: unknown): TradeOfferKind | null =>
 const knownOfferStatus = (value: unknown): TradeOfferStatus | null =>
   value === 'active' || value === 'delivered' || value === 'delisted' ? value : null;
 
+const knownRequestKind = (value: unknown): TradeRequestKind | null =>
+  value === 'hero' || value === 'gold' ? value : null;
+
+const knownRequestStatus = (value: unknown): TradeRequestStatus | null =>
+  value === 'active' || value === 'fulfilled' || value === 'cancelled' ? value : null;
+
 const knownOfferId = (value: unknown): string | null =>
   typeof value === 'string' && /^[A-Za-z0-9_-]{4,100}$/.test(value) ? value : null;
 
@@ -139,6 +169,7 @@ const parseTradeOffers = (
   value: unknown,
   ownedHeroes: readonly string[],
   ownedCopies: Record<string, readonly number[]>,
+  ownedSerials: Record<string, number>,
   playerId: string,
 ): TradeOffer[] => {
   if (!Array.isArray(value)) return [];
@@ -175,12 +206,21 @@ const parseTradeOffers = (
         typeof raw.heroCopySerial === 'number' && Number.isInteger(raw.heroCopySerial) && raw.heroCopySerial > 0
           ? raw.heroCopySerial
           : null;
-      const activeKey = heroCopySerial === null
+      const heroSerial =
+        typeof raw.heroSerial === 'number' && Number.isInteger(raw.heroSerial) && raw.heroSerial > 0
+          ? raw.heroSerial
+          : null;
+      const sourceSerial = heroCopySerial ?? heroSerial;
+      const activeKey = sourceSerial === null
         ? `hero:main:${heroId}`
-        : `hero:copy:${heroId}:${heroCopySerial}`;
-      const listedInstanceIsStillOwned = heroCopySerial === null
+        : `hero:instance:${heroId}:${sourceSerial}`;
+      const currentlyOwnedSerials = new Set<number>([
+        ...(ownedSerials[heroId] === undefined ? [] : [ownedSerials[heroId]]),
+        ...(ownedCopies[heroId] ?? []),
+      ]);
+      const listedInstanceIsStillOwned = sourceSerial === null
         ? ownedHeroes.includes(heroId)
-        : (ownedCopies[heroId] ?? []).includes(heroCopySerial);
+        : currentlyOwnedSerials.has(sourceSerial);
       if (status === 'active' && (listedInstanceIsStillOwned || activeAssets.has(activeKey))) {
         status = 'delisted';
       }
@@ -188,10 +228,6 @@ const parseTradeOffers = (
       const heroCopies = Array.isArray(raw.heroCopies)
         ? raw.heroCopies.filter((serial): serial is number => typeof serial === 'number' && Number.isInteger(serial) && serial > 0)
         : [];
-      const heroSerial =
-        typeof raw.heroSerial === 'number' && Number.isInteger(raw.heroSerial) && raw.heroSerial > 0
-          ? raw.heroSerial
-          : null;
       offer = {
         offerId,
         sellerId,
@@ -232,6 +268,61 @@ const parseTradeOffers = (
     offers.push(offer);
   }
   return offers;
+};
+
+const parseTradeRequests = (value: unknown, playerId: string): TradeRequest[] => {
+  if (!Array.isArray(value)) return [];
+  const requests: TradeRequest[] = [];
+
+  for (const raw of value) {
+    if (!isPlainObject(raw) || requests.length >= MAX_TRADE_REQUESTS) continue;
+    const requestId = knownOfferId(raw.requestId);
+    const requesterId =
+      typeof raw.requesterId === 'string' && raw.requesterId.length > 0 && raw.requesterId.length <= 100
+        ? raw.requesterId
+        : playerId;
+    const kind = knownRequestKind(raw.kind);
+    const status = knownRequestStatus(raw.status);
+    const price = typeof raw.price === 'number' ? raw.price : Number.NaN;
+    const createdAt = asTimestamp(raw.createdAt, 0);
+    const updatedAt = asTimestamp(raw.updatedAt, createdAt);
+    if (requestId === null || kind === null || status === null) continue;
+    if (createdAt === 0 || !isValidTradePrice(price, 'bwar')) continue;
+
+    let request: TradeRequest;
+    if (kind === 'hero') {
+      const heroId = typeof raw.heroId === 'string' && getHeroById(raw.heroId) !== undefined ? raw.heroId : null;
+      if (heroId === null) continue;
+      request = {
+        requestId,
+        requesterId,
+        kind: 'hero',
+        heroId,
+        price,
+        status,
+        createdAt,
+        updatedAt,
+      };
+    } else {
+      const goldAmount =
+        typeof raw.goldAmount === 'number' && Number.isInteger(raw.goldAmount) && raw.goldAmount > 0
+          ? raw.goldAmount
+          : null;
+      if (goldAmount === null) continue;
+      request = {
+        requestId,
+        requesterId,
+        kind: 'gold',
+        goldAmount,
+        price,
+        status,
+        createdAt,
+        updatedAt,
+      };
+    }
+    requests.push(request);
+  }
+  return requests;
 };
 
 /** Free heroes are granted only when a profile has no usable roster. */
@@ -287,7 +378,10 @@ export const newProfile = (now: number): PlayerProfile => {
     heroCopies: {},
     heroSerials: Object.fromEntries(withFreeHeroes([]).map((heroId, index) => [heroId, index + 1])),
     heroSerialCounter: withFreeHeroes([]).length,
+    heroInstanceLevels: {},
+    heroInstanceStars: {},
     tradeOffers: [],
+    tradeRequests: [],
     goldBalance: STARTING_GOLD,
     bwarBalance: STARTING_BWAR,
     mining: null,
@@ -337,6 +431,11 @@ export const parseProfile = (
   const resolvedId = playerId ?? mintPlayerId();
 
   const heroCopies = knownHeroCopies(raw.heroCopies);
+  const heroSerials = knownHeroSerials(raw.heroSerials, ownedHeroes);
+  const validHeroSerials = new Set<number>([
+    ...Object.values(heroSerials),
+    ...Object.values(heroCopies).flat(),
+  ]);
   return ensureHeroIdentity({
     version: STORAGE_VERSION,
     playerId: resolvedId,
@@ -349,14 +448,17 @@ export const parseProfile = (
     heroLevels: knownHeroLevels(raw.heroLevels),
     heroStars: knownHeroStars(raw.heroStars),
     heroCopies,
-    heroSerials: knownHeroSerials(raw.heroSerials, ownedHeroes),
+    heroSerials,
     heroSerialCounter: typeof raw.heroSerialCounter === 'number' && Number.isInteger(raw.heroSerialCounter) && raw.heroSerialCounter >= 0
       ? raw.heroSerialCounter
       : 0,
+    heroInstanceLevels: knownHeroInstanceValues(raw.heroInstanceLevels, validHeroSerials, 'level'),
+    heroInstanceStars: knownHeroInstanceValues(raw.heroInstanceStars, validHeroSerials, 'stars'),
     goldBalance,
     bwarBalance: asNonNegativeNumber(raw.bwarBalance) ?? STARTING_BWAR,
     mining: parseMiningSession(raw.mining, ownedHeroes, now),
-    tradeOffers: parseTradeOffers(raw.tradeOffers, ownedHeroes, heroCopies, resolvedId),
+    tradeOffers: parseTradeOffers(raw.tradeOffers, ownedHeroes, heroCopies, heroSerials, resolvedId),
+    tradeRequests: parseTradeRequests(raw.tradeRequests, resolvedId),
     createdAt,
     updatedAt: asTimestamp(raw.updatedAt, createdAt),
   });

@@ -36,7 +36,7 @@ npm run dev        # http://localhost:5173
 | `npm run build` | Typecheck + production build to `dist/` |
 | `npm run preview` | Serve the production build |
 | `npm run typecheck` | TypeScript only |
-| `npm run verify` | **1,111 assertions** — engine rules, store flow, presentation, rewards, data layer, animation, rendered screens, mining, trade, fusion and gacha |
+| `npm run verify` | **1,125 assertions** — engine rules, store flow, presentation, rewards, data layer, animation, rendered screens, mining, trade, fusion and gacha |
 | `npm run assets:check` | Report which registered assets exist on disk |
 | `npm run assets:placeholder` | Regenerate the bundled placeholder art/audio |
 | `npm run lint` | oxlint |
@@ -279,10 +279,11 @@ the trophy button in the top bar, `WAR` from the big button on Home, and
 - **BWAR Mining** — choose one owned hero with positive hashrate, watch a local
   counter, and claim one character hashrate after each completed 10-minute
   block. The counter reaches its full target after 24 hours and pauses until claimed.
-- **Trade** — create custom-price Hero and Gold offers in `$GOLD` or local `$BWAR`,
-  deliver completed sales, or delist an offer. A stacked duplicate can be offered
-  as its own Level 0 serial while the main Hero remains equipped; the main Hero
-  stays locked while Mining.
+- **Trade** — choose an exact Hero instance by level and star, with equal
+  instances displayed as one `×N` stack. Offers can use `$GOLD` or local `$BWAR`;
+  the Request tab escrows `$BWAR` for Hero or Gold buy requests, and Instant Sell
+  fills the highest matching request first. The main Hero stays locked while
+  Mining.
 - **Gacha** — free 1X and 10X pulls with a floating mystery-card stack, fast
   spin, rarity-colored hero frame and glow, and ten results arranged as two rows
   of five. Results save locally; duplicate heroes stack as `Hero × count` in the
@@ -314,7 +315,7 @@ The Battle Engine does not change. See [docs/ASSETS.md](docs/ASSETS.md).
 
 ## Verification
 
-`npm run verify` bundles thirteen suites and runs them on Node — **1,111 assertions**:
+`npm run verify` bundles thirteen suites and runs them on Node — **1,125 assertions**:
 
 | Suite | Covers |
 | --- | --- |
@@ -326,8 +327,8 @@ The Battle Engine does not change. See [docs/ASSETS.md](docs/ASSETS.md).
 | `asset-check` | the animation controller, hero-agnostic mapping, fallback chains |
 | `render-check` | `BattleScreen` rendered for real at every phase of a battle |
 | `mining-check` | eligible heroes, 24-hour timing, anytime claim, pause at full, one active session, and reload persistence |
-| `trade-check` | local Hero and Gold offers, escrow, delivery, delisting and self-buy protection |
-| `trade-render-check` | marketplace entry points, offer cards and player-facing notices |
+| `trade-check` | exact Hero instances, level/star pricing, offers, Requests, Instant Sell, escrow, delivery, delisting and reload safety |
+| `trade-render-check` | grouped Hero stacks, Offer/Deliver/Request entry points, buy requests and player-facing notices |
 | `fusion-check` | star tiers, serials, duplicate copies, costs and six-star limits |
 | `fusion-render-check` | the Hero screen star and Fusion UI |
 | `gacha-render-check` | 1X/10X controls, saved reveal flow, mystery stack, five-by-two result grid, Home entry point and rarity effects |

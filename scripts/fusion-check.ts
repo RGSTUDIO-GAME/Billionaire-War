@@ -226,6 +226,100 @@ const heroId = HEROES[0].id;
           delisted.profile.heroLevels[heroId] === 100 &&
           heroCopiesOf(delisted.profile.heroCopies, heroId).includes(copySerial),
       );
+
+      if (delisted.ok) {
+        const grown = runtime.fusionService.grantCopy(delisted.profile, heroId, NOW + 23);
+        if (grown.ok) {
+          const grownCopies = heroCopiesOf(grown.profile.heroCopies, heroId);
+          const detailedCopy = grownCopies[grownCopies.length - 1];
+          const detailedProfile = {
+            ...grown.profile,
+            heroInstanceLevels: {
+              ...(grown.profile.heroInstanceLevels ?? {}),
+              [String(detailedCopy)]: 12,
+            },
+            heroInstanceStars: {
+              ...(grown.profile.heroInstanceStars ?? {}),
+              [String(detailedCopy)]: 3,
+            },
+          };
+          const detailedOffer = runtime.tradeService.createHeroOffer(
+            detailedProfile,
+            heroId,
+            88,
+            'bwar',
+            NOW + 24,
+            detailedCopy,
+          );
+          check(
+            'trade: selecting a copy preserves its exact level and stars',
+            detailedOffer.ok &&
+              detailedOffer.profile.heroLevels[heroId] === 100 &&
+              detailedOffer.profile.heroStars[heroId] === MAX_STARS &&
+              detailedOffer.profile.tradeOffers?.[0]?.kind === 'hero' &&
+              detailedOffer.profile.tradeOffers[0].kind === 'hero' &&
+              detailedOffer.profile.tradeOffers[0].heroLevel === 12 &&
+              detailedOffer.profile.tradeOffers[0].heroStars === 3 &&
+              detailedOffer.profile.tradeOffers[0].heroSerial === detailedCopy,
+          );
+          if (detailedOffer.ok) {
+            const detailedOfferId = detailedOffer.profile.tradeOffers?.[0]?.offerId ?? '';
+            const returnedCopy = runtime.tradeService.delistOffer(
+              detailedOffer.profile,
+              detailedOfferId,
+              NOW + 25,
+            );
+            check(
+              'trade: Delist returns the exact detailed copy serial',
+              returnedCopy.ok &&
+                heroCopiesOf(returnedCopy.profile.heroCopies, heroId).includes(detailedCopy) &&
+                returnedCopy.profile.heroLevels[heroId] === 100,
+            );
+          }
+        }
+
+        const grownAgain = runtime.players.load();
+        if (grownAgain !== null) {
+          const selectedMain = heroSerialOf(grownAgain.heroSerials, heroId);
+          const mainOffer = runtime.tradeService.createHeroOffer(
+            grownAgain,
+            heroId,
+            99,
+            'gold',
+            NOW + 26,
+            selectedMain,
+          );
+          check(
+            'trade: a maxed main can be selected while copies remain',
+            mainOffer.ok &&
+              mainOffer.profile.ownedHeroes.includes(heroId) &&
+              mainOffer.profile.heroLevels[heroId] === 12 &&
+              mainOffer.profile.heroStars[heroId] === 3 &&
+              heroSerialOf(mainOffer.profile.heroSerials, heroId) !== selectedMain &&
+              mainOffer.profile.tradeOffers?.[0]?.kind === 'hero' &&
+              mainOffer.profile.tradeOffers[0].kind === 'hero' &&
+              mainOffer.profile.tradeOffers[0].heroLevel === 100 &&
+              mainOffer.profile.tradeOffers[0].heroStars === MAX_STARS &&
+              mainOffer.profile.tradeOffers[0].heroSerial === selectedMain,
+          );
+          if (mainOffer.ok) {
+            const mainOfferId = mainOffer.profile.tradeOffers?.[0]?.offerId ?? '';
+            const returnedMain = runtime.tradeService.delistOffer(
+              mainOffer.profile,
+              mainOfferId,
+              NOW + 27,
+            );
+            check(
+              'trade: Delist promotes the exact maxed main back into place',
+              returnedMain.ok &&
+                heroSerialOf(returnedMain.profile.heroSerials, heroId) === selectedMain &&
+                returnedMain.profile.heroLevels[heroId] === 100 &&
+                returnedMain.profile.heroStars[heroId] === MAX_STARS &&
+                heroCopiesOf(returnedMain.profile.heroCopies, heroId).length === 2,
+            );
+          }
+        }
+      }
     }
   }
 }

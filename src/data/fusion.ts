@@ -108,6 +108,24 @@ export const heroSerialOf = (
   return typeof stored === 'number' && Number.isInteger(stored) && stored > 0 ? stored : null;
 };
 
+export const heroInstanceLevelOf = (
+  levels: Record<string, number> | undefined,
+  fallback: number,
+  serial: number | null,
+): number =>
+  serial !== null && Number.isInteger(levels?.[String(serial)])
+    ? Math.max(0, levels?.[String(serial)] ?? fallback)
+    : fallback;
+
+export const heroInstanceStarsOf = (
+  stars: Record<string, number> | undefined,
+  fallback: number,
+  serial: number | null,
+): number =>
+  serial !== null && Number.isInteger(stars?.[String(serial)])
+    ? clampStars(stars?.[String(serial)] ?? fallback)
+    : clampStars(fallback);
+
 /** Grouped thousands for supply figures: 160000 -> "160,000". */
 export const formatSupply = (amount: number): string => amount.toLocaleString('en-US');
 

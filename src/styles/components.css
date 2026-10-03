@@ -1275,6 +1275,16 @@
   width: 100%;
 }
 
+.trade-item__actions {
+  display: flex;
+  grid-column: 1 / -1;
+  gap: var(--s-2);
+}
+
+.trade-item__actions .btn {
+  flex: 1;
+}
+
 .trade-item__icon {
   width: 54px;
   height: 54px;

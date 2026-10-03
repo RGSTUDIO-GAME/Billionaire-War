@@ -4,6 +4,8 @@ export type TradeCurrency = 'gold' | 'bwar';
 export type TradeSide = 'buy' | 'sell';
 export type TradeOfferKind = 'hero' | 'gold';
 export type TradeOfferStatus = 'active' | 'delivered' | 'delisted';
+export type TradeRequestKind = 'hero' | 'gold';
+export type TradeRequestStatus = 'active' | 'fulfilled' | 'cancelled';
 
 type TradeOfferBase = {
   offerId: string;
@@ -21,12 +23,13 @@ export type HeroTradeOffer = TradeOfferBase & {
   heroLevel: number;
   heroStars: number;
   /**
-   * Serial of one spare copy when the listing escrows only that copy.
-   * Missing/null means the offer escrows the roster (main) instance.
+   * Marks a spare-copy source for older saves. New offers always carry the
+   * exact source in `heroSerial`.
    */
   heroCopySerial?: number | null;
-  /** Remaining spare copies escrowed with a main-instance offer. */
+  /** Legacy spare copies escrowed with an older main-instance offer. */
   heroCopies?: number[];
+  /** Exact serial of the one Hero instance held in escrow. */
   heroSerial?: number | null;
   wasEquipped: boolean;
 };
@@ -38,9 +41,32 @@ export type GoldTradeOffer = TradeOfferBase & {
 
 export type TradeOffer = HeroTradeOffer | GoldTradeOffer;
 
+type TradeRequestBase = {
+  requestId: string;
+  requesterId: string;
+  /** Requests are always denominated and escrowed in local $BWAR. */
+  price: number;
+  status: TradeRequestStatus;
+  createdAt: number;
+  updatedAt: number;
+};
+
+export type HeroTradeRequest = TradeRequestBase & {
+  kind: 'hero';
+  heroId: string;
+};
+
+export type GoldTradeRequest = TradeRequestBase & {
+  kind: 'gold';
+  goldAmount: number;
+};
+
+export type TradeRequest = HeroTradeRequest | GoldTradeRequest;
+
 /** 100 $GOLD buys or sells for 1 $BWAR. */
 export const GOLD_TO_BWAR_RATE = 0.01;
 export const MAX_TRADE_OFFERS = 100;
+export const MAX_TRADE_REQUESTS = 100;
 export const MAX_TRADE_PRICE = 1_000_000_000_000;
 
 const HERO_BASE_GOLD: Record<HeroRarity, number> = {
@@ -62,9 +88,13 @@ export const heroTradePrice = (
   level: number,
   currency: TradeCurrency,
   side: TradeSide,
+  stars = 1,
 ): number => {
   const base = hero.priceInGold ?? HERO_BASE_GOLD[hero.rarity];
-  const levelValue = goldPrice(base * (1 + Math.max(0, level) * HERO_LEVEL_PRICE_MULTIPLIER));
+  const starMultiplier = 1 + Math.max(0, stars - 1) * 0.25;
+  const levelValue = goldPrice(
+    base * (1 + Math.max(0, level) * HERO_LEVEL_PRICE_MULTIPLIER) * starMultiplier,
+  );
   const value = side === 'sell' ? goldPrice(levelValue * HERO_SELL_RATIO) : levelValue;
   return currency === 'gold' ? value : value * GOLD_TO_BWAR_RATE;
 };

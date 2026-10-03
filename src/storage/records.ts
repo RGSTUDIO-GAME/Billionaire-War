@@ -1,6 +1,6 @@
 import { MAX_ROUNDS } from '../data/balance';
 import type { BattleMode } from '../engine/types';
-import type { TradeOffer } from '../data/trade';
+import type { TradeOffer, TradeRequest } from '../data/trade';
 import type { RewardResult } from '../rewards/types';
 
 /**
@@ -28,6 +28,10 @@ export type PlayerProfile = {
   heroSerials?: Record<string, number>;
   /** Monotonic counter that mints hero serial numbers. */
   heroSerialCounter?: number;
+  /** Optional level for non-roster serials; missing copies start at Level 0. */
+  heroInstanceLevels?: Record<string, number>;
+  /** Optional star tier for non-roster serials; missing copies start at 1 star. */
+  heroInstanceStars?: Record<string, number>;
   goldBalance: number;
   /** Local BWAR balance moved by Mining and Trade; no chain or wallet exists. */
   bwarBalance: number;
@@ -35,6 +39,8 @@ export type PlayerProfile = {
   mining: MiningSession | null;
   /** Custom-price marketplace offers, including active and closed history. */
   tradeOffers?: TradeOffer[];
+  /** Buy requests escrowed in $BWAR, highest price first when displayed. */
+  tradeRequests?: TradeRequest[];
   createdAt: number;
   updatedAt: number;
 };
