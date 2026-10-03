@@ -314,7 +314,7 @@ The Battle Engine does not change. See [docs/ASSETS.md](docs/ASSETS.md).
 
 ## Verification
 
-`npm run verify` bundles thirteen suites and runs them on Node — **1,094 assertions**:
+`npm run verify` bundles thirteen suites and runs them on Node — **1,111 assertions**:
 
 | Suite | Covers |
 | --- | --- |
