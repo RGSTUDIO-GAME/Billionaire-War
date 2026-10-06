@@ -16,8 +16,8 @@ is faked.
 ## Not in this stage (on purpose)
 
 No blockchain, no wallet, no NFT, no smart contract, no token transaction, no
-marketplace, no random damage, no critical hits, no second hero, no hero skills,
-no shop, no matchmaking, no leaderboard, no server, no account, no cloud save.
+on-chain marketplace, no random damage, no critical hits, no gameplay-active
+hero skills, no shop, no matchmaking, no leaderboard, no server, no account, no cloud save.
 $GOLD rewards and locally mined $BWAR are stored **on the device**; there is no
 wallet, chain or token transfer.
 
@@ -36,7 +36,7 @@ npm run dev        # http://localhost:5173
 | `npm run build` | Typecheck + production build to `dist/` |
 | `npm run preview` | Serve the production build |
 | `npm run typecheck` | TypeScript only |
-| `npm run verify` | **1,125 assertions** — engine rules, store flow, presentation, rewards, data layer, animation, rendered screens, mining, trade, fusion and gacha |
+| `npm run verify` | **1,131 assertions** — engine rules, store flow, presentation, rewards, data layer, animation, rendered screens, mining, trade, fusion and gacha |
 | `npm run assets:check` | Report which registered assets exist on disk |
 | `npm run assets:placeholder` | Regenerate the bundled placeholder art/audio |
 | `npm run lint` | oxlint |
@@ -275,7 +275,8 @@ the trophy button in the top bar, `WAR` from the big button on Home, and
 - **Home** — equipped hero, base HP, currencies, the ⚔️ WAR button.
 - **War** — VS BOT is playable. PvP shows **COMING SOON**: matchmaking is not
   implemented and no fake queue or fake opponent is simulated.
-- **Hero** — DUROV with LOCKED / OWNED / EQUIPPED states and the equip button.
+- **Hero** — roster, rarity, stars, level, hashrate, Fusion, skills, LOCKED /
+  OWNED / EQUIPPED states and the equip button.
 - **BWAR Mining** — choose one owned hero with positive hashrate, watch a local
   counter, and claim one character hashrate after each completed 10-minute
   block. The counter reaches its full target after 24 hours and pauses until claimed.
@@ -315,7 +316,7 @@ The Battle Engine does not change. See [docs/ASSETS.md](docs/ASSETS.md).
 
 ## Verification
 
-`npm run verify` bundles thirteen suites and runs them on Node — **1,125 assertions**:
+`npm run verify` bundles thirteen suites and runs them on Node — **1,131 assertions**:
 
 | Suite | Covers |
 | --- | --- |
@@ -330,5 +331,5 @@ The Battle Engine does not change. See [docs/ASSETS.md](docs/ASSETS.md).
 | `trade-check` | exact Hero instances, level/star pricing, offers, Requests, Instant Sell, escrow, delivery, delisting and reload safety |
 | `trade-render-check` | grouped Hero stacks, Offer/Deliver/Request entry points, buy requests and player-facing notices |
 | `fusion-check` | star tiers, serials, duplicate copies, costs and six-star limits |
-| `fusion-render-check` | the Hero screen star and Fusion UI |
+| `fusion-render-check` | the Hero screen star, Fusion UI and conditional Instant Sell entry point |
 | `gacha-render-check` | 1X/10X controls, saved reveal flow, mystery stack, five-by-two result grid, Home entry point and rarity effects |

@@ -64,8 +64,8 @@ const entries = [
 /**
  * The render check renders real React, and React's static renderer takes a
  * store's server snapshot from getInitialState(). Swap in a store whose
- * snapshot is the live state so the screen renders the running battle.
- * Applied to the render check only - every other check is untouched.
+ * snapshot is the live state so each screen renders the running profile.
+ * Applied to the React render checks only - every other check is untouched.
  */
 const liveSnapshot = {
   name: 'live-snapshot-store',
@@ -99,7 +99,7 @@ try {
       // The root tsconfig only references sub-projects, so JSX has to be
       // enabled here for the render check.
       jsx: 'automatic',
-      plugins: name === 'render-check' ? [liveSnapshot] : [],
+      plugins: ['render-check', 'fusion-render-check'].includes(name) ? [liveSnapshot] : [],
     });
     require(outFile);
   }

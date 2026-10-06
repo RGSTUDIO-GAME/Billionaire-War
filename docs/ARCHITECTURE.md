@@ -411,7 +411,7 @@ after a reload.
 | Quests / achievements | `battle.roundHistory` is archived, and `BattleRecord` is persisted |
 | Leaderboard | needs a backend — nothing faked yet |
 | Real PvP | `BattleEngine` is mode-agnostic; only a transport is missing |
-| Hero skills | `Hero.skills` exists in the data model, the engine ignores it |
+| Hero skills | `Hero.skills` is shown on the Hero screen; the engine ignores it |
 | New HP / stats | `CombatantSeed.hp` only — no constant is hardcoded |
 | Battle replay | `RoundRecord.events` is stored and ordered |
 | More heroes | a data file plus `public/assets/heroes/<id>/`; the engine does not change |

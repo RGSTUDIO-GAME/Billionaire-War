@@ -8,8 +8,10 @@
  * Run with: npm run verify
  */
 import { DUROV } from '../src/data/heroes/durov';
+import { AURELION } from '../src/data/heroes/aurelion';
 import { getHeroById, HEROES } from '../src/data/heroes';
 import { ANIMATION_EVENTS, eventToAsset, eventToEffect, eventToLabel, eventToVisual, resolveCue } from '../src/assets/animationController';
+import { heroFrames, heroPortraitIds } from '../src/assets/manifest';
 import { getAssetUrl, getFallbackChain, isRegistered } from '../src/assets/resolve';
 import { hasAttackFx, heroExplosionUrls, heroProjectileUrls } from '../src/assets/heroAssets';
 import { ALL_EVENT_TYPES } from '../src/engine/events';
@@ -134,6 +136,23 @@ check('the engine imports nothing from the UI or state layers', !/from '\.\.\/(c
 
 check('the hero registry resolves DUROV', getHeroById('durov') === DUROV);
 check('a hero data object carries all ten asset ids', Object.keys(DUROV.assets).length === 10, String(Object.keys(DUROV.assets).length));
+check('the hero registry resolves AURELION', getHeroById('aurelion') === AURELION);
+check('AURELION is a rare hero with its signature skill',
+  AURELION.rarity === 'rare' &&
+    AURELION.skills.some((skill) => skill.name === 'Magic in My Blood'),
+);
+check('AURELION ships every pose strip',
+  heroFrames.aurelion.idle.length === 5 &&
+    heroFrames.aurelion.attackHead.length === 4 &&
+    heroFrames.aurelion.attackBody.length === 4 &&
+    heroFrames.aurelion.attackArm.length === 4 &&
+    heroFrames.aurelion.attackLeg.length === 4 &&
+    heroFrames.aurelion.defense.length === 4 &&
+    heroFrames.aurelion.hit.length === 4 &&
+    heroFrames.aurelion.victory.length === 4 &&
+    heroFrames.aurelion.defeat.length === 6,
+);
+check('AURELION has a registered display portrait', isRegistered(heroPortraitIds.aurelion));
 
 const everyHeroAssetRegistered = HEROES.every((hero) =>
   Object.values(hero.assets).every((asset) => isRegistered(asset)),

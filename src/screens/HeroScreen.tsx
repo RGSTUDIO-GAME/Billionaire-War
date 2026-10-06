@@ -3,6 +3,7 @@ import { HEROES, getOwnedState } from '../data/heroes';
 import type { Hero, HeroRarity } from '../data/heroes/types';
 import { MAX_ROUNDS, ROUND_DAMAGE } from '../data/balance';
 import { formatGold, formatHashrate, hashrateFor, heroLevelOf, upgradeCost } from '../data/economy';
+import { formatTradeAmount } from '../data/trade';
 import {
   formatStars,
   heroSerialOf,
@@ -22,6 +23,7 @@ import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { haptic } from '../services/telegram';
 import { soundIds } from '../assets/manifest';
 import { audio } from '../audio/audioManager';
+import { tradeRequestsByPrice } from '../services/tradeService';
 
 type HeroScreenProps = { onBack: () => void };
 
@@ -43,12 +45,33 @@ const HeroRow = ({
   const heroStars = usePlayerStore((state) => state.heroStars);
   const heroSerials = usePlayerStore((state) => state.heroSerials);
   const heroCopies = usePlayerStore((state) => state.heroCopies);
+  const ownedHeroIds = usePlayerStore((state) => state.ownedHeroIds);
+  const playerId = usePlayerStore((state) => state.playerId);
+  const tradeRequests = usePlayerStore((state) => state.tradeRequests);
+  const instantSellHero = usePlayerStore((state) => state.instantSellHero);
+  const mining = usePlayerStore((state) => state.mining);
   const upgradeHero = usePlayerStore((state) => state.upgradeHero);
+  const [notice, setNotice] = useState<string | null>(null);
   const isLocked = ownership === 'locked';
   const level = heroLevelOf(heroLevels, hero.id);
   const stars = heroStarsOf(heroStars, hero.id);
   const serial = heroSerialOf(heroSerials, hero.id);
   const stackCount = isLocked ? 0 : heroStackCountOf(heroCopies, hero.id);
+  const copies = isLocked ? [] : heroCopies[hero.id] ?? [];
+  const instantSellSerial = copies[0] ?? serial;
+  const bestHeroRequest = tradeRequestsByPrice(
+    tradeRequests.filter((request) =>
+      request.status === 'active' &&
+      request.kind === 'hero' &&
+      request.heroId === hero.id &&
+      request.requesterId !== playerId,
+    ),
+  )[0];
+  const miningLocked =
+    instantSellSerial !== null &&
+    instantSellSerial === serial &&
+    mining?.heroId === hero.id;
+  const lastHero = instantSellSerial !== null && copies.length === 0 && ownedHeroIds?.length <= 1;
   const levelCap = maxLevelForStars(stars);
   const capped = level >= levelCap;
   const rate = hashrateFor(hero.rarity, level);
@@ -87,8 +110,52 @@ const HeroRow = ({
           <div className="muted" style={{ fontSize: 12 }}>
             Hashrate {formatHashrate(rate)} BWAR/10m
           </div>
+          {hero.skills.length > 0 ? (
+            <div className="hero-skill">
+              {hero.skills.map((skill) => (
+                <div key={skill.id}>
+                  <strong>{skill.name}</strong>
+                  <span>{skill.description}</span>
+                </div>
+              ))}
+            </div>
+          ) : null}
         </div>
       </div>
+
+      {notice ? (
+        <div className="trade-notice" role="status">
+          {notice}
+        </div>
+      ) : null}
+
+      {!isLocked && bestHeroRequest !== undefined && instantSellSerial !== null ? (
+        <div style={{ marginTop: 'var(--s-3)' }}>
+          <Button
+            variant="gold"
+            block
+            disabled={miningLocked || lastHero}
+            onClick={() => {
+              const sold = instantSellHero(hero.id, instantSellSerial);
+              setNotice(
+                sold
+                  ? `Hero sold for ${formatTradeAmount(bestHeroRequest.price, 'bwar')}.`
+                  : miningLocked
+                    ? 'Mining Hero must be unstacked before it can be sold.'
+                    : lastHero
+                      ? 'Your last Hero cannot be sold.'
+                      : 'Instant Sell refused. Check the matching request and roster.',
+              );
+              if (sold) {
+                audio.playSfx(soundIds.uiConfirm, 0.5);
+                haptic.impact('medium');
+              }
+            }}
+          >
+            Instant Sell · {formatTradeAmount(bestHeroRequest.price, 'bwar')}
+          </Button>
+        </div>
+      ) : null}
 
       {!isLocked ? (
         <div style={{ marginTop: 'var(--s-3)' }}>

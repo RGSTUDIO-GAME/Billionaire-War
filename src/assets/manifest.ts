@@ -92,6 +92,8 @@ export const elonmuskAssetIds = registerHeroAssets('elonmusk', 4);
 
 export const gracychenAssetIds = registerHeroAssets('gracychen', 4);
 
+export const aurelionAssetIds = registerHeroAssets('aurelion', 4);
+
 /* ------------------------------------------------------- animation frames */
 
 const heroFrameFolder: Record<HeroAssetKey, string | null> = {
@@ -114,12 +116,17 @@ const frameFile = (index: number): string => `frame_${String(index).padStart(2, 
  * source of truth for the battle controller contract - frames are a
  * presentation-only layer on top, so a hero without frames still renders.
  */
-const registerHeroFrames = (heroId: string, frameCount: number = HERO_FRAME_COUNT): Record<HeroAssetKey, AssetId[]> => {
+const registerHeroFrames = (
+  heroId: string,
+  frameCount: number = HERO_FRAME_COUNT,
+  frameCountOverrides: Partial<Record<HeroAssetKey, number>> = {},
+): Record<HeroAssetKey, AssetId[]> => {
   const out = {} as Record<HeroAssetKey, AssetId[]>;
   (Object.keys(heroFrameFolder) as HeroAssetKey[]).forEach((key) => {
     const folder = heroFrameFolder[key];
+    const count = frameCountOverrides[key] ?? frameCount;
     out[key] = folder
-      ? Array.from({ length: frameCount }, (_, i) =>
+      ? Array.from({ length: count }, (_, i) =>
           registerHero(heroId, `${key}_frame_${i + 1}`, `${folder}/${frameFile(i + 1)}`, PLACEHOLDER_POSE, false),
         )
       : [];
@@ -131,6 +138,7 @@ export const heroFrames: Record<string, Record<HeroAssetKey, AssetId[]>> = {
   durov: registerHeroFrames('durov', 4),
   elonmusk: registerHeroFrames('elonmusk', 4),
   gracychen: registerHeroFrames('gracychen', 4),
+  aurelion: registerHeroFrames('aurelion', 4, { idle: 5, defeat: 6 }),
 };
 
 /* ------------------------------------------------------- attack fx frames */
@@ -178,6 +186,7 @@ export const heroPortraitIds: Record<string, AssetId> = {
   durov: register('heroes', 'durov_portrait', 'durov/portrait.jpg', 'hero', 'Durov portrait'),
   elonmusk: register('heroes', 'elonmusk_portrait', 'elonmusk/portrait.jpg', 'hero', 'Elonmusk portrait'),
   gracychen: register('heroes', 'gracychen_portrait', 'gracychen/portrait.jpg', 'hero', 'Gracychen portrait'),
+  aurelion: register('heroes', 'aurelion_portrait', 'aurelion/portrait.jpg', 'hero', 'Aurelion portrait'),
 };
 
 /* ------------------------------------------------------------ backgrounds */
