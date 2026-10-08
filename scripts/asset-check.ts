@@ -163,10 +163,16 @@ check('every registered hero asset id exists in the manifest', everyHeroAssetReg
 
 const plane = heroProjectileUrls(DUROV);
 const blast = heroExplosionUrls(DUROV);
+const laser = heroProjectileUrls(AURELION);
+const laserBlast = heroExplosionUrls(AURELION);
 check('durov ships a 4-frame paper plane strip', plane.length === 4, String(plane.length));
 check('durov ships a 3-frame explosion strip', blast.length === 3, String(blast.length));
+check('aurelion ships a 4-frame yellow laser strip', laser.length === 4, String(laser.length));
+check('aurelion ships a 4-frame laser explosion strip', laserBlast.length === 4, String(laserBlast.length));
 check('every fx frame has a url', [...plane, ...blast].every((url) => url.length > 0));
+check('every aurelion fx frame has a url', [...laser, ...laserBlast].every((url) => url.length > 0));
 check('durov has attack cinema', hasAttackFx(DUROV));
+check('aurelion has attack cinema', hasAttackFx(AURELION));
 check(
   'a hero without cinema renders nothing',
   !hasAttackFx({ id: 'ghost' } as never),

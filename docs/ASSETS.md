@@ -22,6 +22,8 @@ public/assets/
       as the still the battle controller contract resolves to.
     projectile/frame_01.png ... frame_04.png   paper plane flight (durov).
     explosion/frame_01.png ... frame_03.png    blue impact burst (durov).
+    projectile/frame_01.png ... frame_04.png   yellow laser flight (aurelion).
+    explosion/frame_01.png ... frame_04.png    yellow laser burst (aurelion).
       Attack cinema plays over the arena while the attacker swings and is
       registered outside the 10-key hero contract - a hero without these
       folders simply launches nothing.

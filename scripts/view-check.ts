@@ -11,7 +11,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { MAX_ROUNDS } from '../src/data/balance';
+import { ATTACK_IMPACT_DELAY_MS, MAX_ROUNDS } from '../src/data/balance';
 import type { BodyPart } from '../src/data/balance';
 import { DUROV } from '../src/data/heroes/durov';
 import { soundForEvent } from '../src/presentation/audioEvents';
@@ -173,7 +173,9 @@ const openNextSelection = (state: BattleState): BattleState => BattleEngine.begi
   const view = buildBattleView(fight);
   check('execution: A swings first', view.attacker === 'A', String(view.attacker));
   check('execution: the attacker plays an attack event', view.fighters.A.event?.type === 'ATTACK_HEAD', String(view.fighters.A.event?.type));
-  check('execution: the target reacts in the same beat', view.fighters.B.event?.type === 'HIT', String(view.fighters.B.event?.type));
+  check('execution: the target reaction is known from the resolved plan', view.fighters.B.event?.type === 'HIT', String(view.fighters.B.event?.type));
+  check('execution: the target waits for the attack to land', view.fighters.B.reactionDelayMs === ATTACK_IMPACT_DELAY_MS, String(view.fighters.B.reactionDelayMs));
+  check('execution: the attacker does not wait for impact', view.fighters.A.reactionDelayMs === null, String(view.fighters.A.reactionDelayMs));
   check('execution: the round log is still empty', view.log.length === 0);
 }
 
@@ -185,7 +187,8 @@ const openNextSelection = (state: BattleState): BattleState => BattleEngine.begi
   const view = buildBattleView(afterA);
   check('execution: B is up next', view.attacker === 'B', String(view.attacker));
   check('execution: the next attacker plays its own swing', view.fighters.B.event?.type === 'ATTACK_BODY', String(view.fighters.B.event?.type));
-  check('execution: the waiting fighter reacts in the same beat', view.fighters.A.event?.type === 'HIT', String(view.fighters.A.event?.type));
+  check('execution: the waiting fighter has its incoming result', view.fighters.A.event?.type === 'HIT', String(view.fighters.A.event?.type));
+  check('execution: the waiting fighter delays its reaction', view.fighters.A.reactionDelayMs === ATTACK_IMPACT_DELAY_MS, String(view.fighters.A.reactionDelayMs));
   check('execution: the incoming attack is already known', view.fighters.B.attack === 'body', String(view.fighters.B.attack));
   check('execution: the round log records the first attack', view.log.length === 1);
   check('execution: round 1 damage is 200', view.log[0]?.damage === 200, String(view.log[0]?.damage));

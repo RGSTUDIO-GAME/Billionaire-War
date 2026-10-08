@@ -48,6 +48,8 @@ export const HASHRATE_PERIOD_MS = 10 * 60 * 1000;
  * each beat of the battle is readable rather than instant.
  */
 export const EXECUTION_BEAT_MS = 1400;
+/** The defender reacts only after the attacker's swing/projectile lands. */
+export const ATTACK_IMPACT_DELAY_MS = 720;
 /** How long the round summary is held before the battle moves on. */
 export const ROUND_SUMMARY_MS = 1800;
 /** How long the "ROUND n / 3" banner is held before the pickers return. */

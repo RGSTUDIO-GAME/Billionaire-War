@@ -11,6 +11,8 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { ATTACK_IMPACT_DELAY_MS } from '../src/data/balance';
+import { AURELION } from '../src/data/heroes/aurelion';
 import { DUROV } from '../src/data/heroes/durov';
 import { BATTLE_STATUS } from '../src/engine/types';
 import { BattleScreen } from '../src/screens/BattleScreen';
@@ -107,7 +109,13 @@ check('store: FIGHT hands over to execution', battle()?.status === BATTLE_STATUS
 
 const swinging = shot();
 check('screen: the attacker lunges', swinging.html.includes('is-attacking'));
-check('screen: the defender reacts in the same beat', swinging.html.includes('sprite--right is-'), swinging.html.slice(0, 200));
+check(
+  'screen: the defender waits for the attack to land',
+  swinging.html.includes(`data-impact-delay="${ATTACK_IMPACT_DELAY_MS}" data-impact-state="waiting"`),
+  swinging.html.slice(0, 240),
+);
+check('screen: the defender does not show a hit pose before impact', !swinging.html.includes('sprite sprite--right is-hit'), swinging.html.slice(0, 240));
+check('screen: only one fighter is waiting behind impact', (swinging.html.match(/data-impact-state="waiting"/g) ?? []).length === 1);
 check('screen: the paper plane flies left to right', swinging.html.includes('attack-fx attack-fx--from-left'));
 check('screen: the choices are revealed at last', swinging.html.includes('chip--atk') && !swinging.html.includes('chip--locked'));
 check('screen: the selection panel stays hidden', !swinging.words.includes('Pick attack'));
@@ -117,6 +125,11 @@ const enemySwing = shot();
 check('screen: the enemy lunges on its own beat', enemySwing.html.includes('sprite--right is-attacking'), enemySwing.html.slice(0, 120));
 check('screen: the enemy swings an attack frame', /sprite--right is-attacking.*?attack_\w+\/frame_01/s.test(enemySwing.html));
 check('screen: the player rests while the enemy swings', !enemySwing.html.includes('sprite--left is-attacking'));
+check(
+  'screen: the player also waits behind the enemy attack',
+  enemySwing.html.includes(`data-impact-delay="${ATTACK_IMPACT_DELAY_MS}" data-impact-state="waiting"`),
+  enemySwing.html.slice(0, 240),
+);
 check('screen: the enemy plane flies right to left', enemySwing.html.includes('attack-fx attack-fx--from-right'));
 const firstLanded = enemySwing;
 const firstAttack = battle()?.currentRoundRecord?.attacks[0];
@@ -225,7 +238,30 @@ check('rematch: the balance is carried over, not reset', usePlayerStore.getState
 check('rematch: the previous reward is still in the ledger', usePlayerStore.getState().goldTransactions.length === 1);
 check('rematch: the new battle has full HP again', fresh.words.includes('1000 / 1000'));
 
-/* ----------------------------------------- 9. the hook is actually wired */
+/* -------------------------------------------- 9. aurelion attack cinema */
+
+store().start('bot', AURELION, DUROV, 20261008);
+store().selectAttack('head');
+store().selectDefense('leg');
+store().confirmPlayer();
+store().tickCountdown();
+store().tickCountdown();
+store().tickCountdown();
+store().tickCountdown();
+
+const aurelionSwing = shot();
+check(
+  'screen: aurelion launches its yellow laser',
+  aurelionSwing.html.includes('aurelion/projectile/frame_01.png'),
+  aurelionSwing.html.slice(0, 300),
+);
+check(
+  'screen: aurelion renders the laser explosion',
+  aurelionSwing.html.includes('aurelion/explosion/frame_01.png'),
+  aurelionSwing.html.slice(0, 300),
+);
+
+/* ---------------------------------------- 10. the hook is actually wired */
 
 {
   const hook = readFileSync(join(ROOT, 'src', 'hooks', 'useBattleReward.ts'), 'utf8');

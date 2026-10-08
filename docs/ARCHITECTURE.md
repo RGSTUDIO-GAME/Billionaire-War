@@ -285,7 +285,8 @@ transaction the ledger actually holds.
 turns engine state into the round label, the selection state, the per-fighter
 event that is animating, the round log, the between-round banner and the end
 summary. It computes no gameplay — no damage, no winner, no block, no HP, no
-round, no timeout. The only derived numbers are display helpers.
+round, no timeout. The only derived numbers are display helpers and the
+presentation-only delay that keeps the defender idle until the attack lands.
 
 `presentation/audioEvents.ts` is the only module that names a sound. An event
 in, a cue out, silent when an asset is missing.
@@ -377,22 +378,22 @@ Node against the **real** modules — no mocks, no reimplementation of the rules
 | --- | --- | --- |
 | `engine-check.ts` | 198 | the five worked examples from the spec, every acceptance combination, the state machine, hit/block across all 16 target pairs, KO, win, lose, draw, round history, determinism, PvP/bot parity |
 | `flow-check.ts` | 92 | the real store: phase wiring, per-round bot lock, timers, countdown, execution order, timeouts, rematch |
-| `view-check.ts` | 103 | the read model the screen draws: labels, reveal timing, result events, damage totals |
+| `view-check.ts` | 106 | the read model the screen draws: labels, reveal timing, impact sequencing, result events, damage totals |
 | `reward-check.ts` | 158 | every mode and outcome pays, the amount comes from configuration, the ledger records it, and it is never paid twice |
 | `data-check.ts` | 176 | reload survival, damaged-save recovery, the $GOLD rules, the battle archive, id uniqueness across sessions, and the layer boundaries |
-| `asset-check.ts` | 183 | every event resolves to a registered asset, the documented mappings, hero-agnostic controller, engine purity, fallbacks |
-| `render-check.tsx` | 66 | `BattleScreen` rendered for real at every phase of a battle |
-| `mining-check.ts` | 19 | eligible heroes, 24-hour timing, anytime claim, pause at full, single active hero and reload persistence |
+| `asset-check.ts` | 191 | every event resolves to a registered asset, the documented mappings, hero-agnostic controller, engine purity, attack cinema, fallbacks |
+| `render-check.tsx` | 71 | `BattleScreen` rendered for real at every phase of a battle, including Aurelion's laser |
+| `mining-check.ts` | 21 | eligible heroes, 24-hour timing, anytime claim, pause at full, single active hero and reload persistence |
 
 ```
 All 198 battle rule checks passed.
 All  92 battle flow checks passed.
-All 103 presentation layer checks passed.
+All 106 presentation layer checks passed.
 All 158 reward system checks passed.
 All 176 data layer checks passed.
-All 183 animation controller checks passed.
-All  66 battle screen render checks passed.
-All  19 mining checks passed.
+All 191 animation controller checks passed.
+All  71 battle screen render checks passed.
+All  21 mining checks passed.
 ```
 
 `flow-check.ts` is what caught a bot that only locked its choice in round 1,

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { EXECUTION_BEAT_MS, ROUND_BANNER_MS, ROUND_SUMMARY_MS } from '../data/balance';
+import { ATTACK_IMPACT_DELAY_MS, EXECUTION_BEAT_MS, ROUND_BANNER_MS, ROUND_SUMMARY_MS } from '../data/balance';
 import { audio } from '../audio/audioManager';
 import { BATTLE_MUSIC, playEventCue } from '../presentation/audioEvents';
 import { buildBattleView } from '../presentation/battleView';
@@ -93,23 +93,34 @@ export const useBattleFlow = (): void => {
     if (!current) return undefined;
 
     const view = buildBattleView(current);
+    let impactAudioTimer: number | undefined;
 
     if (view.attacker) {
       playEventCue(view.fighters[view.attacker].event?.type ?? null);
-      // The defender reacts in the same beat as the swing, so its impact
-      // sounds together with the attack - not one beat later when the attack
-      // resolves in the round log.
+      // The whoosh starts with the swing. Hit/block feedback starts only after
+      // the attack lands, matching the defender's delayed reaction.
       const target = view.attacker === 'A' ? view.fighters.B : view.fighters.A;
-      playEventCue(target.event?.type ?? null);
+      if (target.event) {
+        impactAudioTimer = window.setTimeout(
+          () => playEventCue(target.event?.type ?? null),
+          target.reactionDelayMs ?? ATTACK_IMPACT_DELAY_MS,
+        );
+      }
     }
 
     const step = nextFlowStep(view.status);
     // COUNTDOWN belongs to the ticking effect above; selection waits on a
     // person, not a timer.
-    if (step.kind === 'HOLD' || step.kind === 'COUNTDOWN') return undefined;
+    if (step.kind === 'HOLD' || step.kind === 'COUNTDOWN') {
+      if (impactAudioTimer === undefined) return undefined;
+      return () => window.clearTimeout(impactAudioTimer);
+    }
 
     const id = window.setTimeout(() => runFlowStep(step), STEP_DELAY_MS[step.kind]);
-    return () => window.clearTimeout(id);
+    return () => {
+      if (impactAudioTimer !== undefined) window.clearTimeout(impactAudioTimer);
+      window.clearTimeout(id);
+    };
     // `beat` changes as each attack lands, so each beat gets its own cue.
   }, [status, beat]);
 

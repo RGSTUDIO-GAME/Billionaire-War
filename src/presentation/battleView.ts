@@ -1,4 +1,4 @@
-import { MAX_ROUNDS } from '../data/balance';
+import { ATTACK_IMPACT_DELAY_MS, MAX_ROUNDS } from '../data/balance';
 import { eventsForAttack } from '../engine';
 import { BATTLE_STATUS } from '../engine/types';
 import type { BattleEvent } from '../engine/events';
@@ -109,6 +109,8 @@ export type FighterView = {
   /** A landed result whose popup stays up even while this fighter swings. */
   resultEvent: BattleEvent | null;
   attacking: boolean;
+  /** Delay this fighter's incoming reaction until the attack has landed. */
+  reactionDelayMs: number | null;
 };
 
 /** The full-width beat shown between rounds. */
@@ -162,7 +164,7 @@ const RESULT_VISIBLE: Record<1 | 2, readonly BattleStatus[]> = {
 
 /**
  * The result landing on this fighter, read from the pre-resolved plans so the
- * defender reacts in the SAME beat as the swing - not one beat later when the
+ * defender can react after the swing lands - not a full beat later when the
  * attack resolves in the round record. Gameplay is untouched: damage, HP and
  * the log still resolve one attack at a time in the engine.
  */
@@ -181,10 +183,10 @@ const incomingResultFor = (battle: BattleState, id: CombatantId): BattleEvent | 
 /**
  * The event animating on a fighter right now.
  *
- * The attacker plays its attack event; the target plays the incoming result
- * in the same beat, and a resolved result persists into the round summary.
- * Everything is read from the plans the engine resolved before the first
- * animation frame - nothing is decided here.
+ * The attacker plays its attack event; the target receives the incoming
+ * result behind a presentation-only impact delay, and a resolved result
+ * persists into the round summary. Everything is read from the plans the
+ * engine resolved before the first animation frame.
  */
 /**
  * The attack that has already landed on this fighter, if its result is still
@@ -227,6 +229,7 @@ const eventFor = (battle: BattleState, id: CombatantId): BattleEvent | null => {
 const fighterView = (battle: BattleState, id: CombatantId): FighterView => {
   const combatant = id === 'A' ? battle.playerA : battle.playerB;
   const plans = battle.currentPlans;
+  const attacker = ATTACKING[battle.status];
   // The plan this fighter swings, and the plan aimed at them.
   const plan = id === 'A' ? plans?.[0] : plans?.[1];
   const incoming = id === 'A' ? plans?.[1] : plans?.[0];
@@ -246,7 +249,8 @@ const fighterView = (battle: BattleState, id: CombatantId): FighterView => {
     defense: incoming ? incoming.targetDefense : null,
     event: eventFor(battle, id),
     resultEvent: resultEventFor(battle, id),
-    attacking: ATTACKING[battle.status] === id,
+    attacking: attacker === id,
+    reactionDelayMs: attacker !== null && attacker !== id ? ATTACK_IMPACT_DELAY_MS : null,
   };
 };
 

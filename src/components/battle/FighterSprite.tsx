@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { AssetImg } from '../../assets/AssetImg';
 import { AnimatedSprite, FRAME_INTERVAL_MS } from './AnimatedSprite';
 import { heroAssetChain, heroFrameUrls, heroSpriteScale } from '../../assets/heroAssets';
@@ -25,16 +25,33 @@ type FighterSpriteProps = {
  * always drawn.
  */
 export const FighterSprite = ({ fighter, hero, beatKey = '' }: FighterSpriteProps) => {
-  const cue = fighter.event ? resolveCue(hero, fighter.event) : idleCue(hero);
-  const popupCue = fighter.resultEvent ? resolveCue(hero, fighter.resultEvent) : cue;
+  const impactSignature =
+    fighter.reactionDelayMs === null
+      ? null
+      : `${fighter.id}:${beatKey}:${fighter.event?.type ?? 'none'}:${fighter.event?.round ?? ''}:${fighter.hp}`;
+  const [landedSignature, setLandedSignature] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (impactSignature === null || landedSignature === impactSignature) return undefined;
+    const id = window.setTimeout(() => setLandedSignature(impactSignature), fighter.reactionDelayMs ?? 0);
+    return () => window.clearTimeout(id);
+  }, [fighter.reactionDelayMs, impactSignature, landedSignature]);
+
+  const impactLanded = impactSignature === null || landedSignature === impactSignature;
+  const event = impactLanded ? fighter.event : null;
+  const resultEvent = impactLanded ? fighter.resultEvent : null;
+  const cue = event ? resolveCue(hero, event) : idleCue(hero);
+  const popupCue = resultEvent ? resolveCue(hero, resultEvent) : cue;
   const isHit = cue.motion === 'hit';
   const isBlocking = cue.motion === 'block';
   const isBlockPopup = popupCue.motion === 'block';
-  const isIdleOutcome = fighter.event?.type === 'NO_ACTION';
+  const isIdleOutcome = event?.type === 'NO_ACTION';
 
   return (
     <div
       style={{ '--sprite-scale': String(heroSpriteScale(hero, cue.visual)) } as CSSProperties}
+      data-impact-delay={fighter.reactionDelayMs ?? undefined}
+      data-impact-state={fighter.reactionDelayMs === null ? undefined : impactLanded ? 'landed' : 'waiting'}
       className={[
         'sprite',
         fighter.id === 'A' ? 'sprite--left' : 'sprite--right',
@@ -46,7 +63,7 @@ export const FighterSprite = ({ fighter, hero, beatKey = '' }: FighterSpriteProp
         .join(' ')}
     >
       <AnimatedSprite
-        key={`${fighter.id}:${beatKey}:${fighter.event ? `${fighter.event.type}:${fighter.event.round}:${fighter.hp}` : `idle:${fighter.hp}`}`}
+        key={`${fighter.id}:${beatKey}:${event ? `${event.type}:${event.round}:${fighter.hp}` : `idle:${fighter.hp}`}`}
         frames={heroFrameUrls(hero, cue.visual)}
         still={heroAssetChain(hero, cue.visual)}
         intervalMs={cue.visual.type === 'idle' ? (hero.idleIntervalMs ?? FRAME_INTERVAL_MS) : FRAME_INTERVAL_MS}

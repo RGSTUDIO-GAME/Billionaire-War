@@ -36,7 +36,7 @@ npm run dev        # http://localhost:5173
 | `npm run build` | Typecheck + production build to `dist/` |
 | `npm run preview` | Serve the production build |
 | `npm run typecheck` | TypeScript only |
-| `npm run verify` | **1,131 assertions** — engine rules, store flow, presentation, rewards, data layer, animation, rendered screens, mining, trade, fusion and gacha |
+| `npm run verify` | **1,143 assertions** — engine rules, store flow, presentation, rewards, data layer, animation, rendered screens, mining, trade, fusion and gacha |
 | `npm run assets:check` | Report which registered assets exist on disk |
 | `npm run assets:placeholder` | Regenerate the bundled placeholder art/audio |
 | `npm run lint` | oxlint |
@@ -173,7 +173,7 @@ the middle, a round log strip, and the selection panel along the bottom.
 | Waiting | `Your choice is locked` + the opponent reported as `LOCKED` — never their targets |
 | Before execution | `ATK ??? · DEF ???` on both fighters |
 | Countdown | the pickers are replaced by `3 → 2 → 1 → FIGHT!` |
-| Execution | the attacker lunges, the target takes `HIT -200` or `BLOCK 0`, HP drops smoothly, and the round log narrates |
+| Execution | the attacker lunges or launches its projectile; after impact the target takes `HIT -200` / `BLOCK 0`, reacts, and the round log narrates |
 | Round over | `ROUND n COMPLETE`, then `ROUND n+1 / 3` before the pickers return |
 | Result | `VICTORY` / `DEFEAT` / `DRAW`, both final HP pools, rounds, damage dealt, damage received, and a reward placeholder |
 
@@ -316,7 +316,7 @@ The Battle Engine does not change. See [docs/ASSETS.md](docs/ASSETS.md).
 
 ## Verification
 
-`npm run verify` bundles thirteen suites and runs them on Node — **1,131 assertions**:
+`npm run verify` bundles thirteen suites and runs them on Node — **1,143 assertions**:
 
 | Suite | Covers |
 | --- | --- |
@@ -325,8 +325,8 @@ The Battle Engine does not change. See [docs/ASSETS.md](docs/ASSETS.md).
 | `view-check` | the read model: labels, reveal timing, result events, damage totals |
 | `reward-check` | the payout: every mode and outcome, config-driven amounts, the ledger, and never paying twice |
 | `data-check` | the data layer: reload survival, damaged saves, the gold rules, the archive, and the layer boundaries |
-| `asset-check` | the animation controller, hero-agnostic mapping, fallback chains |
-| `render-check` | `BattleScreen` rendered for real at every phase of a battle |
+| `asset-check` | the animation controller, hero-agnostic mapping, attack cinema and fallback chains |
+| `render-check` | `BattleScreen` rendered for real at every phase of a battle, including Aurelion's laser |
 | `mining-check` | eligible heroes, 24-hour timing, anytime claim, pause at full, one active session, and reload persistence |
 | `trade-check` | exact Hero instances, level/star pricing, offers, Requests, Instant Sell, escrow, delivery, delisting and reload safety |
 | `trade-render-check` | grouped Hero stacks, Offer/Deliver/Request entry points, buy requests and player-facing notices |
