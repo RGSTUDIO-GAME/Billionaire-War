@@ -94,6 +94,8 @@ export const gracychenAssetIds = registerHeroAssets('gracychen', 4);
 
 export const aurelionAssetIds = registerHeroAssets('aurelion', 4);
 
+export const durovFreedomAssetIds = registerHeroAssets('durov-freedom', 4);
+
 /* ------------------------------------------------------- animation frames */
 
 const heroFrameFolder: Record<HeroAssetKey, string | null> = {
@@ -139,6 +141,7 @@ export const heroFrames: Record<string, Record<HeroAssetKey, AssetId[]>> = {
   elonmusk: registerHeroFrames('elonmusk', 4),
   gracychen: registerHeroFrames('gracychen', 4),
   aurelion: registerHeroFrames('aurelion', 4, { idle: 5, defeat: 6 }),
+  'durov-freedom': registerHeroFrames('durov-freedom', 4),
 };
 
 /* ------------------------------------------------------- attack fx frames */
@@ -191,6 +194,7 @@ export const heroPortraitIds: Record<string, AssetId> = {
   elonmusk: register('heroes', 'elonmusk_portrait', 'elonmusk/portrait.jpg', 'hero', 'Elonmusk portrait'),
   gracychen: register('heroes', 'gracychen_portrait', 'gracychen/portrait.jpg', 'hero', 'Gracychen portrait'),
   aurelion: register('heroes', 'aurelion_portrait', 'aurelion/portrait.jpg', 'hero', 'Aurelion portrait'),
+  'durov-freedom': register('heroes', 'durov_freedom_portrait', 'durov-freedom/portrait.jpg', 'hero', 'Durov Freedom portrait'),
 };
 
 /* ------------------------------------------------------------ backgrounds */
