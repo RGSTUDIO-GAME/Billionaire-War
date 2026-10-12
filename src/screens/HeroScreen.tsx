@@ -17,7 +17,7 @@ import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { FusionModal } from '../components/hero/FusionModal';
-import { HeroAvatar } from '../components/hero/HeroAvatar';
+import { HeroPortrait } from '../components/hero/HeroPortrait';
 import { RarityBadge } from '../components/hero/RarityBadge';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { haptic } from '../services/telegram';
@@ -81,7 +81,7 @@ const HeroRow = ({
   return (
     <Card style={{ borderColor: accent, boxShadow: `0 0 14px ${accent}40` }}>
       <div className="row" style={{ alignItems: 'flex-start' }}>
-        <HeroAvatar hero={hero} size="md" locked={isLocked} />
+        <HeroPortrait hero={hero} locked={isLocked} />
         <div className="grow stack" style={{ minWidth: 0 }}>
           <div className="row-between">
             <h3 className="display" style={{ fontSize: 20, color: isLocked ? 'var(--text-muted)' : 'var(--gold)' }}>
@@ -270,46 +270,28 @@ const RARITY_ACCENT: Record<HeroRarity, string> = {
 export const HeroScreen = ({ onBack }: HeroScreenProps) => {
   const ownedHeroIds = usePlayerStore((state) => state.ownedHeroIds);
   const equippedHeroId = usePlayerStore((state) => state.equippedHeroId);
-  const [tab, setTab] = useState<HeroRarity>(
-    () => RARITY_ORDER.find((rarity) => HEROES.some((hero) => hero.rarity === rarity)) ?? 'common',
-  );
   const [fusionTarget, setFusionTarget] = useState<Hero | null>(null);
+  const [selectedId, setSelectedId] = useState<string>(
+    () => equippedHeroId || ownedHeroIds[0] || HEROES[0].id,
+  );
 
-  const pickTab = (next: HeroRarity) => {
-    if (next === tab) return;
+  const selectedHero = HEROES.find((hero) => hero.id === selectedId) ?? HEROES[0];
+
+  const pickHero = (hero: Hero) => {
+    if (hero.id === selectedId) return;
     audio.playSfx(soundIds.uiConfirm, 0.3);
     haptic.impact('light');
-    setTab(next);
+    setSelectedId(hero.id);
   };
-
-  const visibleRarities = [tab];
 
   return (
     <div className="anim-fade">
       <ScreenHeader title="Hero" subtitle={`${HEROES.length} hero available`} onBack={onBack} />
 
-      <div className="tabs" style={{ marginBottom: 'var(--s-3)' }}>
-        {RARITY_ORDER.map((rarity) => {
-          const count = HEROES.filter((hero) => hero.rarity === rarity).length;
-          return (
-            <button
-              key={rarity}
-              type="button"
-              className={`tabs__btn${tab === rarity ? ' is-active' : ''}`}
-              aria-pressed={tab === rarity}
-              aria-label={RARITY_LABEL[rarity]}
-              onClick={() => pickTab(rarity)}
-            >
-              <RarityBadge rarity={rarity} height={20} />
-              <span>{count}</span>
-            </button>
-          );
-        })}
-      </div>
-
       <div className="stack" style={{ gap: 'var(--s-4)' }}>
-        {visibleRarities.map((rarity) => {
+        {RARITY_ORDER.map((rarity) => {
           const heroes = HEROES.filter((hero) => hero.rarity === rarity);
+          if (heroes.length === 0) return null;
           return (
             <section key={rarity}>
               <div className="row-between" style={{ marginBottom: 'var(--s-2)' }}>
@@ -318,23 +300,36 @@ export const HeroScreen = ({ onBack }: HeroScreenProps) => {
                   {heroes.length} hero
                 </span>
               </div>
-              {heroes.length > 0 ? (
-                <div className="stack">
-                  {heroes.map((hero) => (
-                    <HeroRow
+              <div className="hero-portrait-grid">
+                {heroes.map((hero) => {
+                  const ownership = getOwnedState(hero, ownedHeroIds, equippedHeroId);
+                  return (
+                    <button
                       key={hero.id}
-                      hero={hero}
-                      ownership={getOwnedState(hero, ownedHeroIds, equippedHeroId)}
-                      onFuse={setFusionTarget}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="empty-state">No heroes here yet - coming soon.</div>
-              )}
+                      type="button"
+                      className={`hero-portrait-btn${hero.id === selectedHero.id ? ' is-selected' : ''}`}
+                      aria-pressed={hero.id === selectedHero.id}
+                      aria-label={`${hero.name}, ${RARITY_LABEL[hero.rarity]} hero, ${OWNERSHIP_LABEL[ownership]}`}
+                      onClick={() => pickHero(hero)}
+                    >
+                      <HeroPortrait hero={hero} locked={ownership === 'locked'} />
+                      <div className="hero-portrait-caption">{hero.name}</div>
+                    </button>
+                  );
+                })}
+              </div>
             </section>
           );
         })}
+      </div>
+
+      <div style={{ marginTop: 'var(--s-4)' }}>
+        <HeroRow
+          key={selectedHero.id}
+          hero={selectedHero}
+          ownership={getOwnedState(selectedHero, ownedHeroIds, equippedHeroId)}
+          onFuse={setFusionTarget}
+        />
       </div>
 
       {fusionTarget ? <FusionModal hero={fusionTarget} onClose={() => setFusionTarget(null)} /> : null}

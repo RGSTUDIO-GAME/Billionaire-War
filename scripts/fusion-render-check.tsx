@@ -35,8 +35,7 @@ check('render: owned heroes expose a Fusion entry point', words.includes('Fusion
 check('render: owned heroes show their stacked quantity', words.includes('×1'));
 check('render: Hero hides Instant Sell without a matching request', !hero.includes('Instant Sell'));
 
-const RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary'] as const;
-const defaultHero = HEROES.find((hero) => hero.rarity === RARITY_ORDER.find((rarity) => HEROES.some((candidate) => candidate.rarity === rarity))) ?? HEROES[0];
+const selectedHero = HEROES.find((hero) => hero.id === usePlayerStore.getState().equippedHeroId) ?? HEROES[0];
 const previousRequests = usePlayerStore.getState().tradeRequests;
 try {
   usePlayerStore.setState({
@@ -45,7 +44,7 @@ try {
         requestId: 'render-request',
         requesterId: 'another-player',
         kind: 'hero',
-        heroId: defaultHero.id,
+        heroId: selectedHero.id,
         price: 17,
         status: 'active',
         createdAt: 1,

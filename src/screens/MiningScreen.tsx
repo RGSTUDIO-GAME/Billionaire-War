@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AssetImg } from '../assets/AssetImg';
 import { iconIds } from '../assets/manifest';
-import { HeroAvatar } from '../components/hero/HeroAvatar';
+import { HeroPortrait } from '../components/hero/HeroPortrait';
 import { RarityBadge } from '../components/hero/RarityBadge';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
@@ -103,7 +103,7 @@ export const MiningScreen = ({ onBack, onChangeHero }: MiningScreenProps) => {
       <div className="stack-lg">
         <Card>
           <div className="row" style={{ alignItems: 'flex-start' }}>
-            <HeroAvatar hero={hero} size="lg" />
+            <HeroPortrait hero={hero} />
             <div className="grow stack" style={{ minWidth: 0 }}>
               <div className="row-between">
                 <div>

@@ -19,7 +19,7 @@ import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Modal } from '../ui/Modal';
-import { HeroAvatar } from './HeroAvatar';
+import { HeroPortrait } from './HeroPortrait';
 import { RarityBadge } from './RarityBadge';
 
 const SHOWN_SERIALS = 60;
@@ -53,7 +53,7 @@ export const FusionModal = ({ hero, onClose }: { hero: Hero; onClose: () => void
       <div className="stack">
         <Card flat tight>
           <div className="row" style={{ gap: 'var(--s-3)', alignItems: 'center' }}>
-            <HeroAvatar hero={hero} size="sm" />
+            <HeroPortrait hero={hero} size="xs" />
             <div className="grow stack" style={{ gap: 2 }}>
               <div className="row" style={{ gap: 6, alignItems: 'center' }}>
                 <RarityBadge rarity={hero.rarity} />

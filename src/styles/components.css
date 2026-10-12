@@ -1432,3 +1432,64 @@
     justify-self: end;
   }
 }
+
+/* ------------------------------------------- hero portrait gallery (Hero) */
+
+.hero-portrait-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s-2);
+}
+
+.hero-portrait-btn {
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-align: center;
+  min-width: 0;
+}
+
+.hero-portrait-btn .home-portrait {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 132 / 168;
+}
+
+.hero-portrait-btn .hero-portrait-caption {
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hero-portrait-btn.is-selected .home-portrait {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+  box-shadow: 0 0 14px rgba(245, 197, 66, 0.35);
+}
+
+.hero-portrait-btn.is-selected .hero-portrait-caption {
+  color: var(--gold);
+}
+
+.hero-portrait.is-locked img {
+  filter: grayscale(1) brightness(0.5);
+}
+
+.hero-portrait--xs {
+  width: 60px;
+  height: 76px;
+  flex: 0 0 auto;
+}
+
+.hero-portrait-badge {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+}

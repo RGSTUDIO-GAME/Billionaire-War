@@ -1,6 +1,6 @@
 import { AssetImg } from '../assets/AssetImg';
 import { iconIds } from '../assets/manifest';
-import { HeroAvatar } from '../components/hero/HeroAvatar';
+import { HeroPortrait } from '../components/hero/HeroPortrait';
 import { RarityBadge } from '../components/hero/RarityBadge';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
@@ -58,7 +58,7 @@ export const MiningSelectScreen = ({ onBack, onEquip }: MiningSelectScreenProps)
             return (
               <Card key={hero.id}>
                 <div className="row" style={{ alignItems: 'flex-start' }}>
-                  <HeroAvatar hero={hero} size="md" />
+                  <HeroPortrait hero={hero} />
                   <div className="grow stack" style={{ minWidth: 0 }}>
                     <div className="row-between">
                       <div>

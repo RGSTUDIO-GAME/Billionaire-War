@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { AssetImg } from '../assets/AssetImg';
 import { iconIds } from '../assets/manifest';
-import { HeroAvatar } from '../components/hero/HeroAvatar';
+import { HeroPortrait } from '../components/hero/HeroPortrait';
 import { RarityBadge } from '../components/hero/RarityBadge';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
@@ -109,7 +109,7 @@ const OfferCard = ({ offer, actions }: { offer: TradeOffer; actions: ReactNode }
     {offer.kind === 'hero' ? (
       (() => {
         const hero = HEROES.find((candidate) => candidate.id === offer.heroId);
-        return hero ? <HeroAvatar hero={hero} size="sm" /> : null;
+        return hero ? <HeroPortrait hero={hero} size="xs" /> : null;
       })()
     ) : (
       <AssetImg assetId={iconIds.gold} alt="" className="trade-offer-icon" />
@@ -145,7 +145,7 @@ const RequestCard = ({ request, actions }: { request: TradeRequest; actions: Rea
     {request.kind === 'hero' ? (
       (() => {
         const hero = HEROES.find((candidate) => candidate.id === request.heroId);
-        return hero ? <HeroAvatar hero={hero} size="sm" /> : null;
+        return hero ? <HeroPortrait hero={hero} size="xs" /> : null;
       })()
     ) : (
       <AssetImg assetId={iconIds.gold} alt="" className="trade-offer-icon" />
@@ -388,7 +388,7 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
                   return (
                     <div className="stack" key={hero.id}>
                       <Card className="trade-row">
-                        <HeroAvatar hero={hero} size="sm" />
+                        <HeroPortrait hero={hero} size="xs" />
                         <div className="trade-row__main">
                           <div className="trade-row__title">{hero.name}</div>
                           <div className="trade-row__meta">
@@ -435,7 +435,7 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
                         const blocked = miningLocked || lastHero;
                         return (
                           <Card className="trade-row" key={group.key}>
-                            <HeroAvatar hero={hero} size="sm" />
+                            <HeroPortrait hero={hero} size="xs" />
                             <div className="trade-row__main">
                               <div className="trade-row__title">
                                 {hero.name} · Lv {group.level}
