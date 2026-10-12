@@ -271,11 +271,21 @@ export const HeroScreen = ({ onBack }: HeroScreenProps) => {
   const ownedHeroIds = usePlayerStore((state) => state.ownedHeroIds);
   const equippedHeroId = usePlayerStore((state) => state.equippedHeroId);
   const [fusionTarget, setFusionTarget] = useState<Hero | null>(null);
+  const [tab, setTab] = useState<HeroRarity>(
+    () => RARITY_ORDER.find((rarity) => HEROES.some((hero) => hero.rarity === rarity)) ?? 'common',
+  );
   const [selectedId, setSelectedId] = useState<string>(
     () => equippedHeroId || ownedHeroIds[0] || HEROES[0].id,
   );
 
   const selectedHero = HEROES.find((hero) => hero.id === selectedId) ?? HEROES[0];
+
+  const pickTab = (next: HeroRarity) => {
+    if (next === tab) return;
+    audio.playSfx(soundIds.uiConfirm, 0.3);
+    haptic.impact('light');
+    setTab(next);
+  };
 
   const pickHero = (hero: Hero) => {
     if (hero.id === selectedId) return;
@@ -284,12 +294,33 @@ export const HeroScreen = ({ onBack }: HeroScreenProps) => {
     setSelectedId(hero.id);
   };
 
+  const visibleRarities = [tab];
+
   return (
     <div className="anim-fade">
       <ScreenHeader title="Hero" subtitle={`${HEROES.length} hero available`} onBack={onBack} />
 
-      <div className="stack" style={{ gap: 'var(--s-4)' }}>
+      <div className="tabs" style={{ marginBottom: 'var(--s-3)' }}>
         {RARITY_ORDER.map((rarity) => {
+          const count = HEROES.filter((hero) => hero.rarity === rarity).length;
+          return (
+            <button
+              key={rarity}
+              type="button"
+              className={`tabs__btn${tab === rarity ? ' is-active' : ''}`}
+              aria-pressed={tab === rarity}
+              aria-label={RARITY_LABEL[rarity]}
+              onClick={() => pickTab(rarity)}
+            >
+              <RarityBadge rarity={rarity} height={20} />
+              <span>{count}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="stack" style={{ gap: 'var(--s-4)' }}>
+        {visibleRarities.map((rarity) => {
           const heroes = HEROES.filter((hero) => hero.rarity === rarity);
           if (heroes.length === 0) return null;
           return (
@@ -300,6 +331,7 @@ export const HeroScreen = ({ onBack }: HeroScreenProps) => {
                   {heroes.length} hero
                 </span>
               </div>
+              {heroes.length > 0 ? (
               <div className="hero-portrait-grid">
                 {heroes.map((hero) => {
                   const ownership = getOwnedState(hero, ownedHeroIds, equippedHeroId);
@@ -318,6 +350,9 @@ export const HeroScreen = ({ onBack }: HeroScreenProps) => {
                   );
                 })}
               </div>
+              ) : (
+                <div className="empty-state">No heroes here yet - coming soon.</div>
+              )}
             </section>
           );
         })}
