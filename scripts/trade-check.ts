@@ -23,9 +23,16 @@ const runtime = createRuntime(memoryStorage());
 
 const fresh = runtime.players.loadOrCreate();
 check('trade: a fresh profile owns the initial roster', fresh.ownedHeroes.length > 0);
+const RARITY_BASE_GOLD: Record<string, number> = {
+  common: 500,
+  uncommon: 1000,
+  rare: 2500,
+  epic: 5000,
+  legendary: 10000,
+};
 check(
   'trade: hero prices use the rarity base price',
-  close(heroTradePrice(HEROES[0], 0, 'gold', 'buy'), HEROES[0].priceInGold ?? 500),
+  close(heroTradePrice(HEROES[0], 0, 'gold', 'buy'), HEROES[0].priceInGold ?? RARITY_BASE_GOLD[HEROES[0].rarity] ?? 500),
   String(heroTradePrice(HEROES[0], 0, 'gold', 'buy')),
 );
 check(
