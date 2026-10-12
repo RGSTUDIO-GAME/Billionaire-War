@@ -186,6 +186,10 @@ export const heroFxFrames: Record<string, Record<HeroFxKind, AssetId[]>> = {
     projectile: registerHeroFx('aurelion', 'projectile', 4),
     explosion: registerHeroFx('aurelion', 'explosion', 4),
   },
+  'durov-freedom': {
+    projectile: registerHeroFx('durov-freedom', 'projectile', 4),
+    explosion: registerHeroFx('durov-freedom', 'explosion', 3),
+  },
 };
 
 /** Display portrait per hero. Outside hero.assets so the 10-key contract holds. */

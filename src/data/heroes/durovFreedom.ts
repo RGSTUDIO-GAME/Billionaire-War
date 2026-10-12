@@ -11,5 +11,6 @@ export const DUROV_FREEDOM: Hero = {
   free: true,
   priceInGold: null,
   skills: [],
+  spriteScale: 1.18,
   assets: durovFreedomAssetIds,
 };
