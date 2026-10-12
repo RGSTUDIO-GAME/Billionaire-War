@@ -187,7 +187,7 @@ export const heroFxFrames: Record<string, Record<HeroFxKind, AssetId[]>> = {
     explosion: registerHeroFx('aurelion', 'explosion', 4),
   },
   'durov-freedom': {
-    projectile: registerHeroFx('durov-freedom', 'projectile', 4),
+    projectile: registerHeroFx('durov-freedom', 'projectile', 5),
     explosion: registerHeroFx('durov-freedom', 'explosion', 3),
   },
 };
