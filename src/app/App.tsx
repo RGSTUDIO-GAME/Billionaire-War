@@ -80,7 +80,7 @@ export const App = () => {
     >
       {entry.screen === 'home' ? (
         <HomeScreen
-          onWar={() => navigate('war-entry')}
+          onPlay={() => navigate('war-entry')}
           onGacha={() => navigate('gacha')}
           onMining={() => goTo('mining-select')}
           onTrade={() => navigate('trade')}

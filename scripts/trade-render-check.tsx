@@ -27,7 +27,7 @@ const readable = (html: string): string =>
     .trim();
 
 const home = renderToStaticMarkup(
-  <HomeScreen onWar={() => {}} onMining={() => {}} onTrade={() => {}} />,
+  <HomeScreen onPlay={() => {}} onMining={() => {}} onTrade={() => {}} />,
 );
 const inventory = renderToStaticMarkup(
   <InventoryScreen onBack={() => {}} onBwarPress={() => {}} onTrade={() => {}} />,

@@ -21,12 +21,13 @@ type WarEntryScreenProps = {
 };
 
 /**
- * WAR entry point.
- * VS BOT is playable. PVP shows the navigation only - matchmaking is not
- * implemented, so no fake queue or fake opponent is simulated.
+ * PLAY entry point - the mode list.
+ * VS BOT is playable. PVP and FARM show the navigation only - matchmaking and
+ * the farm loop are not implemented, so no fake queue and no fake crops.
  */
 export const WarEntryScreen = ({ onBack, onBattleStart }: WarEntryScreenProps) => {
   const [pvpOpen, setPvpOpen] = useState(false);
+  const [farmOpen, setFarmOpen] = useState(false);
 
   const equippedHeroId = usePlayerStore((state) => state.equippedHeroId);
   const playerId = usePlayerStore((state) => state.playerId);
@@ -57,7 +58,7 @@ export const WarEntryScreen = ({ onBack, onBattleStart }: WarEntryScreenProps) =
 
   return (
     <div className="anim-fade">
-      <ScreenHeader title="War" subtitle="1 vs 1 auto battle - 3 rounds" onBack={onBack} />
+      <ScreenHeader title="Play" subtitle="1 vs 1 auto battle - 3 rounds" onBack={onBack} />
 
       <div className="stack-lg" style={{ gap: 'var(--s-4)' }}>
         <SceneCard background={backgroundIds.battleArena}>
@@ -91,7 +92,7 @@ export const WarEntryScreen = ({ onBack, onBattleStart }: WarEntryScreenProps) =
 
         <div className="stack">
           <div className="section-title" style={{ margin: 0 }}>
-            Battle mode
+            Game mode
           </div>
 
           <button type="button" className="list-row" onClick={() => setPvpOpen(true)}>
@@ -105,6 +106,10 @@ export const WarEntryScreen = ({ onBack, onBattleStart }: WarEntryScreenProps) =
 
           <Button variant="primary" size="lg" block icon={iconIds.robot} onClick={startBotBattle}>
             Vs Bot
+          </Button>
+
+          <Button variant="default" size="lg" block icon={iconIds.coin} onClick={() => setFarmOpen(true)}>
+            Farm <Badge tone="muted">Soon</Badge>
           </Button>
         </div>
 
@@ -127,6 +132,13 @@ export const WarEntryScreen = ({ onBack, onBattleStart }: WarEntryScreenProps) =
           icon={iconIds.user}
           title="Matchmaking"
           description="Player vs Player needs a real matchmaking service and a battle record to rank against. This build ships the navigation only - no fake queue and no fake opponent."
+        />
+      </Modal>
+
+      <Modal open={farmOpen} title="Farm" onClose={() => setFarmOpen(false)}>
+        <ComingSoon
+          title="Farm"
+          description="Farming needs its own loop - plots, crops and harvest rewards. This build ships the navigation only - no fake crops and no fake rewards."
         />
       </Modal>
     </div>

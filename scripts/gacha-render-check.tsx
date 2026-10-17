@@ -30,7 +30,7 @@ const readable = (html: string): string =>
 const gacha = renderToStaticMarkup(<GachaScreen onBack={() => {}} />);
 const gachaWords = readable(gacha);
 const home = renderToStaticMarkup(
-  <HomeScreen onWar={() => {}} onGacha={() => {}} onMining={() => {}} onTrade={() => {}} />,
+  <HomeScreen onPlay={() => {}} onGacha={() => {}} onMining={() => {}} onTrade={() => {}} />,
 );
 const homeWords = readable(home);
 
