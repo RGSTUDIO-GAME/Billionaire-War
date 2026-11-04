@@ -112,6 +112,8 @@ export type PlayerActions = {
   upgradeHero: (heroId: string) => boolean;
   addGold: (amount: number, ref?: GoldRef) => boolean;
   debitGold: (amount: number, ref?: GoldRef) => boolean;
+  addBwar: (amount: number) => boolean;
+  debitBwar: (amount: number) => boolean;
   /** Mirrors a reward the Reward Service has already paid. */
   applyReward: (outcome: RewardOutcome) => void;
   clearLastReward: () => void;
@@ -382,6 +384,23 @@ export const createPlayerStore = (app: AppRuntime): PlayerStore => {
     debitGold: (amount, ref = {}) => {
       const outcome = app.goldService.debit(currentProfile(app, get()), amount, ref, Date.now());
       if (!outcome.ok) return false;
+      commit(set);
+      return true;
+    },
+
+    addBwar: (amount) => {
+      if (!Number.isFinite(amount) || amount <= 0) return false;
+      const profile = currentProfile(app, get());
+      app.players.save({ ...profile, bwarBalance: profile.bwarBalance + amount });
+      commit(set);
+      return true;
+    },
+
+    debitBwar: (amount) => {
+      if (!Number.isFinite(amount) || amount <= 0) return false;
+      const profile = currentProfile(app, get());
+      if (profile.bwarBalance < amount) return false;
+      app.players.save({ ...profile, bwarBalance: profile.bwarBalance - amount });
       commit(set);
       return true;
     },

@@ -18,16 +18,16 @@ import { StatBar } from '../components/ui/StatBar';
 type WarEntryScreenProps = {
   onBack: () => void;
   onBattleStart: () => void;
+  onFarm: () => void;
 };
 
 /**
  * PLAY entry point - the mode list.
- * VS BOT is playable. PVP and FARM show the navigation only - matchmaking and
- * the farm loop are not implemented, so no fake queue and no fake crops.
+ * VS BOT and the farming prototype are playable. PvP remains a navigation-only
+ * mode until matchmaking is connected.
  */
-export const WarEntryScreen = ({ onBack, onBattleStart }: WarEntryScreenProps) => {
+export const WarEntryScreen = ({ onBack, onBattleStart, onFarm }: WarEntryScreenProps) => {
   const [pvpOpen, setPvpOpen] = useState(false);
-  const [farmOpen, setFarmOpen] = useState(false);
 
   const equippedHeroId = usePlayerStore((state) => state.equippedHeroId);
   const playerId = usePlayerStore((state) => state.playerId);
@@ -108,8 +108,8 @@ export const WarEntryScreen = ({ onBack, onBattleStart }: WarEntryScreenProps) =
             Vs Bot
           </Button>
 
-          <Button variant="default" size="lg" block icon={iconIds.coin} onClick={() => setFarmOpen(true)}>
-            Farm <Badge tone="muted">Soon</Badge>
+          <Button variant="default" size="lg" block icon={iconIds.coin} onClick={onFarm}>
+            Farm
           </Button>
         </div>
 
@@ -135,12 +135,6 @@ export const WarEntryScreen = ({ onBack, onBattleStart }: WarEntryScreenProps) =
         />
       </Modal>
 
-      <Modal open={farmOpen} title="Farm" onClose={() => setFarmOpen(false)}>
-        <ComingSoon
-          title="Farm"
-          description="Farming needs its own loop - plots, crops and harvest rewards. This build ships the navigation only - no fake crops and no fake rewards."
-        />
-      </Modal>
     </div>
   );
 };

@@ -5,6 +5,7 @@ import './styles/global.css';
 import './styles/layout.css';
 import './styles/components.css';
 import './styles/battle.css';
+import './styles/farm.css';
 import { App } from './app/App';
 
 const container = document.getElementById('root');

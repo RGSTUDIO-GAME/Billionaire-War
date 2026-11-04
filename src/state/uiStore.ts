@@ -12,7 +12,8 @@ export type Screen =
   | 'mining-select'
   | 'mining'
   | 'trade'
-  | 'gacha';
+  | 'gacha'
+  | 'farm';
 
 export type NavParams = Record<string, string>;
 
