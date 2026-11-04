@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { AppShell } from '../components/layout/AppShell';
 import { HomeScreen } from '../screens/HomeScreen';
 import { QuestScreen } from '../screens/QuestScreen';
@@ -21,6 +21,7 @@ import { usePlayerStore } from '../state/playerStore';
 import { useSettingsStore } from '../state/settingsStore';
 import { useUiStore } from '../state/uiStore';
 import type { Screen } from '../state/uiStore';
+import { ProfileModal } from '../components/player/ProfileModal';
 
 export const App = () => {
   const stack = useUiStore((state) => state.stack);
@@ -30,6 +31,7 @@ export const App = () => {
 
   const sfx = useSettingsStore((state) => state.sfx);
   const music = useSettingsStore((state) => state.music);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   useEffect(() => {
     initTelegram();
@@ -77,8 +79,10 @@ export const App = () => {
       onBack={back}
       onNavigate={goTo}
       onLeaderboard={() => goTo('leaderboard')}
+      onProfile={() => setProfileOpen(true)}
       onBwarPress={openMining}
     >
+      <ProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} />
       {entry.screen === 'home' ? (
         <HomeScreen
           onPlay={() => navigate('war-entry')}

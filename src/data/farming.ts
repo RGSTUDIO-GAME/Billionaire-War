@@ -9,6 +9,7 @@ export type FarmSeed = {
   growingHours: number;
   color: string;
 };
+export type FarmPlot = { seed: FarmTier; plantedAt: number } | null;
 
 export const FARM_SEEDS: FarmSeed[] = [
   { tier: 'common', label: '$GRAM', symbol: '🌱', harvestXp: 10, harvestGold: 1500, price: 1000, growingHours: 4, color: '#a7e06f' },

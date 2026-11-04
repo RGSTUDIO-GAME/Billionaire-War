@@ -15,6 +15,7 @@ import type {
 import type { StorageAdapter } from '../storage/StorageAdapter';
 import { STORAGE_KEYS, STORAGE_VERSION } from '../storage/keys';
 import type { MiningSession, PlayerProfile } from '../storage/records';
+import { FARM_PLOT_COUNT, farmSeed, type FarmPlot, type FarmTier } from '../data/farming';
 
 /**
  * PLAYER REPOSITORY
@@ -149,6 +150,20 @@ const knownHeroLevels = (value: unknown): Record<string, number> => {
 
 const knownCurrency = (value: unknown): TradeCurrency | null =>
   value === 'gold' || value === 'bwar' ? value : null;
+
+const knownFarmPlots = (value: unknown): FarmPlot[] => {
+  const plots: FarmPlot[] = Array.from({ length: FARM_PLOT_COUNT }, () => null);
+  if (!Array.isArray(value)) return plots;
+  value.slice(0, FARM_PLOT_COUNT).forEach((raw, index) => {
+    if (!isPlainObject(raw)) return;
+    const seed = raw.seed;
+    const plantedAt = raw.plantedAt;
+    if (typeof seed !== 'string' || !['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'].includes(seed)) return;
+    if (typeof plantedAt !== 'number' || !Number.isFinite(plantedAt) || plantedAt <= 0) return;
+    plots[index] = { seed: seed as FarmTier, plantedAt };
+  });
+  return plots.map((plot) => plot && farmSeed(plot.seed) ? plot : null);
+};
 
 const knownOfferKind = (value: unknown): TradeOfferKind | null =>
   value === 'hero' || value === 'gold' ? value : null;
@@ -384,6 +399,8 @@ export const newProfile = (now: number): PlayerProfile => {
     tradeRequests: [],
     goldBalance: STARTING_GOLD,
     bwarBalance: STARTING_BWAR,
+    playerXp: 0,
+    farmPlots: Array.from({ length: FARM_PLOT_COUNT }, () => null),
     mining: null,
     createdAt: now,
     updatedAt: now,
@@ -456,6 +473,8 @@ export const parseProfile = (
     heroInstanceStars: knownHeroInstanceValues(raw.heroInstanceStars, validHeroSerials, 'stars'),
     goldBalance,
     bwarBalance: asNonNegativeNumber(raw.bwarBalance) ?? STARTING_BWAR,
+    playerXp: asNonNegativeNumber(raw.playerXp) ?? 0,
+    farmPlots: knownFarmPlots(raw.farmPlots),
     mining: parseMiningSession(raw.mining, ownedHeroes, now),
     tradeOffers: parseTradeOffers(raw.tradeOffers, ownedHeroes, heroCopies, heroSerials, resolvedId),
     tradeRequests: parseTradeRequests(raw.tradeRequests, resolvedId),

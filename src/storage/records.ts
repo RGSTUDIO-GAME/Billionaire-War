@@ -2,6 +2,7 @@ import { MAX_ROUNDS } from '../data/balance';
 import type { BattleMode } from '../engine/types';
 import type { TradeOffer, TradeRequest } from '../data/trade';
 import type { RewardResult } from '../rewards/types';
+import type { FarmPlot } from '../data/farming';
 
 /**
  * PERSISTED RECORDS
@@ -35,6 +36,10 @@ export type PlayerProfile = {
   goldBalance: number;
   /** Local BWAR balance moved by Mining and Trade; no chain or wallet exists. */
   bwarBalance: number;
+  /** Farming XP only; never used as currency. */
+  playerXp?: number;
+  /** 50 persisted farm slots; null means the plot is empty. */
+  farmPlots?: FarmPlot[];
   /** The single active mining hero and its immutable 24-hour session snapshot. */
   mining: MiningSession | null;
   /** Custom-price marketplace offers, including active and closed history. */

@@ -12,6 +12,7 @@ type AppShellProps = {
   onBack: () => void;
   onNavigate: (screen: Screen) => void;
   onLeaderboard: () => void;
+  onProfile: () => void;
   onBwarPress: () => void;
   flush?: boolean;
   children: ReactNode;
@@ -22,6 +23,7 @@ export const AppShell = ({
   onBack,
   onNavigate,
   onLeaderboard,
+  onProfile,
   onBwarPress,
   flush = false,
   children,
@@ -37,7 +39,7 @@ export const AppShell = ({
         aria-hidden="true"
       />
       <div className="app-shell">
-        <TopBar onLeaderboard={onLeaderboard} onBwarPress={onBwarPress} />
+        <TopBar onLeaderboard={onLeaderboard} onProfile={onProfile} onBwarPress={onBwarPress} />
         <main className={`app-main${flush ? ' app-main--flush' : ''}`}>{children}</main>
         <BottomNav active={active} onNavigate={onNavigate} />
       </div>

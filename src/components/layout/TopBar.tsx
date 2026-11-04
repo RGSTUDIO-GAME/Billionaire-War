@@ -6,18 +6,19 @@ import { usePlayerStore } from '../../state/playerStore';
 
 type TopBarProps = {
   onLeaderboard: () => void;
+  onProfile: () => void;
   onBwarPress: () => void;
 };
 
-export const TopBar = ({ onLeaderboard, onBwarPress }: TopBarProps) => {
+export const TopBar = ({ onLeaderboard, onProfile, onBwarPress }: TopBarProps) => {
   const gold = usePlayerStore((state) => state.gold);
   const bwar = usePlayerStore((state) => state.bwar);
 
   return (
     <header className="topbar">
-      <div className="topbar__brand">
+      <button type="button" className="topbar__brand topbar__brand-button" onClick={onProfile} aria-label="Open player profile">
         <AssetImg assetId={iconIds.logo} alt="Billionaire War" className="topbar__logo" />
-      </div>
+      </button>
 
       <div className="topbar__actions">
         <CurrencyPill kind="bwar" value={bwar} onClick={onBwarPress} />

@@ -13,6 +13,8 @@ import type { BattleRecord, GoldTransaction, PlayerProfile } from '../storage/re
 import type { RewardOutcome } from '../rewards';
 import { runtime as defaultRuntime } from './runtime';
 import type { AppRuntime } from './runtime';
+import { maxPlayerXp } from '../data/progression';
+import { FARM_PLOT_COUNT, type FarmPlot } from '../data/farming';
 
 /**
  * PLAYER STATE
@@ -45,6 +47,8 @@ export type PlayerData = {
   gold: number;
   /** Local BWAR moved by Mining claims and Trade; no chain or wallet exists. */
   bwar: number;
+  playerXp: number;
+  farmPlots: FarmPlot[];
   ownedHeroIds: string[];
   equippedHeroId: string;
   /** Hero level per hero id. Missing heroes are Level 0. */
@@ -114,6 +118,9 @@ export type PlayerActions = {
   debitGold: (amount: number, ref?: GoldRef) => boolean;
   addBwar: (amount: number) => boolean;
   debitBwar: (amount: number) => boolean;
+  /** Farming is the only source of player XP. XP is capped at Level 100. */
+  addPlayerXp: (amount: number) => boolean;
+  setFarmPlots: (plots: FarmPlot[]) => boolean;
   /** Mirrors a reward the Reward Service has already paid. */
   applyReward: (outcome: RewardOutcome) => void;
   clearLastReward: () => void;
@@ -135,6 +142,8 @@ const blankData = (): PlayerData => ({
   username: '',
   gold: STARTING_GOLD,
   bwar: STARTING_BWAR,
+  playerXp: 0,
+  farmPlots: Array.from({ length: FARM_PLOT_COUNT }, () => null),
   ownedHeroIds: getFreeHeroes().map((hero) => hero.id),
   equippedHeroId: getFreeHeroes()[0]?.id ?? 'durov',
   heroLevels: {},
@@ -167,6 +176,8 @@ export const createPlayerStore = (app: AppRuntime): PlayerStore => {
       username: profile.username,
       gold: profile.goldBalance,
       bwar: profile.bwarBalance,
+      playerXp: Math.min(profile.playerXp ?? 0, maxPlayerXp()),
+      farmPlots: profile.farmPlots ?? Array.from({ length: FARM_PLOT_COUNT }, () => null),
       ownedHeroIds: profile.ownedHeroes,
       equippedHeroId: profile.equippedHeroId,
       heroLevels: profile.heroLevels,
@@ -405,6 +416,24 @@ export const createPlayerStore = (app: AppRuntime): PlayerStore => {
       return true;
     },
 
+    addPlayerXp: (amount) => {
+      if (!Number.isFinite(amount) || amount <= 0) return false;
+      const profile = currentProfile(app, get());
+      const nextXp = Math.min(maxPlayerXp(), (profile.playerXp ?? 0) + Math.floor(amount));
+      if (nextXp === (profile.playerXp ?? 0)) return false;
+      app.players.save({ ...profile, playerXp: nextXp });
+      commit(set);
+      return true;
+    },
+
+    setFarmPlots: (plots) => {
+      if (plots.length !== FARM_PLOT_COUNT) return false;
+      const profile = currentProfile(app, get());
+      app.players.save({ ...profile, farmPlots: plots });
+      commit(set);
+      return true;
+    },
+
     /**
      * Shows a reward that the Reward Service has already paid.
      *
@@ -474,6 +503,8 @@ const currentProfile = (app: AppRuntime, state: PlayerState): PlayerProfile =>
     mining: state.mining,
     goldBalance: state.gold,
     bwarBalance: state.bwar,
+    playerXp: state.playerXp,
+    farmPlots: state.farmPlots,
     createdAt: state.createdAt,
     updatedAt: state.updatedAt,
   };

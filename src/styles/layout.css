@@ -55,6 +55,12 @@
   min-width: 0;
 }
 
+.topbar__brand-button {
+  border: 0;
+  padding: 0;
+  text-align: left;
+}
+
 .topbar__logo {
   height: 44px;
   width: auto;

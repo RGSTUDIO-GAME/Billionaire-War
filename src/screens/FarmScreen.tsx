@@ -2,10 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
-import { FARM_PLOT_COUNT, FARM_SEEDS, farmSeed, type FarmSeed, type FarmTier } from '../data/farming';
+import { FARM_PLOT_COUNT, FARM_SEEDS, farmSeed, type FarmPlot, type FarmSeed, type FarmTier } from '../data/farming';
 import { usePlayerStore } from '../state/playerStore';
+import { playerProgression, unlockedPlotCount } from '../data/progression';
 
-type Plot = { seed: FarmTier; plantedAt: number } | null;
+type Plot = FarmPlot;
 
 const emptyPlots = (): Plot[] => Array.from({ length: FARM_PLOT_COUNT }, () => null);
 const format = (value: number) => new Intl.NumberFormat('en-US').format(value);
@@ -19,14 +20,18 @@ const remainingLabel = (remaining: number) => {
 
 export const FarmScreen = ({ onBack }: { onBack: () => void }) => {
   const gold = usePlayerStore((state) => state.gold);
-  const bwar = usePlayerStore((state) => state.bwar);
   const debitGold = usePlayerStore((state) => state.debitGold);
   const addGold = usePlayerStore((state) => state.addGold);
+  const playerXp = usePlayerStore((state) => state.playerXp);
+  const addPlayerXp = usePlayerStore((state) => state.addPlayerXp);
+  const savedPlots = usePlayerStore((state) => state.farmPlots);
+  const setFarmPlots = usePlayerStore((state) => state.setFarmPlots);
   const [selectedTier, setSelectedTier] = useState<FarmTier>('common');
-  const [plots, setPlots] = useState<Plot[]>(emptyPlots);
+  const [plots, setPlots] = useState<Plot[]>(savedPlots);
   const [now, setNow] = useState(Date.now());
-  const [xp, setXp] = useState(0);
   const selected = farmSeed(selectedTier);
+  const progression = playerProgression(playerXp);
+  const unlockedPlots = unlockedPlotCount(progression.level);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
@@ -43,13 +48,21 @@ export const FarmScreen = ({ onBack }: { onBack: () => void }) => {
     if (plots[index]) return;
     const paid = debitGold(selected.price, { kind: 'SPEND' });
     if (!paid) return;
-    setPlots((current) => current.map((plot, plotIndex) => plotIndex === index ? { seed: selected.tier, plantedAt: Date.now() } : plot));
+    setPlots((current) => {
+      const next = current.map((plot, plotIndex) => plotIndex === index ? { seed: selected.tier, plantedAt: Date.now() } : plot);
+      setFarmPlots(next);
+      return next;
+    });
   };
 
   const harvest = (index: number, seed: FarmSeed) => {
     if (now - (plots[index]?.plantedAt ?? 0) < growthMs(seed)) return;
-    setPlots((current) => current.map((plot, plotIndex) => plotIndex === index ? null : plot));
-    setXp((value) => value + seed.harvestXp);
+    setPlots((current) => {
+      const next = current.map((plot, plotIndex) => plotIndex === index ? null : plot);
+      setFarmPlots(next);
+      return next;
+    });
+    addPlayerXp(seed.harvestXp);
     addGold(seed.harvestGold, { kind: 'GRANT' });
   };
 
@@ -60,7 +73,7 @@ export const FarmScreen = ({ onBack }: { onBack: () => void }) => {
       <div className="farm-stats">
         <div><span>Planted</span><strong>{planted}<small> / 50</small></strong></div>
         <div><span>Ready</span><strong>{ready}</strong></div>
-        <div><span>Farm XP</span><strong>{format(xp)}</strong></div>
+        <div><span>Player XP</span><strong>{format(progression.totalXp)}</strong></div>
       </div>
 
       <Card flat className="farm-field-card">
@@ -73,9 +86,10 @@ export const FarmScreen = ({ onBack }: { onBack: () => void }) => {
             const seed = plot ? farmSeed(plot.seed) : null;
             const remaining = plot && seed ? growthMs(seed) - (now - plot.plantedAt) : 0;
             const isReady = Boolean(plot && remaining <= 0);
+            const isLocked = index >= unlockedPlots;
             return (
-              <button key={index} type="button" className={`farm-plot${seed ? ' is-planted' : ''}${isReady ? ' is-ready' : ''}`} onClick={() => seed ? harvest(index, seed) : plant(index)} aria-label={seed ? `${seed.label} plot` : `Empty plot ${index + 1}`}>
-                {seed ? <><span className="farm-crop" style={{ color: seed.color }}>{isReady ? '✦' : seed.symbol}</span><span className="farm-plot-label">{isReady ? 'HARVEST' : remainingLabel(remaining)}</span></> : <span className="farm-plot-empty">+</span>}
+              <button key={index} type="button" disabled={isLocked} className={`farm-plot${seed ? ' is-planted' : ''}${isReady ? ' is-ready' : ''}${isLocked ? ' is-locked' : ''}`} onClick={() => seed ? harvest(index, seed) : plant(index)} aria-label={isLocked ? `Plot ${index + 1} locked` : seed ? `${seed.label} plot` : `Empty plot ${index + 1}`}>
+                {isLocked ? <><span className="farm-lock">🔒</span><span className="farm-plot-label">LV {Math.ceil(1 + (index * 99) / 49)}</span></> : seed ? <><span className="farm-crop" style={{ color: seed.color }}>{isReady ? '✦' : seed.symbol}</span><span className="farm-plot-label">{isReady ? 'HARVEST' : remainingLabel(remaining)}</span></> : <span className="farm-plot-empty">+</span>}
               </button>
             );
           })}
@@ -83,7 +97,7 @@ export const FarmScreen = ({ onBack }: { onBack: () => void }) => {
         <p className="farm-hint">Tap an empty plot to plant. Tap a glowing crop to harvest.</p>
       </Card>
 
-      <div className="farm-section-title"><span>Seed bag</span><span className="muted">Balance: {format(gold)} GOLD · {format(bwar)} BWAR</span></div>
+      <div className="farm-section-title"><span>Seed bag</span><span className="muted">Level {progression.level} · {unlockedPlots}/50 plots · {format(gold)} GOLD</span></div>
       <div className="farm-seeds">
         {FARM_SEEDS.map((seed) => (
           <button key={seed.tier} type="button" className={`farm-seed${selectedTier === seed.tier ? ' is-selected' : ''} farm-seed--${seed.tier}`} onClick={() => setSelectedTier(seed.tier)}>
@@ -95,7 +109,7 @@ export const FarmScreen = ({ onBack }: { onBack: () => void }) => {
           </button>
         ))}
       </div>
-      <Button variant="ghost" block onClick={() => setPlots(emptyPlots())}>Reset field (prototype)</Button>
+      <Button variant="ghost" block onClick={() => { const next = emptyPlots(); setPlots(next); setFarmPlots(next); }}>Reset field (prototype)</Button>
     </div>
   );
 };
