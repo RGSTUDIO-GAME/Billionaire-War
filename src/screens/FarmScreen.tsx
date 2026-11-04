@@ -1,14 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
-import { FARM_PLOT_COUNT, FARM_SEEDS, farmSeed, type FarmPlot, type FarmSeed, type FarmTier } from '../data/farming';
+import { FARM_SEEDS, farmSeed, type FarmPlot, type FarmSeed, type FarmTier } from '../data/farming';
 import { usePlayerStore } from '../state/playerStore';
 import { playerProgression, unlockedPlotCount } from '../data/progression';
 
 type Plot = FarmPlot;
 
-const emptyPlots = (): Plot[] => Array.from({ length: FARM_PLOT_COUNT }, () => null);
 const format = (value: number) => new Intl.NumberFormat('en-US').format(value);
 const growthMs = (seed: FarmSeed) => seed.growingHours * 60 * 60 * 1000;
 const remainingLabel = (remaining: number) => {
@@ -109,7 +107,6 @@ export const FarmScreen = ({ onBack }: { onBack: () => void }) => {
           </button>
         ))}
       </div>
-      <Button variant="ghost" block onClick={() => { const next = emptyPlots(); setPlots(next); setFarmPlots(next); }}>Reset field (prototype)</Button>
     </div>
   );
 };
