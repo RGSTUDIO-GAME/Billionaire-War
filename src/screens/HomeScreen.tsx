@@ -1,14 +1,12 @@
 import { AssetImg } from '../assets/AssetImg';
 import { RarityBadge } from '../components/hero/RarityBadge';
-import { backgroundIds, iconIds, uiIds } from '../assets/manifest';
+import { backgroundIds, uiIds } from '../assets/manifest';
 import { getHeroById } from '../data/heroes';
 import { usePlayerStore } from '../state/playerStore';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
-import { Card } from '../components/ui/Card';
 import { SceneCard } from '../components/ui/SceneCard';
 import { heroPortraitIds } from '../assets/manifest';
-import { Icon } from '../components/ui/Icon';
 import { StatBar } from '../components/ui/StatBar';
 
 type HomeScreenProps = {
@@ -25,7 +23,7 @@ export const HomeScreen = ({ onPlay, onGacha, onMining, onTrade }: HomeScreenPro
   if (!hero) return null;
 
   return (
-    <div className="stack-lg anim-fade">
+    <div className="home-screen anim-fade">
       <SceneCard background={backgroundIds.home}>
         <div className="row" style={{ alignItems: 'flex-start' }}>
           <div className="home-portrait">
@@ -53,51 +51,23 @@ export const HomeScreen = ({ onPlay, onGacha, onMining, onTrade }: HomeScreenPro
         </p>
       </SceneCard>
 
-      <Button variant="ghost" block className="home-asset-button" onClick={onPlay} aria-label="Play">
+      <Button variant="ghost" block className="home-asset-button home-asset-button--wide" onClick={onPlay} aria-label="Play">
         <AssetImg assetId={uiIds.playButton} alt="Play" />
       </Button>
 
-      <Button variant="ghost" block className="home-asset-button" onClick={onGacha} aria-label="Gacha">
+      <Button variant="ghost" block className="home-asset-button home-asset-button--wide" onClick={onGacha} aria-label="Gacha">
         <AssetImg assetId={uiIds.gachaButton} alt="Gacha" />
       </Button>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--s-3)' }}>
-        <Button variant="ghost" className="home-asset-button" onClick={onTrade} aria-label="Trade">
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--s-2)' }}>
+        <Button variant="ghost" className="home-asset-button home-asset-button--small" onClick={onTrade} aria-label="Trade">
           <AssetImg assetId={uiIds.tradeButton} alt="Trade" />
         </Button>
-        <Button variant="ghost" className="home-asset-button" onClick={onMining} aria-label="BWAR Mining">
+        <Button variant="ghost" className="home-asset-button home-asset-button--small" onClick={onMining} aria-label="BWAR Mining">
           <AssetImg assetId={uiIds.bwarMiningButton} alt="BWAR Mining" />
         </Button>
       </div>
 
-      <Card flat>
-        <div className="row" style={{ gap: 'var(--s-3)' }}>
-          <Icon assetId={iconIds.star} alt="" className="coming-soon__icon" style={{ width: 34, height: 34 }} />
-          <div className="grow">
-            <div className="card__title">Season 0 &middot; Foundation</div>
-            <div className="muted" style={{ fontSize: 12 }}>
-              Core battle system, hero roster, $GOLD battle rewards and local BWAR Mining.
-              Quests, leaderboard and matchmaking arrive next.
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      <AssetImg
-        assetId={uiIds.divider}
-        alt=""
-        style={{ opacity: 0.6, width: '100%' }}
-      />
-
-      <Card flat tight>
-        <div className="row" style={{ gap: 'var(--s-2)', fontSize: 12 }}>
-          <AssetImg assetId={iconIds.bwar} alt="" style={{ width: 18, height: 18 }} />
-          <span className="muted">
-            BWAR Mining and local Trade are live. Web3 features remain COMING SOON. No wallet,
-            no chain.
-          </span>
-        </div>
-      </Card>
     </div>
   );
 };
