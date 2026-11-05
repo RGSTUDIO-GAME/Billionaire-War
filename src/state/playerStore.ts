@@ -84,6 +84,7 @@ export type PlayerData = {
 export type PlayerActions = {
   /** Re-reads the save. Safe to call more than once. */
   hydrate: () => void;
+  setUsername: (username: string) => boolean;
   equipHero: (heroId: string) => void;
   equipMiningHero: (heroId: string) => boolean;
   /** Credits a full session and starts its next cycle. Returns the amount paid. */
@@ -207,6 +208,16 @@ export const createPlayerStore = (app: AppRuntime): PlayerStore => {
 
     hydrate: () => {
       commit(set);
+    },
+
+    setUsername: (username) => {
+      const normalized = username.trim().replace(/\s+/g, ' ');
+      if (normalized.length < 3 || normalized.length > 24) return false;
+      const profile = currentProfile(app, get());
+      if (profile.username === normalized) return true;
+      app.players.save({ ...profile, username: normalized });
+      commit(set);
+      return true;
     },
 
     equipHero: (heroId) => {

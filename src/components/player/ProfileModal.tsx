@@ -2,7 +2,9 @@ import { AssetImg } from '../../assets/AssetImg';
 import { heroPortraitIds } from '../../assets/manifest';
 import { getHeroById } from '../../data/heroes';
 import { MAX_PLAYER_LEVEL, MAX_BATTLE_LEVEL, battleProgression, playerProgression, unlockedPlotCount } from '../../data/progression';
+import { useEffect, useState } from 'react';
 import { usePlayerStore } from '../../state/playerStore';
+import { Button } from '../ui/Button';
 import { Modal } from '../ui/Modal';
 
 type ProfileModalProps = { open: boolean; onClose: () => void };
@@ -12,9 +14,18 @@ export const ProfileModal = ({ open, onClose }: ProfileModalProps) => {
   const equippedHeroId = usePlayerStore((state) => state.equippedHeroId);
   const playerXp = usePlayerStore((state) => state.playerXp);
   const battleXp = usePlayerStore((state) => state.battleXp);
+  const setUsername = usePlayerStore((state) => state.setUsername);
+  const [draftName, setDraftName] = useState(username);
+  const [nameNotice, setNameNotice] = useState<string | null>(null);
   const hero = getHeroById(equippedHeroId);
   const progression = playerProgression(playerXp);
   const battle = battleProgression(battleXp);
+  useEffect(() => {
+    if (open) {
+      setDraftName(username);
+      setNameNotice(null);
+    }
+  }, [open, username]);
   if (!hero) return null;
 
   return (
@@ -25,6 +36,20 @@ export const ProfileModal = ({ open, onClose }: ProfileModalProps) => {
         </div>
         <div className="profile-name">{username || 'PLAYER'}</div>
         <div className="profile-hero">{hero.name} · Equipped Hero</div>
+        <div className="profile-name-edit">
+          <label htmlFor="profile-name">Player name</label>
+          <div className="profile-name-form">
+            <input
+              id="profile-name"
+              value={draftName}
+              maxLength={24}
+              onChange={(event) => setDraftName(event.target.value)}
+              placeholder="Enter your name"
+            />
+            <Button variant="gold" size="sm" onClick={() => setNameNotice(setUsername(draftName) ? 'Name saved.' : 'Use 3–24 characters.')}>Save</Button>
+          </div>
+          {nameNotice ? <div className="profile-name-notice" role="status">{nameNotice}</div> : null}
+        </div>
         <div className="profile-level-row"><span>PLAYER LEVEL</span><strong>{progression.level}</strong><em>/ {MAX_PLAYER_LEVEL}</em></div>
         <div className="profile-progress-track"><div className="profile-progress-fill" style={{ width: `${progression.progress * 100}%` }} /></div>
         <div className="profile-xp-row">
