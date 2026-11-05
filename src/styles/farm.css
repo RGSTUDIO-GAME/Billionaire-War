@@ -1,10 +1,10 @@
 .home-screen { display: flex; flex-direction: column; gap: 10px; }
 .home-screen .card--scene { padding: 12px; }
 .home-screen .home-portrait { width: 82px; height: 104px; border-radius: 12px; }
+.home-menu-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .home-asset-button { display: flex; align-items: center; justify-content: center; min-height: 0; padding: 0; overflow: visible; border: 0; background: transparent; box-shadow: none; border-radius: 18px; transition: transform .15s, filter .15s; }
 .home-asset-button:hover, .home-asset-button:active { background: transparent; box-shadow: none; transform: translateY(-1px); }
-.home-asset-button--wide { height: 72px; }
-.home-asset-button--small { height: 56px; }
+.home-asset-button { height: 82px; }
 .home-asset-button--play { background: radial-gradient(ellipse, rgba(0, 190, 255, .2), rgba(0, 100, 255, .06) 58%, transparent 76%); filter: drop-shadow(0 5px 12px rgba(0, 150, 255, .28)); }
 .home-asset-button--gacha { background: radial-gradient(ellipse, rgba(220, 0, 255, .2), rgba(120, 0, 255, .07) 58%, transparent 76%); filter: drop-shadow(0 5px 12px rgba(190, 0, 255, .3)); }
 .home-asset-button--trade { background: radial-gradient(ellipse, rgba(0, 255, 120, .2), rgba(0, 180, 80, .07) 58%, transparent 76%); filter: drop-shadow(0 4px 10px rgba(0, 220, 100, .28)); }
