@@ -51,19 +51,19 @@ export const HomeScreen = ({ onPlay, onGacha, onMining, onTrade }: HomeScreenPro
         </p>
       </SceneCard>
 
-      <Button variant="ghost" block className="home-asset-button home-asset-button--wide" onClick={onPlay} aria-label="Play">
+      <Button variant="ghost" block className="home-asset-button home-asset-button--wide home-asset-button--play" onClick={onPlay} aria-label="Play">
         <AssetImg assetId={uiIds.playButton} alt="Play" />
       </Button>
 
-      <Button variant="ghost" block className="home-asset-button home-asset-button--wide" onClick={onGacha} aria-label="Gacha">
+      <Button variant="ghost" block className="home-asset-button home-asset-button--wide home-asset-button--gacha" onClick={onGacha} aria-label="Gacha">
         <AssetImg assetId={uiIds.gachaButton} alt="Gacha" />
       </Button>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--s-2)' }}>
-        <Button variant="ghost" className="home-asset-button home-asset-button--small" onClick={onTrade} aria-label="Trade">
+        <Button variant="ghost" className="home-asset-button home-asset-button--small home-asset-button--trade" onClick={onTrade} aria-label="Trade">
           <AssetImg assetId={uiIds.tradeButton} alt="Trade" />
         </Button>
-        <Button variant="ghost" className="home-asset-button home-asset-button--small" onClick={onMining} aria-label="BWAR Mining">
+        <Button variant="ghost" className="home-asset-button home-asset-button--small home-asset-button--mining" onClick={onMining} aria-label="BWAR Mining">
           <AssetImg assetId={uiIds.bwarMiningButton} alt="BWAR Mining" />
         </Button>
       </div>
