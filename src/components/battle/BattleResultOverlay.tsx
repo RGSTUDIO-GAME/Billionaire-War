@@ -6,6 +6,7 @@ import type { GoldTransaction } from '../../rewards';
 import type { BattleSummary } from '../../presentation/battleView';
 import { Button } from '../ui/Button';
 import { Modal } from '../ui/Modal';
+import { BATTLE_XP_PER_WIN } from '../../data/progression';
 
 type BattleResultOverlayProps = {
   summary: BattleSummary;
@@ -108,6 +109,11 @@ export const BattleResultOverlay = ({
             <div className="battle-result__amount">
               +{reward.amount.toLocaleString('en-US')} <span className="gold">GOLD</span>
             </div>
+            {reward.result === 'VICTORY' && reward.mode !== null ? (
+              <div className="battle-result__amount" style={{ fontSize: 16 }}>
+                +{BATTLE_XP_PER_WIN[reward.mode]} <span className="gold">BATTLE XP</span>
+              </div>
+            ) : null}
             <div className="muted" style={{ fontSize: 11 }}>
               Balance {goldBalance.toLocaleString('en-US')} GOLD
             </div>

@@ -38,6 +38,8 @@ export type PlayerProfile = {
   bwarBalance: number;
   /** Farming XP only; never used as currency. */
   playerXp?: number;
+  /** Combat progression XP, earned only from battle victories. */
+  battleXp?: number;
   /** 50 persisted farm slots; null means the plot is empty. */
   farmPlots?: FarmPlot[];
   /** The single active mining hero and its immutable 24-hour session snapshot. */

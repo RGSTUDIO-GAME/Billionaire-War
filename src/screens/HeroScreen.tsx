@@ -4,6 +4,7 @@ import type { Hero, HeroRarity } from '../data/heroes/types';
 import { MAX_ROUNDS, ROUND_DAMAGE } from '../data/balance';
 import { formatGold, formatHashrate, hashrateFor, heroLevelOf, upgradeCost } from '../data/economy';
 import { formatTradeAmount } from '../data/trade';
+import { battleProgression } from '../data/progression';
 import {
   formatStars,
   heroSerialOf,
@@ -50,6 +51,7 @@ const HeroRow = ({
   const tradeRequests = usePlayerStore((state) => state.tradeRequests);
   const instantSellHero = usePlayerStore((state) => state.instantSellHero);
   const mining = usePlayerStore((state) => state.mining);
+  const battleXp = usePlayerStore((state) => state.battleXp);
   const upgradeHero = usePlayerStore((state) => state.upgradeHero);
   const [notice, setNotice] = useState<string | null>(null);
   const isLocked = ownership === 'locked';
@@ -72,7 +74,10 @@ const HeroRow = ({
     instantSellSerial === serial &&
     mining?.heroId === hero.id;
   const lastHero = instantSellSerial !== null && copies.length === 0 && ownedHeroIds?.length <= 1;
-  const levelCap = maxLevelForStars(stars);
+  const battleLevel = battleProgression(battleXp).level;
+  const starLevelCap = maxLevelForStars(stars);
+  const levelCap = Math.min(starLevelCap, battleLevel);
+  const battleLocked = level >= battleLevel && battleLevel < starLevelCap;
   const capped = level >= levelCap;
   const rate = hashrateFor(hero.rarity, level);
   const cost = upgradeCost(level);
@@ -161,6 +166,8 @@ const HeroRow = ({
         <div style={{ marginTop: 'var(--s-3)' }}>
           {cost === null || (capped && stars >= MAX_STARS) ? (
             <div className="empty-state">MAX LEVEL - {formatHashrate(rate)} BWAR/10m</div>
+          ) : capped && battleLocked ? (
+            <div className="empty-state">Battle Level {battleLevel} reached. Win more battles to unlock Hero Lv {level + 1}.</div>
           ) : capped ? (
             <div className="stack" style={{ gap: 'var(--s-2)' }}>
               <div className="empty-state">

@@ -2,12 +2,14 @@ import { fusionCostCopies, heroCopiesOf, heroSerialOf, heroStarsOf, MAX_STARS } 
 import { getHeroById } from '../data/heroes';
 import type { PlayerRepository } from '../repositories/playerRepository';
 import type { PlayerProfile } from '../storage/records';
+import { battleProgression, fusionBattleLevelRequirement } from '../data/progression';
 
 export type FusionFailure =
   | 'UNKNOWN_HERO'
   | 'NOT_OWNED'
   | 'MAX_STARS'
   | 'NOT_ENOUGH_COPIES'
+  | 'BATTLE_LEVEL_TOO_LOW'
   | 'SAVE_FAILED';
 
 export type FusionOutcome =
@@ -87,6 +89,10 @@ export class FusionService {
     if (!profile.ownedHeroes.includes(heroId)) return refused(profile, 'NOT_OWNED');
     const stars = heroStarsOf(profile.heroStars, heroId);
     if (stars >= MAX_STARS) return refused(profile, 'MAX_STARS');
+    const nextStars = stars + 1;
+    if (battleProgression(profile.battleXp ?? 0).level < fusionBattleLevelRequirement(nextStars)) {
+      return refused(profile, 'BATTLE_LEVEL_TOO_LOW');
+    }
     const cost = fusionCostCopies(stars) ?? 0;
     const copies = heroCopiesOf(profile.heroCopies, heroId);
     if (copies.length < cost) return refused(profile, 'NOT_ENOUGH_COPIES');
@@ -94,7 +100,7 @@ export class FusionService {
     const burnedSerials = new Set(copies.slice(0, cost));
     const next: PlayerProfile = {
       ...profile,
-      heroStars: { ...(profile.heroStars ?? {}), [heroId]: stars + 1 },
+      heroStars: { ...(profile.heroStars ?? {}), [heroId]: nextStars },
       heroCopies: { ...(profile.heroCopies ?? {}), [heroId]: copies.slice(cost) },
       heroInstanceLevels: Object.fromEntries(
         Object.entries(profile.heroInstanceLevels ?? {}).filter(
@@ -105,7 +111,7 @@ export class FusionService {
         Object.entries(
           mainSerial === null
             ? profile.heroInstanceStars ?? {}
-            : { ...(profile.heroInstanceStars ?? {}), [String(mainSerial)]: stars + 1 },
+            : { ...(profile.heroInstanceStars ?? {}), [String(mainSerial)]: nextStars },
         ).filter(([serial]) => !burnedSerials.has(Number(serial))),
       ),
     };

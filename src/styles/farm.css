@@ -50,3 +50,6 @@
 .profile-xp-row span:last-child, .profile-meta span:last-child { color: var(--text-muted); text-align: right; }
 .profile-meta { margin-top: var(--s-4); padding-top: var(--s-3); border-top: 1px solid var(--line); }
 .profile-meta b { color: var(--success); }
+.profile-battle-block { margin-top: var(--s-5); padding-top: var(--s-2); border-top: 1px solid var(--line); }
+.profile-progress-fill--battle { background: linear-gradient(90deg, #3478dc, #65b7ff, #c4e7ff); box-shadow: 0 0 12px rgba(74, 168, 255, .65); }
+.profile-battle-note { margin-top: var(--s-3); color: var(--text-muted); font-size: 11px; }

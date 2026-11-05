@@ -13,7 +13,7 @@ import type { BattleRecord, GoldTransaction, PlayerProfile } from '../storage/re
 import type { RewardOutcome } from '../rewards';
 import { runtime as defaultRuntime } from './runtime';
 import type { AppRuntime } from './runtime';
-import { maxPlayerXp } from '../data/progression';
+import { BATTLE_XP_PER_WIN, battleProgression, maxBattleXp, maxPlayerXp } from '../data/progression';
 import { FARM_PLOT_COUNT, type FarmPlot } from '../data/farming';
 
 /**
@@ -48,6 +48,7 @@ export type PlayerData = {
   /** Local BWAR moved by Mining claims and Trade; no chain or wallet exists. */
   bwar: number;
   playerXp: number;
+  battleXp: number;
   farmPlots: FarmPlot[];
   ownedHeroIds: string[];
   equippedHeroId: string;
@@ -120,6 +121,7 @@ export type PlayerActions = {
   debitBwar: (amount: number) => boolean;
   /** Farming is the only source of player XP. XP is capped at Level 100. */
   addPlayerXp: (amount: number) => boolean;
+  addBattleXp: (amount: number) => boolean;
   setFarmPlots: (plots: FarmPlot[]) => boolean;
   /** Mirrors a reward the Reward Service has already paid. */
   applyReward: (outcome: RewardOutcome) => void;
@@ -143,6 +145,7 @@ const blankData = (): PlayerData => ({
   gold: STARTING_GOLD,
   bwar: STARTING_BWAR,
   playerXp: 0,
+  battleXp: 0,
   farmPlots: Array.from({ length: FARM_PLOT_COUNT }, () => null),
   ownedHeroIds: getFreeHeroes().map((hero) => hero.id),
   equippedHeroId: getFreeHeroes()[0]?.id ?? 'durov',
@@ -177,6 +180,7 @@ export const createPlayerStore = (app: AppRuntime): PlayerStore => {
       gold: profile.goldBalance,
       bwar: profile.bwarBalance,
       playerXp: Math.min(profile.playerXp ?? 0, maxPlayerXp()),
+      battleXp: Math.min(profile.battleXp ?? 0, maxBattleXp()),
       farmPlots: profile.farmPlots ?? Array.from({ length: FARM_PLOT_COUNT }, () => null),
       ownedHeroIds: profile.ownedHeroes,
       equippedHeroId: profile.equippedHeroId,
@@ -361,6 +365,8 @@ export const createPlayerStore = (app: AppRuntime): PlayerStore => {
       if (heroLevelOf(get().heroLevels, heroId) >= maxLevelForStars(heroStarsOf(get().heroStars, heroId))) {
         return false;
       }
+      const nextHeroLevel = heroLevelOf(get().heroLevels, heroId) + 1;
+      if (battleProgression(get().battleXp).level < nextHeroLevel) return false;
       const cost = upgradeCost(heroLevelOf(get().heroLevels, heroId));
       if (cost === null) return false;
       const paid = app.goldService.debit(currentProfile(app, get()), cost, { kind: 'SPEND' }, Date.now());
@@ -426,6 +432,16 @@ export const createPlayerStore = (app: AppRuntime): PlayerStore => {
       return true;
     },
 
+    addBattleXp: (amount) => {
+      if (!Number.isFinite(amount) || amount <= 0) return false;
+      const profile = currentProfile(app, get());
+      const nextXp = Math.min(maxBattleXp(), (profile.battleXp ?? 0) + Math.floor(amount));
+      if (nextXp === (profile.battleXp ?? 0)) return false;
+      app.players.save({ ...profile, battleXp: nextXp });
+      commit(set);
+      return true;
+    },
+
     setFarmPlots: (plots) => {
       if (plots.length !== FARM_PLOT_COUNT) return false;
       const profile = currentProfile(app, get());
@@ -444,6 +460,13 @@ export const createPlayerStore = (app: AppRuntime): PlayerStore => {
      */
     applyReward: (outcome) => {
       commit(set);
+      if (
+        outcome.status === 'GRANTED' &&
+        outcome.transaction.result === 'VICTORY' &&
+        outcome.transaction.mode !== null
+      ) {
+        get().addBattleXp(BATTLE_XP_PER_WIN[outcome.transaction.mode]);
+      }
       const battleId = outcome.transaction.battleId;
       const recorded =
         battleId === null
@@ -504,6 +527,7 @@ const currentProfile = (app: AppRuntime, state: PlayerState): PlayerProfile =>
     goldBalance: state.gold,
     bwarBalance: state.bwar,
     playerXp: state.playerXp,
+    battleXp: state.battleXp,
     farmPlots: state.farmPlots,
     createdAt: state.createdAt,
     updatedAt: state.updatedAt,
