@@ -215,6 +215,10 @@ export const uiIds = {
   panel: register('ui', 'panel', 'panel.svg', 'ui', 'Panel'),
   divider: register('ui', 'divider', 'divider.svg', 'ui', 'Divider'),
   buttonGlow: register('ui', 'button_glow', 'button_glow.svg', 'ui', 'Button'),
+  playButton: register('ui', 'play_button', 'play-button.png', 'ui', 'Play button'),
+  gachaButton: register('ui', 'gacha_button', 'gacha-button.png', 'ui', 'Gacha button'),
+  tradeButton: register('ui', 'trade_button', 'trade-button.png', 'ui', 'Trade button'),
+  bwarMiningButton: register('ui', 'bwar_mining_button', 'bwar-mining-button.png', 'ui', 'BWAR Mining button'),
 } satisfies Record<string, AssetId>;
 
 /** Rarity plaque buttons, keyed by hero rarity. */

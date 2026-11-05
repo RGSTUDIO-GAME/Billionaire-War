@@ -1,3 +1,7 @@
+.home-asset-button { display: flex; align-items: center; justify-content: center; min-height: 0; padding: 0; overflow: hidden; border: 0; background: transparent; box-shadow: none; }
+.home-asset-button:hover, .home-asset-button:active { background: transparent; box-shadow: none; transform: translateY(-1px); }
+.home-asset-button img { display: block; width: 100%; height: auto; object-fit: contain; }
+
 .farm-screen { display: flex; flex-direction: column; gap: var(--s-4); }
 .farm-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-2); }
 .farm-stats > div { padding: 10px; border: 1px solid var(--line); border-radius: var(--r-md); background: rgba(20, 26, 40, .8); text-align: center; }

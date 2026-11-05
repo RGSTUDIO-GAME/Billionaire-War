@@ -53,20 +53,20 @@ export const HomeScreen = ({ onPlay, onGacha, onMining, onTrade }: HomeScreenPro
         </p>
       </SceneCard>
 
-      <Button variant="primary" size="lg" block icon={iconIds.swords} onClick={onPlay}>
-        Play
+      <Button variant="ghost" block className="home-asset-button" onClick={onPlay} aria-label="Play">
+        <AssetImg assetId={uiIds.playButton} alt="Play" />
       </Button>
 
-      <Button variant="gold" block icon={iconIds.star} onClick={onGacha}>
-        Gacha
+      <Button variant="ghost" block className="home-asset-button" onClick={onGacha} aria-label="Gacha">
+        <AssetImg assetId={uiIds.gachaButton} alt="Gacha" />
       </Button>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--s-3)' }}>
-        <Button variant="ghost" icon={iconIds.coin} onClick={onTrade}>
-          Trade
+        <Button variant="ghost" className="home-asset-button" onClick={onTrade} aria-label="Trade">
+          <AssetImg assetId={uiIds.tradeButton} alt="Trade" />
         </Button>
-        <Button variant="ghost" icon={iconIds.bwar} onClick={onMining}>
-          BWAR Mining
+        <Button variant="ghost" className="home-asset-button" onClick={onMining} aria-label="BWAR Mining">
+          <AssetImg assetId={uiIds.bwarMiningButton} alt="BWAR Mining" />
         </Button>
       </div>
 
