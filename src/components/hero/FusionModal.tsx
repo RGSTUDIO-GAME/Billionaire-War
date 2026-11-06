@@ -14,7 +14,7 @@ import {
   RARITY_SUPPLY,
 } from '../../data/fusion';
 import { heroLevelOf } from '../../data/economy';
-import { battleProgression, fusionBattleLevelRequirement } from '../../data/progression';
+import { fusionBattleLevelRequirement, playerProgression } from '../../data/progression';
 import { usePlayerStore } from '../../state/playerStore';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
@@ -30,7 +30,7 @@ export const FusionModal = ({ hero, onClose }: { hero: Hero; onClose: () => void
   const heroStars = usePlayerStore((state) => state.heroStars);
   const heroCopies = usePlayerStore((state) => state.heroCopies);
   const heroSerials = usePlayerStore((state) => state.heroSerials);
-  const battleXp = usePlayerStore((state) => state.battleXp);
+  const playerXp = usePlayerStore((state) => state.playerXp);
   const fuseHero = usePlayerStore((state) => state.fuseHero);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -41,9 +41,9 @@ export const FusionModal = ({ hero, onClose }: { hero: Hero; onClose: () => void
   const cost = fusionCostCopies(stars);
   const maxed = stars >= MAX_STARS;
   const canFuse = !maxed && cost !== null && copies.length >= cost;
-  const battleLevel = battleProgression(battleXp).level;
-  const requiredBattleLevel = maxed ? 0 : fusionBattleLevelRequirement(stars + 1);
-  const battleLocked = !maxed && battleLevel < requiredBattleLevel;
+  const playerLevel = playerProgression(playerXp).level;
+  const requiredPlayerLevel = maxed ? 0 : fusionBattleLevelRequirement(stars + 1);
+  const playerLevelLocked = !maxed && playerLevel < requiredPlayerLevel;
 
   const fuse = () => {
     if (fuseHero(hero.id)) {
@@ -109,11 +109,11 @@ export const FusionModal = ({ hero, onClose }: { hero: Hero; onClose: () => void
                 {maxLevelForStars(stars) + 1}–{maxLevelForStars(stars + 1)} for {cost} {cost === 1 ? 'copy' : 'copies'}.
               </div>
               <div className="muted" style={{ fontSize: 12 }}>
-                Battle Level {battleLevel} / {requiredBattleLevel} required
+                Player Level {playerLevel} / {requiredPlayerLevel} required
               </div>
-              <Button variant="gold" block disabled={!canFuse || battleLocked} onClick={fuse}>
-                {battleLocked
-                  ? `Reach Battle Level ${requiredBattleLevel}`
+              <Button variant="gold" block disabled={!canFuse || playerLevelLocked} onClick={fuse}>
+                {playerLevelLocked
+                  ? `Reach Player Level ${requiredPlayerLevel}`
                   : canFuse
                     ? `Fuse ${cost} ${cost === 1 ? 'copy' : 'copies'}`
                     : `Need ${cost} ${cost === 1 ? 'copy' : 'copies'}`}

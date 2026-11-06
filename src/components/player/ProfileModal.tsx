@@ -1,7 +1,7 @@
 import { AssetImg } from '../../assets/AssetImg';
 import { heroPortraitIds } from '../../assets/manifest';
 import { getHeroById } from '../../data/heroes';
-import { MAX_PLAYER_LEVEL, playerProgression, unlockedPlotCount } from '../../data/progression';
+import { MAX_PLAYER_LEVEL, playerProgression } from '../../data/progression';
 import { useEffect, useState } from 'react';
 import { usePlayerStore } from '../../state/playerStore';
 import { Button } from '../ui/Button';
@@ -59,10 +59,6 @@ export const ProfileModal = ({ open, onClose }: ProfileModalProps) => {
         <div className="profile-xp-row">
           <span>{progression.currentXp.toLocaleString('en-US')} XP</span>
           <span>{progression.maxed ? 'MAX LEVEL' : `${progression.requiredXp.toLocaleString('en-US')} XP to next level`}</span>
-        </div>
-        <div className="profile-meta">
-          <span><b>{unlockedPlotCount(progression.level)}</b> / 50 plots unlocked</span>
-          <span>{progression.maxed ? 'Progress complete' : 'XP from farming and battles'}</span>
         </div>
       </div>
     </Modal>
