@@ -52,7 +52,7 @@
 
 .profile-card { text-align: center; }
 .profile-avatar { position: relative; width: 116px; height: 116px; margin: 0 auto var(--s-3); overflow: visible; border: 4px solid var(--panel-3); border-radius: 50%; background: var(--panel-3); box-shadow: 0 0 0 5px rgba(74, 207, 116, .12), 0 8px 24px rgba(0, 0, 0, .45); }
-.profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.profile-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
 .profile-avatar-progress { position: absolute; inset: -7px; width: calc(100% + 14px); height: calc(100% + 14px); transform: rotate(-90deg); pointer-events: none; }
 .profile-avatar-progress circle { fill: none; stroke-width: 5; }
 .profile-avatar-progress__track { stroke: rgba(74, 207, 116, .18); }
