@@ -207,6 +207,7 @@ export const backgroundIds = {
   battleArena: register('backgrounds', 'battle_arena', 'battle_arena.jpg', 'background', 'Battle arena throne hall'),
   home: register('backgrounds', 'home', 'home.png', 'background', 'Home'),
   menu: register('backgrounds', 'menu', 'menu.png', 'background', 'Menu'),
+  farmGrass: register('backgrounds', 'farm_grass', 'farm-grass.jpg', 'background', 'Farm grass'),
 } satisfies Record<string, AssetId>;
 
 /* --------------------------------------------------------------------- ui */
@@ -219,6 +220,7 @@ export const uiIds = {
   gachaButton: register('ui', 'gacha_button', 'gacha-button.png', 'ui', 'Gacha button'),
   tradeButton: register('ui', 'trade_button', 'trade-button.png', 'ui', 'Trade button'),
   bwarMiningButton: register('ui', 'bwar_mining_button', 'bwar-mining-button.png', 'ui', 'BWAR Mining button'),
+  farmPlot: register('ui', 'farm_plot', 'farm-plot.png', 'ui', 'Farm plot'),
 } satisfies Record<string, AssetId>;
 
 /** Rarity plaque buttons, keyed by hero rarity. */

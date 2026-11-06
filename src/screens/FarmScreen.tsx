@@ -4,6 +4,9 @@ import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { FARM_SEEDS, farmSeed, type FarmPlot, type FarmSeed, type FarmTier } from '../data/farming';
 import { usePlayerStore } from '../state/playerStore';
 import { playerProgression, unlockedPlotCount } from '../data/progression';
+import { backgroundIds, uiIds } from '../assets/manifest';
+import { getAssetUrl } from '../assets/resolve';
+import { AssetImg } from '../assets/AssetImg';
 
 type Plot = FarmPlot;
 
@@ -79,7 +82,7 @@ export const FarmScreen = ({ onBack }: { onBack: () => void }) => {
           <div><span className="farm-kicker">Billionaire soil</span><h2>Green Acres</h2></div>
           <span className="farm-weather">☀️ 24°C</span>
         </div>
-        <div className="farm-field" aria-label="50 farming plots">
+        <div className="farm-field" aria-label="50 farming plots" style={{ backgroundImage: `url("${getAssetUrl(backgroundIds.farmGrass)}")` }}>
           {plots.map((plot, index) => {
             const seed = plot ? farmSeed(plot.seed) : null;
             const remaining = plot && seed ? growthMs(seed) - (now - plot.plantedAt) : 0;
@@ -87,6 +90,7 @@ export const FarmScreen = ({ onBack }: { onBack: () => void }) => {
             const isLocked = index >= unlockedPlots;
             return (
               <button key={index} type="button" disabled={isLocked} className={`farm-plot${seed ? ' is-planted' : ''}${isReady ? ' is-ready' : ''}${isLocked ? ' is-locked' : ''}`} onClick={() => seed ? harvest(index, seed) : plant(index)} aria-label={isLocked ? `Plot ${index + 1} locked` : seed ? `${seed.label} plot` : `Empty plot ${index + 1}`}>
+                <AssetImg assetId={uiIds.farmPlot} alt="" className="farm-plot-art" />
                 {isLocked ? <><span className="farm-lock">🔒</span><span className="farm-plot-label">LV {Math.ceil(1 + (index * 99) / 49)}</span></> : seed ? <><span className="farm-crop" style={{ color: seed.color }}>{isReady ? '✦' : seed.symbol}</span><span className="farm-plot-label">{isReady ? 'HARVEST' : remainingLabel(remaining)}</span></> : <span className="farm-plot-empty">+</span>}
               </button>
             );

@@ -22,8 +22,10 @@
 .farm-field-head h2 { color: #e8ffb5; font-size: 22px; text-transform: uppercase; letter-spacing: .04em; }
 .farm-kicker { color: #b8e78f; }
 .farm-weather { font-size: 12px; color: #fff2ad; }
-.farm-field { display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px; padding: 16px; background-color: #64aa59; background-image: linear-gradient(135deg, rgba(255,255,255,.07) 25%, transparent 25%), linear-gradient(315deg, rgba(0,0,0,.07) 25%, transparent 25%); background-size: 24px 24px; }
-.farm-plot { min-width: 0; aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 2px; padding: 2px; border: 2px solid rgba(75, 52, 27, .32); border-radius: 5px; background: #805d35; box-shadow: inset 0 3px rgba(255,255,255,.1), 0 2px rgba(29, 68, 33, .35); transition: transform .15s, filter .15s; }
+.farm-field { display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px; padding: 16px; background-color: #64aa59; background-size: 320px 317px; background-position: center; }
+.farm-plot { position: relative; min-width: 0; aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 2px; padding: 2px; overflow: hidden; border: 0; border-radius: 5px; background: transparent; box-shadow: 0 2px rgba(29, 68, 33, .35); transition: transform .15s, filter .15s; }
+.farm-plot-art { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: fill; }
+.farm-plot > span { position: relative; z-index: 1; }
 .farm-plot:hover { transform: translateY(-2px); filter: brightness(1.1); }
 .farm-plot-empty { color: rgba(255, 227, 157, .72); font-size: 23px; line-height: 1; }
 .farm-crop { font-size: clamp(18px, 6vw, 30px); line-height: 1; filter: drop-shadow(0 2px rgba(0,0,0,.3)); }
@@ -31,7 +33,7 @@
 .farm-plot.is-ready { border-color: #ffdf58; box-shadow: 0 0 0 2px rgba(255, 213, 53, .22), 0 0 16px rgba(255, 213, 53, .65); animation: farm-ready 1.2s ease-in-out infinite; }
 .farm-plot.is-ready .farm-crop { animation: farm-sway .8s ease-in-out infinite alternate; }
 .farm-plot:disabled { cursor: not-allowed; filter: none; }
-.farm-plot.is-locked { background: rgba(56, 71, 45, .72); border-color: rgba(210, 234, 174, .2); }
+.farm-plot.is-locked .farm-plot-art { filter: grayscale(.7) brightness(.6); }
 .farm-lock { font-size: clamp(15px, 5vw, 25px); line-height: 1; opacity: .72; }
 .farm-hint { padding: 0 var(--s-4) var(--s-3); color: rgba(239, 255, 205, .75); font-size: 11px; text-align: center; }
 .farm-section-title { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
