@@ -36,10 +36,12 @@ export type PlayerProfile = {
   goldBalance: number;
   /** Local BWAR balance moved by Mining and Trade; no chain or wallet exists. */
   bwarBalance: number;
-  /** Farming XP only; never used as currency. */
+  /** Unified player XP from farming and battle rewards; never used as currency. */
   playerXp?: number;
-  /** Combat progression XP, earned only from battle victories. */
+  /** Legacy combat XP kept internally for the unchanged Fusion Hero gates. */
   battleXp?: number;
+  /** Unified XP save field; older profiles migrate from playerXp + battleXp. */
+  totalXp?: number;
   /** 50 persisted farm slots; null means the plot is empty. */
   farmPlots?: FarmPlot[];
   /** The single active mining hero and its immutable 24-hour session snapshot. */

@@ -120,7 +120,7 @@ export type PlayerActions = {
   debitGold: (amount: number, ref?: GoldRef) => boolean;
   addBwar: (amount: number) => boolean;
   debitBwar: (amount: number) => boolean;
-  /** Farming is the only source of player XP. XP is capped at Level 100. */
+  /** All player XP sources share one Level 1-100 progression. */
   addPlayerXp: (amount: number) => boolean;
   addBattleXp: (amount: number) => boolean;
   setFarmPlots: (plots: FarmPlot[]) => boolean;
@@ -174,13 +174,17 @@ export const createPlayerStore = (app: AppRuntime): PlayerStore => {
   /** Re-reads the save and mirrors it into the store. */
   const commit = (set: (partial: Partial<PlayerState>) => void): PlayerProfile => {
     const profile = app.players.load(rebuild) ?? app.players.loadOrCreate(rebuild);
+    const unifiedXp = Math.min(maxPlayerXp(), profile.totalXp ?? ((profile.playerXp ?? 0) + (profile.battleXp ?? 0)));
+    if (profile.totalXp === undefined) {
+      app.players.save({ ...profile, totalXp: unifiedXp, playerXp: unifiedXp });
+    }
     set({
       hydrated: true,
       playerId: profile.playerId,
       username: profile.username,
       gold: profile.goldBalance,
       bwar: profile.bwarBalance,
-      playerXp: Math.min(profile.playerXp ?? 0, maxPlayerXp()),
+      playerXp: unifiedXp,
       battleXp: Math.min(profile.battleXp ?? 0, maxBattleXp()),
       farmPlots: profile.farmPlots ?? Array.from({ length: FARM_PLOT_COUNT }, () => null),
       ownedHeroIds: profile.ownedHeroes,
@@ -438,7 +442,7 @@ export const createPlayerStore = (app: AppRuntime): PlayerStore => {
       const profile = currentProfile(app, get());
       const nextXp = Math.min(maxPlayerXp(), (profile.playerXp ?? 0) + Math.floor(amount));
       if (nextXp === (profile.playerXp ?? 0)) return false;
-      app.players.save({ ...profile, playerXp: nextXp });
+      app.players.save({ ...profile, playerXp: nextXp, totalXp: nextXp });
       commit(set);
       return true;
     },
@@ -446,9 +450,10 @@ export const createPlayerStore = (app: AppRuntime): PlayerStore => {
     addBattleXp: (amount) => {
       if (!Number.isFinite(amount) || amount <= 0) return false;
       const profile = currentProfile(app, get());
-      const nextXp = Math.min(maxBattleXp(), (profile.battleXp ?? 0) + Math.floor(amount));
-      if (nextXp === (profile.battleXp ?? 0)) return false;
-      app.players.save({ ...profile, battleXp: nextXp });
+      const nextBattleXp = Math.min(maxBattleXp(), (profile.battleXp ?? 0) + Math.floor(amount));
+      const nextXp = Math.min(maxPlayerXp(), (profile.totalXp ?? profile.playerXp ?? 0) + Math.floor(amount));
+      if (nextBattleXp === (profile.battleXp ?? 0) && nextXp === (profile.totalXp ?? profile.playerXp ?? 0)) return false;
+      app.players.save({ ...profile, playerXp: nextXp, totalXp: nextXp, battleXp: nextBattleXp });
       commit(set);
       return true;
     },
@@ -539,6 +544,7 @@ const currentProfile = (app: AppRuntime, state: PlayerState): PlayerProfile =>
     bwarBalance: state.bwar,
     playerXp: state.playerXp,
     battleXp: state.battleXp,
+    totalXp: state.playerXp,
     farmPlots: state.farmPlots,
     createdAt: state.createdAt,
     updatedAt: state.updatedAt,
