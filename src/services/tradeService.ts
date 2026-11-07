@@ -9,6 +9,7 @@ import { getHeroById } from '../data/heroes';
 import {
   goldItemPrice,
   heroTradePrice,
+  itemTradePrice,
   isValidTradePrice,
   MAX_TRADE_OFFERS,
   MAX_TRADE_REQUESTS,
@@ -469,7 +470,9 @@ export class TradeService {
     now: number,
   ): TradeOutcome {
     if (!Number.isInteger(goldAmount) || goldAmount <= 0) return insufficient(profile, 'INVALID_AMOUNT');
-    if (!isValidTradePrice(price, 'bwar')) return insufficient(profile, 'INVALID_PRICE');
+    if (!isValidTradePrice(price, 'bwar') || !closeEnough(price, goldItemPrice(goldAmount))) {
+      return insufficient(profile, 'INVALID_PRICE');
+    }
     const offers = this.offers(profile);
     if (offers.length >= MAX_TRADE_OFFERS) return insufficient(profile, 'TOO_MANY_OFFERS');
     if (offers.some((offer) => offer.status === 'active' && offer.kind === 'gold')) {
@@ -504,7 +507,10 @@ export class TradeService {
   ): TradeOutcome {
     if (!FARM_SEEDS.some((seed) => seed.tier === itemTier)) return insufficient(profile, 'INVALID_AMOUNT');
     if (!Number.isInteger(itemAmount) || itemAmount <= 0) return insufficient(profile, 'INVALID_AMOUNT');
-    if (!isValidTradePrice(price, currency)) return insufficient(profile, 'INVALID_PRICE');
+    if (currency !== 'bwar' || !isValidTradePrice(price, 'bwar') ||
+      !closeEnough(price, itemTradePrice(itemTier, itemAmount))) {
+      return insufficient(profile, 'INVALID_PRICE');
+    }
     if ((profile.farmItems?.[itemTier] ?? 0) < itemAmount) return insufficient(profile, 'INSUFFICIENT_FUNDS');
     const offers = this.offers(profile);
     if (offers.length >= MAX_TRADE_OFFERS) return insufficient(profile, 'TOO_MANY_OFFERS');

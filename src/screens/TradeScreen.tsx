@@ -17,7 +17,7 @@ import {
 } from '../data/fusion';
 import { HEROES } from '../data/heroes';
 import { FARM_SEEDS, type FarmTier } from '../data/farming';
-import { formatTradeAmount, heroTradePrice, isValidTradePrice } from '../data/trade';
+import { formatTradeAmount, goldItemPrice, heroTradePrice, isValidTradePrice, itemTradePrice } from '../data/trade';
 import type { TradeCurrency, TradeOffer } from '../data/trade';
 import { usePlayerStore } from '../state/playerStore';
 
@@ -156,19 +156,17 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
   const [heroPriceDrafts, setHeroPriceDrafts] = useState<Record<string, string>>({});
   const [expandedHeroId, setExpandedHeroId] = useState<string | null>(null);
   const [goldAmount, setGoldAmount] = useState('100');
-  const [goldPrice, setGoldPrice] = useState('1');
   const [itemTier, setItemTier] = useState<FarmTier>('common');
   const [itemAmount, setItemAmount] = useState('1');
-  const [itemPrice, setItemPrice] = useState('1');
   const [notice, setNotice] = useState<string | null>(null);
 
   const activeOffers = tradeOffers.filter((offer) => offer.status === 'active');
   const deliveredOffers = tradeOffers.filter((offer) => offer.status === 'delivered');
   const activeGoldOffer = activeOffers.some((offer) => offer.kind === 'gold');
   const offerAmount = parseAmount(goldAmount);
-  const offerPrice = parseAmount(goldPrice);
+  const offerPrice = goldItemPrice(offerAmount);
   const itemAmountValue = parseAmount(itemAmount);
-  const itemPriceValue = parseAmount(itemPrice);
+  const itemPriceValue = itemTradePrice(itemTier, itemAmountValue);
   const availableItemSeeds = FARM_SEEDS.filter((seed) => (farmItems[seed.tier] ?? 0) > 0);
 
   const report = (success: boolean, successMessage: string) => {
@@ -214,16 +212,14 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
     );
     if (created) {
       setGoldAmount('100');
-      setGoldPrice('1');
     }
   };
 
   const offerItem = () => {
-    const created = createItemOffer(itemTier, itemAmountValue, itemPriceValue, offerCurrency);
-    report(created, `Item offer created for ${formatTradeAmount(itemPriceValue, offerCurrency)}.`);
+    const created = createItemOffer(itemTier, itemAmountValue, itemPriceValue, 'bwar');
+    report(created, `Item offer created for ${formatTradeAmount(itemPriceValue, 'bwar')}.`);
     if (created) {
       setItemAmount('1');
-      setItemPrice('1');
     }
   };
 
@@ -433,8 +429,8 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
               <div className="trade-row__main">
                 <div className="trade-row__title">Gold offer</div>
                 <div className="trade-row__meta">
-                  <Badge tone="gold">Custom BWAR price</Badge>
-                  <span>Escrowed until delivery</span>
+                  <Badge tone="gold">Fixed rate · 0.01 $BWAR / Gold</Badge>
+                  <span>Total: {formatTradeAmount(offerPrice, 'bwar')}</span>
                 </div>
                 <div className="trade-form-grid">
                   <label className="trade-price-field">
@@ -448,18 +444,6 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
                       value={goldAmount}
                       onChange={(event) => setGoldAmount(event.target.value)}
                       aria-label="Gold amount to offer"
-                    />
-                  </label>
-                  <label className="trade-price-field">
-                    <span>Price in BWAR</span>
-                    <input
-                      className="trade-amount__input"
-                      type="number"
-                      min="0.01"
-                      step="0.01"
-                      value={goldPrice}
-                      onChange={(event) => setGoldPrice(event.target.value)}
-                      aria-label="Custom BWAR price for Gold"
                     />
                   </label>
                 </div>
@@ -487,8 +471,8 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
               <div className="trade-row__main">
                 <div className="trade-row__title">Item offer</div>
                 <div className="trade-row__meta">
-                  <Badge tone="gold">Custom price</Badge>
-                  <span>Items are stacked in your inventory</span>
+                  <Badge tone="gold">Fixed BWAR price</Badge>
+                  <span>Price is set per item · quantity changes the total</span>
                 </div>
                 <div className="trade-form-grid">
                   <label className="trade-price-field">
@@ -520,30 +504,9 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
                     />
                   </label>
                   <label className="trade-price-field">
-                    <span>Price</span>
-                    <input
-                      className="trade-amount__input"
-                      type="number"
-                      min="0.01"
-                      step={offerCurrency === 'gold' ? '1' : '0.01'}
-                      value={itemPrice}
-                      onChange={(event) => setItemPrice(event.target.value)}
-                      aria-label="Item price"
-                    />
+                    <span>Fixed total</span>
+                    <output className="trade-amount__input">{formatTradeAmount(itemPriceValue, 'bwar')}</output>
                   </label>
-                </div>
-                <div className="trade-currency__options" role="radiogroup" aria-label="Item price currency">
-                  {(['gold', 'bwar'] as const).map((currency) => (
-                    <button
-                      key={currency}
-                      type="button"
-                      className={`trade-currency__btn${offerCurrency === currency ? ' is-active' : ''}`}
-                      onClick={() => pickCurrency(currency)}
-                    >
-                      <AssetImg assetId={currency === 'gold' ? iconIds.gold : iconIds.bwar} alt="" />
-                      {currency === 'gold' ? '$GOLD' : '$BWAR'}
-                    </button>
-                  ))}
                 </div>
               </div>
               <div className="trade-item__actions">
@@ -555,7 +518,7 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
                     !Number.isInteger(itemAmountValue) ||
                     itemAmountValue <= 0 ||
                     itemAmountValue > (farmItems[itemTier] ?? 0) ||
-                    !isValidTradePrice(itemPriceValue, offerCurrency)
+                    !isValidTradePrice(itemPriceValue, 'bwar')
                   }
                   onClick={offerItem}
                 >

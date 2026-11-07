@@ -2,7 +2,13 @@ import { HASHRATE_PERIOD_MS, MINING_DURATION_MS, STARTING_BWAR, STARTING_GOLD } 
 import { clampHeroLevel } from '../data/economy';
 import { clampStars } from '../data/fusion';
 import { getFreeHeroes, getHeroById, HEROES } from '../data/heroes';
-import { isValidTradePrice, MAX_TRADE_OFFERS, MAX_TRADE_REQUESTS } from '../data/trade';
+import {
+  goldItemPrice,
+  isValidTradePrice,
+  itemTradePrice,
+  MAX_TRADE_OFFERS,
+  MAX_TRADE_REQUESTS,
+} from '../data/trade';
 import type {
   TradeCurrency,
   TradeOffer,
@@ -284,8 +290,8 @@ const parseTradeOffers = (
         sellerId,
         kind: 'gold',
         goldAmount,
-        currency,
-        price,
+        currency: 'bwar',
+        price: goldItemPrice(goldAmount),
         status,
         createdAt,
         updatedAt,
@@ -304,8 +310,8 @@ const parseTradeOffers = (
         kind: 'item',
         itemTier,
         itemAmount,
-        currency,
-        price,
+        currency: 'bwar',
+        price: itemTradePrice(itemTier, itemAmount),
         status,
         createdAt,
         updatedAt,

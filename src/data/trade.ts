@@ -72,6 +72,14 @@ export type TradeRequest = HeroTradeRequest | GoldTradeRequest;
 
 /** 100 $GOLD buys or sells for 1 $BWAR. */
 export const GOLD_TO_BWAR_RATE = 0.01;
+export const ITEM_TRADE_PRICE_BY_TIER: Record<FarmTier, number> = {
+  common: 0.001,
+  uncommon: 0.005,
+  rare: 0.01,
+  epic: 0.05,
+  legendary: 0.1,
+  mythic: 0.5,
+};
 export const MAX_TRADE_OFFERS = 100;
 export const MAX_TRADE_REQUESTS = 100;
 export const MAX_TRADE_PRICE = 1_000_000_000_000;
@@ -108,6 +116,9 @@ export const heroTradePrice = (
 
 /** Gold is an item: both directions are quoted in $BWAR. */
 export const goldItemPrice = (goldAmount: number): number => goldAmount * GOLD_TO_BWAR_RATE;
+
+export const itemTradePrice = (tier: FarmTier, amount: number): number =>
+  ITEM_TRADE_PRICE_BY_TIER[tier] * amount;
 
 export const isValidTradePrice = (price: number, currency: TradeCurrency): boolean =>
   Number.isFinite(price) &&
