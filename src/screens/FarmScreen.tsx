@@ -4,7 +4,7 @@ import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { FARM_SEEDS, farmSeed, type FarmPlot, type FarmSeed, type FarmTier } from '../data/farming';
 import { usePlayerStore } from '../state/playerStore';
 import { playerProgression, unlockedPlotCount } from '../data/progression';
-import { backgroundIds, uiIds } from '../assets/manifest';
+import { backgroundIds, farmPlantIds, uiIds } from '../assets/manifest';
 import { getAssetUrl } from '../assets/resolve';
 import { AssetImg } from '../assets/AssetImg';
 
@@ -17,6 +17,14 @@ const remainingLabel = (remaining: number) => {
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
   return `${hours}h ${String(minutes).padStart(2, '0')}m`;
+};
+const plantStage = (seed: FarmSeed, remaining: number): 'seed' | 'sprout' | 'growing' | 'mature' => {
+  const elapsed = Math.max(0, growthMs(seed) - remaining);
+  const ratio = elapsed / growthMs(seed);
+  if (ratio >= 1) return 'mature';
+  if (ratio >= 0.35) return 'growing';
+  if (ratio >= 0.1) return 'sprout';
+  return 'seed';
 };
 
 export const FarmScreen = ({ onBack }: { onBack: () => void }) => {
@@ -88,10 +96,11 @@ export const FarmScreen = ({ onBack }: { onBack: () => void }) => {
             const remaining = plot && seed ? growthMs(seed) - (now - plot.plantedAt) : 0;
             const isReady = Boolean(plot && remaining <= 0);
             const isLocked = index >= unlockedPlots;
+            const stage = seed ? plantStage(seed, remaining) : null;
             return (
               <button key={index} type="button" disabled={isLocked} className={`farm-plot${seed ? ' is-planted' : ''}${isReady ? ' is-ready' : ''}${isLocked ? ' is-locked' : ''}`} onClick={() => seed ? harvest(index, seed) : plant(index)} aria-label={isLocked ? `Plot ${index + 1} locked` : seed ? `${seed.label} plot` : `Empty plot ${index + 1}`}>
                 <AssetImg assetId={uiIds.farmPlot} alt="" className="farm-plot-art" />
-                {isLocked ? <><span className="farm-lock">🔒</span><span className="farm-plot-label">LV {Math.ceil(1 + (index * 99) / 49)}</span></> : seed ? <><span className="farm-crop" style={{ color: seed.color }}>{isReady ? '✦' : seed.symbol}</span><span className="farm-plot-label">{isReady ? 'HARVEST' : remainingLabel(remaining)}</span></> : <span className="farm-plot-empty">+</span>}
+                {isLocked ? <><span className="farm-lock">🔒</span><span className="farm-plot-label">LV {Math.ceil(1 + (index * 99) / 49)}</span></> : seed && stage ? <><AssetImg assetId={farmPlantIds[seed.tier][stage]} alt={`${seed.label} ${stage}`} className="farm-crop-art" /><span className="farm-plot-label">{isReady ? 'HARVEST' : remainingLabel(remaining)}</span></> : <span className="farm-plot-empty">+</span>}
               </button>
             );
           })}
@@ -103,7 +112,7 @@ export const FarmScreen = ({ onBack }: { onBack: () => void }) => {
       <div className="farm-seeds">
         {FARM_SEEDS.map((seed) => (
           <button key={seed.tier} type="button" className={`farm-seed${selectedTier === seed.tier ? ' is-selected' : ''} farm-seed--${seed.tier}`} onClick={() => setSelectedTier(seed.tier)}>
-            <span className="farm-seed-art" style={{ color: seed.color }}>{seed.symbol}</span>
+            <AssetImg assetId={farmPlantIds[seed.tier].growing} alt={`${seed.label} growing`} className="farm-seed-art" />
             <span className="farm-seed-name">{seed.tier}</span>
             <strong>{seed.label} seed</strong>
             <span className="farm-seed-price">{format(seed.price)} GOLD · {seed.growingHours}h</span>

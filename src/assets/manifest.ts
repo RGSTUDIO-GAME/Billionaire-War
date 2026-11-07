@@ -1,5 +1,6 @@
 import type { AssetCategory, AssetEntry, AssetId, HeroAssetKey, PlaceholderKind } from './types';
 import type { HeroRarity } from '../data/heroes/types';
+import type { FarmTier } from '../data/farming';
 
 /**
  * GLOBAL ASSET CONFIGURATION
@@ -222,6 +223,45 @@ export const uiIds = {
   bwarMiningButton: register('ui', 'bwar_mining_button', 'bwar-mining-button.png', 'ui', 'BWAR Mining button'),
   farmPlot: register('ui', 'farm_plot', 'farm-plot.png', 'ui', 'Farm plot'),
 } satisfies Record<string, AssetId>;
+
+export const farmPlantIds: Record<FarmTier, Record<'seed' | 'sprout' | 'growing' | 'mature', AssetId>> = {
+  common: {
+    seed: register('ui', 'farm_common_seed', 'farming/common-seed.png', 'ui', 'Common seed'),
+    sprout: register('ui', 'farm_common_sprout', 'farming/common-sprout.png', 'ui', 'Common sprout'),
+    growing: register('ui', 'farm_common_growing', 'farming/common-growing.png', 'ui', 'Common growing'),
+    mature: register('ui', 'farm_common_mature', 'farming/common-mature.png', 'ui', 'Common mature'),
+  },
+  uncommon: {
+    seed: register('ui', 'farm_uncommon_seed', 'farming/uncommon-seed.png', 'ui', 'Uncommon seed'),
+    sprout: register('ui', 'farm_uncommon_sprout', 'farming/uncommon-sprout.png', 'ui', 'Uncommon sprout'),
+    growing: register('ui', 'farm_uncommon_growing', 'farming/uncommon-growing.png', 'ui', 'Uncommon growing'),
+    mature: register('ui', 'farm_uncommon_mature', 'farming/uncommon-mature.png', 'ui', 'Uncommon mature'),
+  },
+  rare: {
+    seed: register('ui', 'farm_rare_seed', 'farming/rare-seed.png', 'ui', 'Rare seed'),
+    sprout: register('ui', 'farm_rare_sprout', 'farming/rare-sprout.png', 'ui', 'Rare sprout'),
+    growing: register('ui', 'farm_rare_growing', 'farming/rare-growing.png', 'ui', 'Rare growing'),
+    mature: register('ui', 'farm_rare_mature', 'farming/rare-mature.png', 'ui', 'Rare mature'),
+  },
+  epic: {
+    seed: register('ui', 'farm_epic_seed', 'farming/epic-seed.png', 'ui', 'Epic seed'),
+    sprout: register('ui', 'farm_epic_sprout', 'farming/epic-sprout.png', 'ui', 'Epic sprout'),
+    growing: register('ui', 'farm_epic_growing', 'farming/epic-growing.png', 'ui', 'Epic growing'),
+    mature: register('ui', 'farm_epic_mature', 'farming/epic-mature.png', 'ui', 'Epic mature'),
+  },
+  legendary: {
+    seed: register('ui', 'farm_legendary_seed', 'farming/legendary-seed.png', 'ui', 'Legendary seed'),
+    sprout: register('ui', 'farm_legendary_sprout', 'farming/legendary-sprout.png', 'ui', 'Legendary sprout'),
+    growing: register('ui', 'farm_legendary_growing', 'farming/legendary-growing.png', 'ui', 'Legendary growing'),
+    mature: register('ui', 'farm_legendary_mature', 'farming/legendary-mature.png', 'ui', 'Legendary mature'),
+  },
+  mythic: {
+    seed: register('ui', 'farm_mythic_seed', 'farming/mythic-seed.png', 'ui', 'Mythic seed'),
+    sprout: register('ui', 'farm_mythic_sprout', 'farming/mythic-sprout.png', 'ui', 'Mythic sprout'),
+    growing: register('ui', 'farm_mythic_growing', 'farming/mythic-growing.png', 'ui', 'Mythic growing'),
+    mature: register('ui', 'farm_mythic_mature', 'farming/mythic-mature.png', 'ui', 'Mythic mature'),
+  },
+};
 
 /** Rarity plaque buttons, keyed by hero rarity. */
 export const rarityIds: Record<HeroRarity, AssetId> = {
