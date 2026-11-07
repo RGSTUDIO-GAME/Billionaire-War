@@ -14,6 +14,7 @@ import {
   MAX_TRADE_REQUESTS,
 } from '../data/trade';
 import type { TradeCurrency, TradeOffer, TradeRequest } from '../data/trade';
+import { FARM_SEEDS, type FarmTier } from '../data/farming';
 import type { PlayerRepository } from '../repositories/playerRepository';
 import type { PlayerProfile } from '../storage/records';
 import { withCopyGranted } from './fusionService';
@@ -335,6 +336,20 @@ const withHeroOfferGranted = (profile: PlayerProfile, offer: TradeOffer): Player
   };
 };
 
+const withItemOfferGranted = (profile: PlayerProfile, offer: TradeOffer): PlayerProfile => {
+  if (offer.kind !== 'item') return profile;
+  return {
+    ...profile,
+    farmItems: {
+      ...(profile.farmItems ?? {}),
+      [offer.itemTier]: (profile.farmItems?.[offer.itemTier] ?? 0) + offer.itemAmount,
+    },
+  };
+};
+
+const withOfferGranted = (profile: PlayerProfile, offer: TradeOffer): PlayerProfile =>
+  withItemOfferGranted(withHeroOfferGranted(profile, offer), offer);
+
 const createOfferId = (now: number): string => {
   offerSequence += 1;
   const token = globalThis.crypto?.randomUUID?.().slice(0, 8) ?? Math.random().toString(36).slice(2, 10);
@@ -477,6 +492,41 @@ export class TradeService {
       return insufficient(profile, escrowed.reason === 'INSUFFICIENT_FUNDS' ? 'INSUFFICIENT_FUNDS' : 'INVALID_AMOUNT');
     }
     return { ok: true, profile: escrowed.profile };
+  }
+
+  createItemOffer(
+    profile: PlayerProfile,
+    itemTier: FarmTier,
+    itemAmount: number,
+    price: number,
+    currency: TradeCurrency,
+    now: number,
+  ): TradeOutcome {
+    if (!FARM_SEEDS.some((seed) => seed.tier === itemTier)) return insufficient(profile, 'INVALID_AMOUNT');
+    if (!Number.isInteger(itemAmount) || itemAmount <= 0) return insufficient(profile, 'INVALID_AMOUNT');
+    if (!isValidTradePrice(price, currency)) return insufficient(profile, 'INVALID_PRICE');
+    if ((profile.farmItems?.[itemTier] ?? 0) < itemAmount) return insufficient(profile, 'INSUFFICIENT_FUNDS');
+    const offers = this.offers(profile);
+    if (offers.length >= MAX_TRADE_OFFERS) return insufficient(profile, 'TOO_MANY_OFFERS');
+    const offer: TradeOffer = {
+      offerId: createOfferId(now),
+      sellerId: profile.playerId,
+      kind: 'item',
+      itemTier,
+      itemAmount,
+      currency,
+      price,
+      status: 'active',
+      createdAt: now,
+      updatedAt: now,
+    };
+    const next: PlayerProfile = {
+      ...profile,
+      farmItems: { ...(profile.farmItems ?? {}), [itemTier]: (profile.farmItems?.[itemTier] ?? 0) - itemAmount },
+      tradeOffers: [offer, ...offers],
+    };
+    if (!this.players.save(next)) return insufficient(profile, 'SAVE_FAILED');
+    return { ok: true, profile: next };
   }
 
   createHeroRequest(profile: PlayerProfile, heroId: string, price: number, now: number): TradeOutcome {
@@ -651,6 +701,16 @@ export class TradeService {
       return { ok: true, profile: refunded.profile };
     }
 
+    if (offer.status === 'active' && offer.kind === 'item') {
+      const next: PlayerProfile = {
+        ...profile,
+        farmItems: { ...(profile.farmItems ?? {}), [offer.itemTier]: (profile.farmItems?.[offer.itemTier] ?? 0) + offer.itemAmount },
+        tradeOffers: closedOffers,
+      };
+      if (!this.players.save(next)) return insufficient(profile, 'SAVE_FAILED');
+      return { ok: true, profile: next };
+    }
+
     const next: PlayerProfile = { ...profile, tradeOffers: closedOffers };
     if (!this.players.save(next)) return insufficient(profile, 'SAVE_FAILED');
     return { ok: true, profile: next };
@@ -667,7 +727,7 @@ export class TradeService {
     const deliveredOffers = offers.map((candidate) => candidate.offerId === offerId ? deliveredOffer : candidate);
 
     const receivingProfile: PlayerProfile = {
-      ...withHeroOfferGranted(profile, offer),
+      ...withOfferGranted(profile, offer),
       tradeOffers: deliveredOffers,
     };
 

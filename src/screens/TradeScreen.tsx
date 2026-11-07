@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { AssetImg } from '../assets/AssetImg';
-import { iconIds } from '../assets/manifest';
+import { farmItemIds, iconIds } from '../assets/manifest';
 import { HeroPortrait } from '../components/hero/HeroPortrait';
 import { RarityBadge } from '../components/hero/RarityBadge';
 import { Badge } from '../components/ui/Badge';
@@ -16,15 +16,14 @@ import {
   heroInstanceStarsOf,
 } from '../data/fusion';
 import { HEROES } from '../data/heroes';
+import { FARM_SEEDS, type FarmTier } from '../data/farming';
 import { formatTradeAmount, heroTradePrice, isValidTradePrice } from '../data/trade';
-import type { TradeCurrency, TradeOffer, TradeRequest } from '../data/trade';
+import type { TradeCurrency, TradeOffer } from '../data/trade';
 import { usePlayerStore } from '../state/playerStore';
-import { tradeRequestsByPrice } from '../services/tradeService';
 
 type TradeScreenProps = { onBack: () => void };
-type TradeView = 'offer' | 'deliver' | 'request';
-type OfferKind = 'hero' | 'gold';
-type RequestKind = 'hero' | 'gold';
+type TradeView = 'offer' | 'deliver';
+type OfferKind = 'hero' | 'gold' | 'item';
 
 type HeroInstance = {
   serial: number;
@@ -89,21 +88,6 @@ const groupHeroInstances = (instances: readonly HeroInstance[]): HeroInstanceGro
   );
 };
 
-const highestRequest = (
-  requests: readonly TradeRequest[],
-  kind: RequestKind,
-  playerId: string,
-  match: (request: TradeRequest) => boolean,
-): TradeRequest | undefined =>
-  tradeRequestsByPrice(
-    requests.filter((request) =>
-      request.status === 'active' &&
-      request.kind === kind &&
-      request.requesterId !== playerId &&
-      match(request),
-    ),
-  )[0];
-
 const OfferCard = ({ offer, actions }: { offer: TradeOffer; actions: ReactNode }) => (
   <Card className="trade-row">
     {offer.kind === 'hero' ? (
@@ -111,14 +95,18 @@ const OfferCard = ({ offer, actions }: { offer: TradeOffer; actions: ReactNode }
         const hero = HEROES.find((candidate) => candidate.id === offer.heroId);
         return hero ? <HeroPortrait hero={hero} size="xs" /> : null;
       })()
-    ) : (
+    ) : offer.kind === 'gold' ? (
       <AssetImg assetId={iconIds.gold} alt="" className="trade-offer-icon" />
+    ) : (
+      <AssetImg assetId={farmItemIds[offer.itemTier]} alt="" className="trade-offer-icon" />
     )}
     <div className="trade-row__main">
       <div className="trade-row__title">
         {offer.kind === 'hero'
           ? HEROES.find((hero) => hero.id === offer.heroId)?.name ?? 'Unknown hero'
-          : `${offer.goldAmount.toLocaleString('en-US')} Gold`}
+          : offer.kind === 'gold'
+            ? `${offer.goldAmount.toLocaleString('en-US')} Gold`
+            : `${FARM_SEEDS.find((seed) => seed.tier === offer.itemTier)?.label ?? 'Item'} ×${offer.itemAmount}`}
       </div>
       <div className="trade-row__meta">
         <Badge tone={statusTone[offer.status]}>{offer.status}</Badge>
@@ -130,37 +118,13 @@ const OfferCard = ({ offer, actions }: { offer: TradeOffer; actions: ReactNode }
               {offer.heroLevel} · {formatStars(offer.heroStars)}
             </span>
           </>
-        ) : (
+        ) : offer.kind === 'gold' ? (
           <span>Gold offer</span>
+        ) : (
+          <span>Item offer</span>
         )}
       </div>
       <div className="trade-row__price">{formatTradeAmount(offer.price, offer.currency)}</div>
-    </div>
-    <div className="trade-offer-actions">{actions}</div>
-  </Card>
-);
-
-const RequestCard = ({ request, actions }: { request: TradeRequest; actions: ReactNode }) => (
-  <Card className="trade-row">
-    {request.kind === 'hero' ? (
-      (() => {
-        const hero = HEROES.find((candidate) => candidate.id === request.heroId);
-        return hero ? <HeroPortrait hero={hero} size="xs" /> : null;
-      })()
-    ) : (
-      <AssetImg assetId={iconIds.gold} alt="" className="trade-offer-icon" />
-    )}
-    <div className="trade-row__main">
-      <div className="trade-row__title">
-        {request.kind === 'hero'
-          ? `Request ${HEROES.find((hero) => hero.id === request.heroId)?.name ?? 'Hero'}`
-          : `Request ${request.goldAmount.toLocaleString('en-US')} Gold`}
-      </div>
-      <div className="trade-row__meta">
-        <Badge tone={request.status === 'active' ? 'gold' : 'muted'}>{request.status}</Badge>
-        <span>Highest BWAR price wins</span>
-      </div>
-      <div className="trade-row__price">{formatTradeAmount(request.price, 'bwar')}</div>
     </div>
     <div className="trade-offer-actions">{actions}</div>
   </Card>
@@ -177,30 +141,25 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
   const heroInstanceLevels = usePlayerStore((state) => state.heroInstanceLevels);
   const heroInstanceStars = usePlayerStore((state) => state.heroInstanceStars);
   const mining = usePlayerStore((state) => state.mining);
+  const farmItems = usePlayerStore((state) => state.farmItems);
   const tradeOffers = usePlayerStore((state) => state.tradeOffers);
-  const tradeRequests = usePlayerStore((state) => state.tradeRequests);
   const playerId = usePlayerStore((state) => state.playerId);
   const createHeroOffer = usePlayerStore((state) => state.createHeroOffer);
   const createGoldOffer = usePlayerStore((state) => state.createGoldOffer);
-  const createHeroRequest = usePlayerStore((state) => state.createHeroRequest);
-  const createGoldRequest = usePlayerStore((state) => state.createGoldRequest);
-  const cancelRequest = usePlayerStore((state) => state.cancelRequest);
-  const instantSellHero = usePlayerStore((state) => state.instantSellHero);
-  const instantSellGold = usePlayerStore((state) => state.instantSellGold);
+  const createItemOffer = usePlayerStore((state) => state.createItemOffer);
   const delistOffer = usePlayerStore((state) => state.delistOffer);
   const deliverOffer = usePlayerStore((state) => state.deliverOffer);
 
   const [view, setView] = useState<TradeView>('offer');
   const [kind, setKind] = useState<OfferKind>('hero');
-  const [requestKind, setRequestKind] = useState<RequestKind>('hero');
   const [offerCurrency, setOfferCurrency] = useState<TradeCurrency>('gold');
   const [heroPriceDrafts, setHeroPriceDrafts] = useState<Record<string, string>>({});
   const [expandedHeroId, setExpandedHeroId] = useState<string | null>(null);
   const [goldAmount, setGoldAmount] = useState('100');
   const [goldPrice, setGoldPrice] = useState('1');
-  const [requestHeroId, setRequestHeroId] = useState(HEROES[0]?.id ?? 'durov');
-  const [requestGoldAmount, setRequestGoldAmount] = useState('100');
-  const [requestPrice, setRequestPrice] = useState('1');
+  const [itemTier, setItemTier] = useState<FarmTier>('common');
+  const [itemAmount, setItemAmount] = useState('1');
+  const [itemPrice, setItemPrice] = useState('1');
   const [notice, setNotice] = useState<string | null>(null);
 
   const activeOffers = tradeOffers.filter((offer) => offer.status === 'active');
@@ -208,14 +167,9 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
   const activeGoldOffer = activeOffers.some((offer) => offer.kind === 'gold');
   const offerAmount = parseAmount(goldAmount);
   const offerPrice = parseAmount(goldPrice);
-  const activeRequests = tradeRequests.filter((request) => request.status === 'active');
-  const highestRequests = tradeRequestsByPrice(activeRequests);
-  const bestGoldRequest = highestRequest(
-    tradeRequests,
-    'gold',
-    playerId,
-    (request) => request.kind === 'gold' && request.goldAmount === offerAmount,
-  );
+  const itemAmountValue = parseAmount(itemAmount);
+  const itemPriceValue = parseAmount(itemPrice);
+  const availableItemSeeds = FARM_SEEDS.filter((seed) => (farmItems[seed.tier] ?? 0) > 0);
 
   const report = (success: boolean, successMessage: string) => {
     setNotice(success ? successMessage : 'Offer refused. Check the price, balance, roster and mining status.');
@@ -264,21 +218,13 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
     }
   };
 
-  const submitRequest = () => {
-    const price = parseAmount(requestPrice);
-    const success = requestKind === 'hero'
-      ? createHeroRequest(requestHeroId, price)
-      : createGoldRequest(parseAmount(requestGoldAmount), price);
-    report(
-      success,
-      success
-        ? `Request placed for ${formatTradeAmount(price, 'bwar')}. Highest price fills first.`
-        : '',
-    );
-  };
-
-  const removeRequest = (request: TradeRequest) => {
-    report(cancelRequest(request.requestId), 'Request cancelled and $BWAR refunded.');
+  const offerItem = () => {
+    const created = createItemOffer(itemTier, itemAmountValue, itemPriceValue, offerCurrency);
+    report(created, `Item offer created for ${formatTradeAmount(itemPriceValue, offerCurrency)}.`);
+    if (created) {
+      setItemAmount('1');
+      setItemPrice('1');
+    }
   };
 
   const delist = (offer: TradeOffer) => {
@@ -313,7 +259,7 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
       </Card>
 
       <div className="trade-tabs" role="tablist" aria-label="Trade workflow">
-        {(['offer', 'deliver', 'request'] as const).map((value) => (
+        {(['offer', 'deliver'] as const).map((value) => (
           <button
             key={value}
             type="button"
@@ -322,7 +268,7 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
             aria-selected={view === value}
             onClick={() => pickView(value)}
           >
-            {value === 'offer' ? 'Offer' : value === 'deliver' ? 'Deliver' : 'Request'}
+            {value === 'offer' ? 'Offer' : 'Deliver'}
           </button>
         ))}
       </div>
@@ -336,7 +282,7 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
       {view === 'offer' ? (
         <div className="stack">
           <div className="trade-tabs" role="tablist" aria-label="Offer asset">
-            {(['hero', 'gold'] as const).map((value) => (
+            {(['hero', 'gold', 'item'] as const).map((value) => (
               <button
                 key={value}
                 type="button"
@@ -345,7 +291,7 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
                 aria-selected={kind === value}
                 onClick={() => pickKind(value)}
               >
-                {value === 'hero' ? 'Hero' : 'Gold'}
+                {value === 'hero' ? 'Hero' : value === 'gold' ? 'Gold' : 'Item'}
               </button>
             ))}
           </div>
@@ -426,12 +372,6 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
                           preferredInstance.isMain &&
                           copies.length === 0 &&
                           ownedHeroIds.length <= 1;
-                        const bestHeroRequest = highestRequest(
-                          tradeRequests,
-                          'hero',
-                          playerId,
-                          (request) => request.kind === 'hero' && request.heroId === hero.id,
-                        );
                         const blocked = miningLocked || lastHero;
                         return (
                           <Card className="trade-row" key={group.key}>
@@ -462,24 +402,9 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
                               </label>
                             </div>
                             <div className="trade-offer-actions">
-                              {bestHeroRequest !== undefined ? (
-                                <Button
-                                  size="sm"
-                                  variant="gold"
-                                  disabled={blocked}
-                                  onClick={() =>
-                                    report(
-                                      instantSellHero(hero.id, preferredInstance.serial),
-                                      'Hero sold to the highest matching request.',
-                                    )
-                                  }
-                                >
-                                  Instant Sell
-                                </Button>
-                              ) : null}
                               <Button
                                 size="sm"
-                                variant={bestHeroRequest === undefined ? 'gold' : 'ghost'}
+                                variant="gold"
                                 disabled={blocked || !isValidTradePrice(price, offerCurrency)}
                                 onClick={() =>
                                   offerHero(hero.id, preferredInstance.serial, price)
@@ -502,7 +427,7 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
                 <div className="empty-state">No unlisted heroes available.</div>
               )}
             </>
-          ) : (
+          ) : kind === 'gold' ? (
             <Card className="trade-item">
               <AssetImg assetId={iconIds.gold} alt="" className="trade-item__icon" />
               <div className="trade-row__main">
@@ -540,23 +465,9 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
                 </div>
               </div>
               <div className="trade-item__actions">
-                {bestGoldRequest !== undefined ? (
-                  <Button
-                    size="sm"
-                    variant="gold"
-                    disabled={
-                      !Number.isInteger(offerAmount) ||
-                      offerAmount <= 0 ||
-                      offerAmount > gold
-                    }
-                    onClick={() => report(instantSellGold(offerAmount), 'Gold sold to the highest request.')}
-                  >
-                    Instant Sell
-                  </Button>
-                ) : null}
                 <Button
                   size="sm"
-                  variant={bestGoldRequest === undefined ? 'gold' : 'ghost'}
+                  variant="gold"
                   disabled={
                     activeGoldOffer ||
                     !Number.isInteger(offerAmount) ||
@@ -567,6 +478,88 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
                   onClick={offerGold}
                 >
                   {activeGoldOffer ? 'Already offered' : 'Offer'}
+                </Button>
+              </div>
+            </Card>
+          ) : (
+            <Card className="trade-item">
+              <AssetImg assetId={farmItemIds[itemTier]} alt="" className="trade-item__icon" />
+              <div className="trade-row__main">
+                <div className="trade-row__title">Item offer</div>
+                <div className="trade-row__meta">
+                  <Badge tone="gold">Custom price</Badge>
+                  <span>Items are stacked in your inventory</span>
+                </div>
+                <div className="trade-form-grid">
+                  <label className="trade-price-field">
+                    <span>Item</span>
+                    <select
+                      className="trade-amount__input"
+                      value={itemTier}
+                      onChange={(event) => setItemTier(event.target.value as FarmTier)}
+                      aria-label="Item to offer"
+                    >
+                      {(availableItemSeeds.length > 0 ? availableItemSeeds : FARM_SEEDS).map((seed) => (
+                        <option key={seed.tier} value={seed.tier} disabled={(farmItems[seed.tier] ?? 0) <= 0}>
+                          {seed.label} · {farmItems[seed.tier] ?? 0} available
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="trade-price-field">
+                    <span>Quantity</span>
+                    <input
+                      className="trade-amount__input"
+                      type="number"
+                      min="1"
+                      max={farmItems[itemTier] || undefined}
+                      step="1"
+                      value={itemAmount}
+                      onChange={(event) => setItemAmount(event.target.value)}
+                      aria-label="Item quantity"
+                    />
+                  </label>
+                  <label className="trade-price-field">
+                    <span>Price</span>
+                    <input
+                      className="trade-amount__input"
+                      type="number"
+                      min="0.01"
+                      step={offerCurrency === 'gold' ? '1' : '0.01'}
+                      value={itemPrice}
+                      onChange={(event) => setItemPrice(event.target.value)}
+                      aria-label="Item price"
+                    />
+                  </label>
+                </div>
+                <div className="trade-currency__options" role="radiogroup" aria-label="Item price currency">
+                  {(['gold', 'bwar'] as const).map((currency) => (
+                    <button
+                      key={currency}
+                      type="button"
+                      className={`trade-currency__btn${offerCurrency === currency ? ' is-active' : ''}`}
+                      onClick={() => pickCurrency(currency)}
+                    >
+                      <AssetImg assetId={currency === 'gold' ? iconIds.gold : iconIds.bwar} alt="" />
+                      {currency === 'gold' ? '$GOLD' : '$BWAR'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="trade-item__actions">
+                <Button
+                  size="sm"
+                  variant="gold"
+                  disabled={
+                    availableItemSeeds.length === 0 ||
+                    !Number.isInteger(itemAmountValue) ||
+                    itemAmountValue <= 0 ||
+                    itemAmountValue > (farmItems[itemTier] ?? 0) ||
+                    !isValidTradePrice(itemPriceValue, offerCurrency)
+                  }
+                  onClick={offerItem}
+                >
+                  Offer
                 </Button>
               </div>
             </Card>
@@ -589,7 +582,7 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
             <div className="empty-state">No active offers.</div>
           )}
         </div>
-      ) : view === 'deliver' ? (
+      ) : (
         <div className="stack">
           <div className="trade-section-title">Ready to deliver</div>
           {activeOffers.length > 0 ? (
@@ -637,122 +630,12 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
             <div className="empty-state">No delivered offers yet.</div>
           )}
         </div>
-      ) : (
-        <div className="stack">
-          <div className="trade-section-title">Place a buy request</div>
-          <Card className="trade-item">
-            <AssetImg
-              assetId={requestKind === 'hero' ? iconIds.hero : iconIds.gold}
-              alt=""
-              className="trade-item__icon"
-            />
-            <div className="trade-row__main">
-              <div className="trade-row__title">Request in $BWAR</div>
-              <div className="trade-row__meta">
-                <Badge tone="gold">Your price</Badge>
-                <span>Escrowed until fill or cancel</span>
-              </div>
-              <div className="trade-tabs" role="tablist" aria-label="Request asset">
-                {(['hero', 'gold'] as const).map((value) => (
-                  <button
-                    key={value}
-                    type="button"
-                    className={`tabs__btn${requestKind === value ? ' is-active' : ''}`}
-                    role="tab"
-                    aria-selected={requestKind === value}
-                    onClick={() => {
-                      setRequestKind(value);
-                      setNotice(null);
-                    }}
-                  >
-                    {value === 'hero' ? 'Hero' : 'Gold'}
-                  </button>
-                ))}
-              </div>
-              <div className="trade-form-grid">
-                {requestKind === 'hero' ? (
-                  <label className="trade-price-field">
-                    <span>Hero</span>
-                    <select
-                      className="trade-amount__input"
-                      value={requestHeroId}
-                      onChange={(event) => setRequestHeroId(event.target.value)}
-                      aria-label="Requested Hero"
-                    >
-                      {HEROES.map((hero) => (
-                        <option key={hero.id} value={hero.id}>{hero.name}</option>
-                      ))}
-                    </select>
-                  </label>
-                ) : (
-                  <label className="trade-price-field">
-                    <span>Gold amount</span>
-                    <input
-                      className="trade-amount__input"
-                      type="number"
-                      min="1"
-                      step="1"
-                      value={requestGoldAmount}
-                      onChange={(event) => setRequestGoldAmount(event.target.value)}
-                      aria-label="Requested Gold amount"
-                    />
-                  </label>
-                )}
-                <label className="trade-price-field">
-                  <span>Price in BWAR</span>
-                  <input
-                    className="trade-amount__input"
-                    type="number"
-                    min="0.01"
-                    step="0.01"
-                    value={requestPrice}
-                    onChange={(event) => setRequestPrice(event.target.value)}
-                    aria-label="Request price in BWAR"
-                  />
-                </label>
-              </div>
-            </div>
-            <Button
-              size="sm"
-              variant="gold"
-              disabled={
-                !isValidTradePrice(parseAmount(requestPrice), 'bwar') ||
-                parseAmount(requestPrice) > bwar ||
-                (requestKind === 'gold' &&
-                  (!Number.isInteger(parseAmount(requestGoldAmount)) ||
-                    parseAmount(requestGoldAmount) <= 0))
-              }
-              onClick={submitRequest}
-            >
-              Place Request
-            </Button>
-          </Card>
-
-          <div className="trade-section-title">Requests · highest first</div>
-          {highestRequests.length > 0 ? (
-            highestRequests.map((request) => (
-              <RequestCard
-                key={request.requestId}
-                request={request}
-                actions={
-                  request.requesterId === playerId && request.status === 'active' ? (
-                    <Button size="sm" variant="ghost" onClick={() => removeRequest(request)}>
-                      Cancel
-                    </Button>
-                  ) : null
-                }
-              />
-            ))
-          ) : (
-            <div className="empty-state">No active buy requests.</div>
-          )}
-        </div>
       )}
 
       <Card flat tight className="trade-rules">
         Choose a Hero instance by level and star; equal instances display as one ×N stack.
-        Offers escrow the exact serial at your price. Requests escrow $BWAR and the highest
-        matching price fills first through Instant Sell. Mining locks only the roster instance.
+        Offers escrow the exact Hero or Item at your price until delivery or cancellation. Mining
+        locks only the roster instance.
       </Card>
     </div>
   );

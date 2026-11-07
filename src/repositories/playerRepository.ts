@@ -177,7 +177,7 @@ const knownFarmPlots = (value: unknown): FarmPlot[] => {
 };
 
 const knownOfferKind = (value: unknown): TradeOfferKind | null =>
-  value === 'hero' || value === 'gold' ? value : null;
+  value === 'hero' || value === 'gold' || value === 'item' ? value : null;
 
 const knownOfferStatus = (value: unknown): TradeOfferStatus | null =>
   value === 'active' || value === 'delivered' || value === 'delisted' ? value : null;
@@ -271,7 +271,7 @@ const parseTradeOffers = (
         createdAt,
         updatedAt,
       };
-    } else {
+    } else if (kind === 'gold') {
       const goldAmount = typeof raw.goldAmount === 'number' && Number.isInteger(raw.goldAmount) && raw.goldAmount > 0
         ? raw.goldAmount
         : null;
@@ -284,6 +284,26 @@ const parseTradeOffers = (
         sellerId,
         kind: 'gold',
         goldAmount,
+        currency,
+        price,
+        status,
+        createdAt,
+        updatedAt,
+      };
+    } else {
+      const itemTier = typeof raw.itemTier === 'string' && FARM_SEEDS.some((seed) => seed.tier === raw.itemTier)
+        ? raw.itemTier as FarmTier
+        : null;
+      const itemAmount = typeof raw.itemAmount === 'number' && Number.isInteger(raw.itemAmount) && raw.itemAmount > 0
+        ? raw.itemAmount
+        : null;
+      if (itemTier === null || itemAmount === null) continue;
+      offer = {
+        offerId,
+        sellerId,
+        kind: 'item',
+        itemTier,
+        itemAmount,
         currency,
         price,
         status,

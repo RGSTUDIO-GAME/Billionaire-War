@@ -99,6 +99,7 @@ export type PlayerActions = {
     instanceSerial?: number,
   ) => boolean;
   createGoldOffer: (goldAmount: number, price: number) => boolean;
+  createItemOffer: (tier: FarmTier, amount: number, price: number, currency: TradeCurrency) => boolean;
   createHeroRequest: (heroId: string, price: number) => boolean;
   createGoldRequest: (goldAmount: number, price: number) => boolean;
   cancelRequest: (requestId: string) => boolean;
@@ -277,6 +278,15 @@ export const createPlayerStore = (app: AppRuntime): PlayerStore => {
         goldAmount,
         price,
         Date.now(),
+      );
+      if (!outcome.ok) return false;
+      commit(set);
+      return true;
+    },
+
+    createItemOffer: (tier, amount, price, currency) => {
+      const outcome = app.tradeService.createItemOffer(
+        currentProfile(app, get()), tier, amount, price, currency, Date.now(),
       );
       if (!outcome.ok) return false;
       commit(set);

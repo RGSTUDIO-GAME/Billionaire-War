@@ -1,8 +1,9 @@
 import type { Hero, HeroRarity } from './heroes/types';
+import type { FarmTier } from './farming';
 
 export type TradeCurrency = 'gold' | 'bwar';
 export type TradeSide = 'buy' | 'sell';
-export type TradeOfferKind = 'hero' | 'gold';
+export type TradeOfferKind = 'hero' | 'gold' | 'item';
 export type TradeOfferStatus = 'active' | 'delivered' | 'delisted';
 export type TradeRequestKind = 'hero' | 'gold';
 export type TradeRequestStatus = 'active' | 'fulfilled' | 'cancelled';
@@ -39,7 +40,13 @@ export type GoldTradeOffer = TradeOfferBase & {
   goldAmount: number;
 };
 
-export type TradeOffer = HeroTradeOffer | GoldTradeOffer;
+export type ItemTradeOffer = TradeOfferBase & {
+  kind: 'item';
+  itemTier: FarmTier;
+  itemAmount: number;
+};
+
+export type TradeOffer = HeroTradeOffer | GoldTradeOffer | ItemTradeOffer;
 
 type TradeRequestBase = {
   requestId: string;
