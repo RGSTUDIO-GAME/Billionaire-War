@@ -7,12 +7,14 @@ export type FarmSeed = {
   harvestGold: number;
   price: number;
   growingHours: number;
+  /** Optional short growth override for tutorial/early-game seeds. */
+  growingMinutes?: number;
   color: string;
 };
 export type FarmPlot = { seed: FarmTier; plantedAt: number } | null;
 
 export const FARM_SEEDS: FarmSeed[] = [
-  { tier: 'common', label: '$GRAM', symbol: '🌱', harvestXp: 10, harvestGold: 1500, price: 1000, growingHours: 4, color: '#a7e06f' },
+  { tier: 'common', label: '$GRAM', symbol: '🌱', harvestXp: 10, harvestGold: 1100, price: 1000, growingHours: 4, growingMinutes: 2, color: '#a7e06f' },
   { tier: 'uncommon', label: '$DOGE', symbol: '🌿', harvestXp: 20, harvestGold: 3000, price: 2000, growingHours: 8, color: '#71d7a0' },
   { tier: 'rare', label: '$SOLANA', symbol: '🌷', harvestXp: 40, harvestGold: 6000, price: 4000, growingHours: 12, color: '#65b7ff' },
   { tier: 'epic', label: '$BNB', symbol: '🌻', harvestXp: 80, harvestGold: 12000, price: 8000, growingHours: 16, color: '#bf91ff' },

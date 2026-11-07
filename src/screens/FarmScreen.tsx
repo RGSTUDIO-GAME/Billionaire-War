@@ -11,7 +11,8 @@ import { AssetImg } from '../assets/AssetImg';
 type Plot = FarmPlot;
 
 const format = (value: number) => new Intl.NumberFormat('en-US').format(value);
-const growthMs = (seed: FarmSeed) => seed.growingHours * 60 * 60 * 1000;
+const growthMs = (seed: FarmSeed) => (seed.growingMinutes ?? seed.growingHours * 60) * 60 * 1000;
+const growthLabel = (seed: FarmSeed) => seed.growingMinutes ? `${seed.growingMinutes}m` : `${seed.growingHours}h`;
 const remainingLabel = (remaining: number) => {
   const totalMinutes = Math.max(0, Math.ceil(remaining / 60000));
   const hours = Math.floor(totalMinutes / 60);
@@ -115,7 +116,7 @@ export const FarmScreen = ({ onBack }: { onBack: () => void }) => {
             <AssetImg assetId={farmPlantIds[seed.tier].growing} alt={`${seed.label} growing`} className="farm-seed-art" />
             <span className="farm-seed-name">{seed.tier}</span>
             <strong>{seed.label} seed</strong>
-            <span className="farm-seed-price">{format(seed.price)} GOLD · {seed.growingHours}h</span>
+            <span className="farm-seed-price">{format(seed.price)} GOLD · {growthLabel(seed)}</span>
             <span className="farm-seed-reward">+{seed.harvestXp} XP · +{format(seed.harvestGold)} GOLD</span>
           </button>
         ))}
