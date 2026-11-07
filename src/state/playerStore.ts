@@ -14,7 +14,7 @@ import type { RewardOutcome } from '../rewards';
 import { runtime as defaultRuntime } from './runtime';
 import type { AppRuntime } from './runtime';
 import { BATTLE_XP_PER_WIN, battleProgression, maxBattleXp, maxPlayerXp } from '../data/progression';
-import { FARM_PLOT_COUNT, type FarmPlot } from '../data/farming';
+import { FARM_PLOT_COUNT, type FarmPlot, type FarmTier } from '../data/farming';
 
 /**
  * PLAYER STATE
@@ -50,6 +50,7 @@ export type PlayerData = {
   playerXp: number;
   battleXp: number;
   farmPlots: FarmPlot[];
+  farmItems: Partial<Record<FarmTier, number>>;
   ownedHeroIds: string[];
   equippedHeroId: string;
   /** Hero level per hero id. Missing heroes are Level 0. */
@@ -123,6 +124,7 @@ export type PlayerActions = {
   /** All player XP sources share one Level 1-100 progression. */
   addPlayerXp: (amount: number) => boolean;
   addBattleXp: (amount: number) => boolean;
+  addFarmItem: (tier: FarmTier) => boolean;
   setFarmPlots: (plots: FarmPlot[]) => boolean;
   /** Mirrors a reward the Reward Service has already paid. */
   applyReward: (outcome: RewardOutcome) => void;
@@ -148,6 +150,7 @@ const blankData = (): PlayerData => ({
   playerXp: 0,
   battleXp: 0,
   farmPlots: Array.from({ length: FARM_PLOT_COUNT }, () => null),
+  farmItems: {},
   ownedHeroIds: getFreeHeroes().map((hero) => hero.id),
   equippedHeroId: getFreeHeroes()[0]?.id ?? 'durov',
   heroLevels: {},
@@ -187,6 +190,7 @@ export const createPlayerStore = (app: AppRuntime): PlayerStore => {
       playerXp: unifiedXp,
       battleXp: Math.min(profile.battleXp ?? 0, maxBattleXp()),
       farmPlots: profile.farmPlots ?? Array.from({ length: FARM_PLOT_COUNT }, () => null),
+      farmItems: profile.farmItems ?? {},
       ownedHeroIds: profile.ownedHeroes,
       equippedHeroId: profile.equippedHeroId,
       heroLevels: profile.heroLevels,
@@ -458,6 +462,15 @@ export const createPlayerStore = (app: AppRuntime): PlayerStore => {
       return true;
     },
 
+    addFarmItem: (tier) => {
+      const profile = currentProfile(app, get());
+      const farmItems = { ...(profile.farmItems ?? {}) };
+      farmItems[tier] = (farmItems[tier] ?? 0) + 1;
+      app.players.save({ ...profile, farmItems });
+      commit(set);
+      return true;
+    },
+
     setFarmPlots: (plots) => {
       if (plots.length !== FARM_PLOT_COUNT) return false;
       const profile = currentProfile(app, get());
@@ -546,6 +559,7 @@ const currentProfile = (app: AppRuntime, state: PlayerState): PlayerProfile =>
     battleXp: state.battleXp,
     totalXp: state.playerXp,
     farmPlots: state.farmPlots,
+    farmItems: state.farmItems,
     createdAt: state.createdAt,
     updatedAt: state.updatedAt,
   };

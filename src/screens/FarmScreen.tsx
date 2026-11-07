@@ -34,6 +34,7 @@ export const FarmScreen = ({ onBack }: { onBack: () => void }) => {
   const addGold = usePlayerStore((state) => state.addGold);
   const playerXp = usePlayerStore((state) => state.playerXp);
   const addPlayerXp = usePlayerStore((state) => state.addPlayerXp);
+  const addFarmItem = usePlayerStore((state) => state.addFarmItem);
   const savedPlots = usePlayerStore((state) => state.farmPlots);
   const setFarmPlots = usePlayerStore((state) => state.setFarmPlots);
   const [selectedTier, setSelectedTier] = useState<FarmTier>('common');
@@ -74,6 +75,7 @@ export const FarmScreen = ({ onBack }: { onBack: () => void }) => {
     });
     addPlayerXp(seed.harvestXp);
     addGold(seed.harvestGold, { kind: 'GRANT' });
+    addFarmItem(seed.tier);
   };
 
   return (

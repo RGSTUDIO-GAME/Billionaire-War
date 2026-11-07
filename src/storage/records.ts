@@ -2,7 +2,7 @@ import { MAX_ROUNDS } from '../data/balance';
 import type { BattleMode } from '../engine/types';
 import type { TradeOffer, TradeRequest } from '../data/trade';
 import type { RewardResult } from '../rewards/types';
-import type { FarmPlot } from '../data/farming';
+import type { FarmPlot, FarmTier } from '../data/farming';
 
 /**
  * PERSISTED RECORDS
@@ -44,6 +44,8 @@ export type PlayerProfile = {
   totalXp?: number;
   /** 50 persisted farm slots; null means the plot is empty. */
   farmPlots?: FarmPlot[];
+  /** Harvested farm items, stacked by seed rarity. */
+  farmItems?: Partial<Record<FarmTier, number>>;
   /** The single active mining hero and its immutable 24-hour session snapshot. */
   mining: MiningSession | null;
   /** Custom-price marketplace offers, including active and closed history. */

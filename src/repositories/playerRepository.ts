@@ -15,7 +15,7 @@ import type {
 import type { StorageAdapter } from '../storage/StorageAdapter';
 import { STORAGE_KEYS, STORAGE_VERSION } from '../storage/keys';
 import type { MiningSession, PlayerProfile } from '../storage/records';
-import { FARM_PLOT_COUNT, farmSeed, type FarmPlot, type FarmTier } from '../data/farming';
+import { FARM_PLOT_COUNT, FARM_SEEDS, farmSeed, type FarmPlot, type FarmTier } from '../data/farming';
 
 /**
  * PLAYER REPOSITORY
@@ -49,6 +49,17 @@ const asTimestamp = (value: unknown, fallback: number): number =>
 const knownHeroIds = (value: unknown): string[] => {
   const ids = Array.isArray(value) ? value.filter((id): id is string => typeof id === 'string') : [];
   return [...new Set(ids.filter((id) => getHeroById(id) !== undefined))];
+};
+
+const knownFarmItems = (value: unknown): Partial<Record<FarmTier, number>> => {
+  if (!isPlainObject(value)) return {};
+  const tiers = new Set(FARM_SEEDS.map((seed) => seed.tier));
+  const items: Partial<Record<FarmTier, number>> = {};
+  for (const [tier, count] of Object.entries(value)) {
+    if (!tiers.has(tier as FarmTier) || typeof count !== 'number' || !Number.isInteger(count) || count < 0) continue;
+    items[tier as FarmTier] = count;
+  }
+  return items;
 };
 
 /** Star tiers that survived sanitising: known heroes only, clamped to 1..6. */
@@ -479,6 +490,7 @@ export const parseProfile = (
     battleXp: asNonNegativeNumber(raw.battleXp) ?? 0,
     totalXp: asNonNegativeNumber(raw.totalXp) ?? undefined,
     farmPlots: knownFarmPlots(raw.farmPlots),
+    farmItems: knownFarmItems(raw.farmItems),
     mining: parseMiningSession(raw.mining, ownedHeroes, now),
     tradeOffers: parseTradeOffers(raw.tradeOffers, ownedHeroes, heroCopies, heroSerials, resolvedId),
     tradeRequests: parseTradeRequests(raw.tradeRequests, resolvedId),

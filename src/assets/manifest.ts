@@ -263,6 +263,15 @@ export const farmPlantIds: Record<FarmTier, Record<'seed' | 'sprout' | 'growing'
   },
 };
 
+export const farmItemIds: Record<FarmTier, AssetId> = {
+  common: register('ui', 'farm_common_item', 'items/common-item.png', 'ui', 'Common harvest item'),
+  uncommon: register('ui', 'farm_uncommon_item', 'items/uncommon-item.png', 'ui', 'Uncommon harvest item'),
+  rare: register('ui', 'farm_rare_item', 'items/rare-item.png', 'ui', 'Rare harvest item'),
+  epic: register('ui', 'farm_epic_item', 'items/epic-item.png', 'ui', 'Epic harvest item'),
+  legendary: register('ui', 'farm_legendary_item', 'items/legendary-item.png', 'ui', 'Legendary harvest item'),
+  mythic: register('ui', 'farm_mythic_item', 'items/mythic-item.png', 'ui', 'Mythic harvest item'),
+};
+
 /** Rarity plaque buttons, keyed by hero rarity. */
 export const rarityIds: Record<HeroRarity, AssetId> = {
   common: register('ui', 'rarity_common', 'rarity-common.png', 'ui', 'Common rarity'),
