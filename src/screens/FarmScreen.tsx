@@ -1,14 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Card } from '../components/ui/Card';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { FARM_SEEDS, farmSeed, type FarmPlot, type FarmSeed, type FarmTier } from '../data/farming';
 import { usePlayerStore } from '../state/playerStore';
 import { playerProgression, unlockedPlotCount } from '../data/progression';
-import { backgroundIds, farmPlantIds, uiIds } from '../assets/manifest';
+import { backgroundIds, farmItemIds, farmPlantIds, uiIds } from '../assets/manifest';
 import { getAssetUrl } from '../assets/resolve';
 import { AssetImg } from '../assets/AssetImg';
 
 type Plot = FarmPlot;
+type HarvestFx = { id: number; index: number; tier: FarmTier };
 
 const format = (value: number) => new Intl.NumberFormat('en-US').format(value);
 const growthMs = (seed: FarmSeed) => (seed.growingMinutes ?? seed.growingHours * 60) * 60 * 1000;
@@ -40,6 +41,8 @@ export const FarmScreen = ({ onBack }: { onBack: () => void }) => {
   const [selectedTier, setSelectedTier] = useState<FarmTier>('common');
   const [plots, setPlots] = useState<Plot[]>(savedPlots);
   const [now, setNow] = useState(Date.now());
+  const [harvestFx, setHarvestFx] = useState<HarvestFx[]>([]);
+  const harvestFxId = useRef(0);
   const selected = farmSeed(selectedTier);
   const progression = playerProgression(playerXp);
   const unlockedPlots = unlockedPlotCount(progression.level);
@@ -68,6 +71,8 @@ export const FarmScreen = ({ onBack }: { onBack: () => void }) => {
 
   const harvest = (index: number, seed: FarmSeed) => {
     if (now - (plots[index]?.plantedAt ?? 0) < growthMs(seed)) return;
+    const id = harvestFxId.current++;
+    setHarvestFx((current) => [...current, { id, index, tier: seed.tier }]);
     setPlots((current) => {
       const next = current.map((plot, plotIndex) => plotIndex === index ? null : plot);
       setFarmPlots(next);
@@ -104,6 +109,15 @@ export const FarmScreen = ({ onBack }: { onBack: () => void }) => {
               <button key={index} type="button" disabled={isLocked} className={`farm-plot${seed ? ' is-planted' : ''}${isReady ? ' is-ready' : ''}${isLocked ? ' is-locked' : ''}`} onClick={() => seed ? harvest(index, seed) : plant(index)} aria-label={isLocked ? `Plot ${index + 1} locked` : seed ? `${seed.label} plot` : `Empty plot ${index + 1}`}>
                 <AssetImg assetId={uiIds.farmPlot} alt="" className="farm-plot-art" />
                 {isLocked ? <><span className="farm-lock">🔒</span><span className="farm-plot-label">LV {Math.ceil(1 + (index * 99) / 49)}</span></> : seed && stage ? <><AssetImg assetId={farmPlantIds[seed.tier][stage]} alt={`${seed.label} ${stage}`} className="farm-crop-art" /><span className="farm-plot-label">{isReady ? 'HARVEST' : remainingLabel(remaining)}</span></> : <span className="farm-plot-empty">+</span>}
+                {harvestFx.filter((effect) => effect.index === index).map((effect) => (
+                  <span
+                    key={effect.id}
+                    className="farm-harvest-fx"
+                    onAnimationEnd={() => setHarvestFx((current) => current.filter((item) => item.id !== effect.id))}
+                  >
+                    <AssetImg assetId={farmItemIds[effect.tier]} alt="Harvested item" />
+                  </span>
+                ))}
               </button>
             );
           })}

@@ -23,9 +23,11 @@
 .farm-kicker { color: #b8e78f; }
 .farm-weather { font-size: 12px; color: #fff2ad; }
 .farm-field { display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px; padding: 16px; background-color: #64aa59; background-size: 320px 317px; background-position: center; }
-.farm-plot { position: relative; min-width: 0; aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 2px; padding: 2px; overflow: hidden; border: 0; border-radius: 5px; background: transparent; box-shadow: 0 2px rgba(29, 68, 33, .35); transition: transform .15s, filter .15s; }
+.farm-plot { position: relative; min-width: 0; aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 2px; padding: 2px; overflow: visible; border: 0; border-radius: 5px; background: transparent; box-shadow: 0 2px rgba(29, 68, 33, .35); transition: transform .15s, filter .15s; }
 .farm-plot-art { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: fill; }
 .farm-plot > span { position: relative; z-index: 1; }
+.farm-plot > .farm-harvest-fx { position: absolute; top: 18%; left: 50%; z-index: 3; display: block; width: 55%; max-width: 38px; aspect-ratio: 1; pointer-events: none; animation: farm-harvest-float .9s ease-out forwards; }
+.farm-harvest-fx img { display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 5px rgba(255, 220, 93, .7)); }
 .farm-plot:hover { transform: translateY(-2px); filter: brightness(1.1); }
 .farm-plot-empty { color: rgba(255, 227, 157, .72); font-size: 23px; line-height: 1; }
 .farm-crop-art { position: relative; z-index: 1; display: block; width: 82%; height: 82%; object-fit: contain; filter: drop-shadow(0 2px rgba(0,0,0,.3)); }
@@ -55,6 +57,7 @@
 .farm-inventory-item__count { position: absolute; top: 4px; right: 4px; padding: 2px 5px; border: 1px solid rgba(255,255,255,.2); border-radius: var(--r-pill); background: rgba(8, 11, 18, .85); color: var(--gold); font-size: 10px; font-weight: 900; }
 @keyframes farm-ready { 50% { transform: scale(1.04); } }
 @keyframes farm-sway { from { transform: rotate(-4deg); } to { transform: rotate(4deg); } }
+@keyframes farm-harvest-float { from { opacity: 1; transform: translate(-50%, 0) scale(.8); } 45% { opacity: 1; transform: translate(-50%, -12px) scale(1); } to { opacity: 0; transform: translate(-50%, -32px) scale(.72); } }
 @media (min-width: 440px) { .farm-seeds { grid-template-columns: repeat(3, 1fr); } }
 
 .profile-card { text-align: center; }
