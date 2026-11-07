@@ -13,10 +13,10 @@ export const InventoryScreen = ({ onBack }: InventoryScreenProps) => {
 
   return (
     <div className="anim-fade">
-      <ScreenHeader title="Items" subtitle="Harvest inventory" onBack={onBack} />
+      <ScreenHeader title="Inventory" subtitle="Collected items" onBack={onBack} />
 
       <Card>
-        <div className="card__title" style={{ marginBottom: 'var(--s-3)' }}>Farm Harvests</div>
+        <div className="card__title" style={{ marginBottom: 'var(--s-3)' }}>Items</div>
         {hasItems ? (
           <div className="farm-inventory-grid">
             {FARM_SEEDS.map((seed) => {
@@ -33,7 +33,7 @@ export const InventoryScreen = ({ onBack }: InventoryScreenProps) => {
             })}
           </div>
         ) : (
-          <div className="empty-state">Belum ada hasil panen. Panen tanaman di Farm untuk mendapatkan item.</div>
+          <div className="empty-state">Belum ada item. Item yang diperoleh akan tersimpan di sini.</div>
         )}
       </Card>
     </div>
