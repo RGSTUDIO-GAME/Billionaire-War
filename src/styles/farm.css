@@ -46,12 +46,13 @@
 .farm-seed strong { overflow: hidden; width: 100%; margin: 2px 0; color: var(--text); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .farm-seed-price { color: var(--gold); font-size: 11px; font-weight: 800; }
 .farm-seed-reward { margin-top: 3px; color: var(--success); font-size: 10px; }
-.farm-inventory-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-2); }
-.farm-inventory-item { position: relative; min-width: 0; padding: 12px 8px 10px; overflow: hidden; border: 1px solid var(--line); border-radius: var(--r-md); background: linear-gradient(145deg, rgba(255,255,255,.06), rgba(10, 14, 24, .8)); text-align: center; }
-.farm-inventory-item img { display: block; width: 86px; height: 86px; max-width: 100%; margin: 0 auto 5px; object-fit: contain; }
-.farm-inventory-item__name { color: var(--text); font-size: 12px; font-weight: 800; }
+.farm-inventory-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+.farm-inventory-item { position: relative; min-width: 0; padding: 7px 4px 6px; overflow: hidden; border: 1px solid var(--line); border-radius: var(--r-md); background: linear-gradient(145deg, rgba(255,255,255,.06), rgba(10, 14, 24, .8)); text-align: center; }
+.farm-inventory-item img { display: block; width: 58px; height: 58px; max-width: 100%; margin: 0 auto 3px; object-fit: contain; }
+.farm-inventory-item__name { overflow: hidden; color: var(--text); font-size: 10px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
 .farm-inventory-item__tier { color: var(--text-muted); font-size: 10px; text-transform: uppercase; }
-.farm-inventory-item__count { position: absolute; top: 7px; right: 7px; padding: 3px 7px; border: 1px solid rgba(255,255,255,.2); border-radius: var(--r-pill); background: rgba(8, 11, 18, .85); color: var(--gold); font-size: 12px; font-weight: 900; }
+.farm-inventory-item__tier { font-size: 8px; }
+.farm-inventory-item__count { position: absolute; top: 4px; right: 4px; padding: 2px 5px; border: 1px solid rgba(255,255,255,.2); border-radius: var(--r-pill); background: rgba(8, 11, 18, .85); color: var(--gold); font-size: 10px; font-weight: 900; }
 @keyframes farm-ready { 50% { transform: scale(1.04); } }
 @keyframes farm-sway { from { transform: rotate(-4deg); } to { transform: rotate(4deg); } }
 @media (min-width: 440px) { .farm-seeds { grid-template-columns: repeat(3, 1fr); } }
