@@ -429,7 +429,7 @@ export const TradeScreen = ({ onBack }: TradeScreenProps) => {
               <div className="trade-row__main">
                 <div className="trade-row__title">Gold offer</div>
                 <div className="trade-row__meta">
-                  <Badge tone="gold">Fixed rate · 0.01 $BWAR / Gold</Badge>
+                  <Badge tone="gold">Fixed rate · 0.0001 $BWAR / Gold</Badge>
                   <span>Total: {formatTradeAmount(offerPrice, 'bwar')}</span>
                 </div>
                 <div className="trade-form-grid">

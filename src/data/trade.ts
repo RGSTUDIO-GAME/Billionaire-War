@@ -71,7 +71,7 @@ export type GoldTradeRequest = TradeRequestBase & {
 export type TradeRequest = HeroTradeRequest | GoldTradeRequest;
 
 /** 100 $GOLD buys or sells for 1 $BWAR. */
-export const GOLD_TO_BWAR_RATE = 0.01;
+export const GOLD_TO_BWAR_RATE = 0.0001;
 export const ITEM_TRADE_PRICE_BY_TIER: Record<FarmTier, number> = {
   common: 0.001,
   uncommon: 0.005,
