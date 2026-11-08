@@ -130,7 +130,7 @@ export const App = () => {
       {entry.screen === 'inventory' ? (
         <InventoryScreen onBack={back} onBwarPress={openMining} onTrade={() => navigate('trade')} />
       ) : null}
-      {entry.screen === 'hero' ? <HeroScreen onBack={back} /> : null}
+      {entry.screen === 'hero' ? <HeroScreen onBack={back} onMining={openMining} /> : null}
       {entry.screen === 'settings' ? <SettingsScreen onBack={back} /> : null}
       {entry.screen === 'leaderboard' ? <LeaderboardScreen onBack={back} /> : null}
       {entry.screen === 'war-entry' ? (

@@ -26,7 +26,7 @@ import { soundIds } from '../assets/manifest';
 import { audio } from '../audio/audioManager';
 import { tradeRequestsByPrice } from '../services/tradeService';
 
-type HeroScreenProps = { onBack: () => void };
+type HeroScreenProps = { onBack: () => void; onMining: () => void };
 
 const OWNERSHIP_TONE = { equipped: 'gold', owned: 'success', locked: 'muted' } as const;
 const OWNERSHIP_LABEL = { equipped: 'Equipped', owned: 'Owned', locked: 'Locked' } as const;
@@ -35,10 +35,12 @@ const HeroRow = ({
   hero,
   ownership,
   onFuse,
+  onMining,
 }: {
   hero: Hero;
   ownership: 'locked' | 'owned' | 'equipped';
   onFuse: (hero: Hero) => void;
+  onMining: () => void;
 }) => {
   const equipHero = usePlayerStore((state) => state.equipHero);
   const gold = usePlayerStore((state) => state.gold);
@@ -164,6 +166,11 @@ const HeroRow = ({
 
       {!isLocked ? (
         <div style={{ marginTop: 'var(--s-3)' }}>
+          {mining?.heroId === hero.id ? (
+            <Button variant="gold" block onClick={onMining}>
+              Go to Claim Stack Result
+            </Button>
+          ) : null}
           {cost === null || (capped && stars >= MAX_STARS) ? (
             <div className="empty-state">MAX LEVEL - {formatHashrate(rate)} BWAR/10m</div>
           ) : capped && battleLocked ? (
@@ -274,7 +281,7 @@ const RARITY_ACCENT: Record<HeroRarity, string> = {
   legendary: '#f5c542',
 };
 
-export const HeroScreen = ({ onBack }: HeroScreenProps) => {
+export const HeroScreen = ({ onBack, onMining }: HeroScreenProps) => {
   const ownedHeroIds = usePlayerStore((state) => state.ownedHeroIds);
   const equippedHeroId = usePlayerStore((state) => state.equippedHeroId);
   const [fusionTarget, setFusionTarget] = useState<Hero | null>(null);
@@ -371,6 +378,7 @@ export const HeroScreen = ({ onBack }: HeroScreenProps) => {
           hero={selectedHero}
           ownership={getOwnedState(selectedHero, ownedHeroIds, equippedHeroId)}
           onFuse={setFusionTarget}
+          onMining={onMining}
         />
       </div>
 
