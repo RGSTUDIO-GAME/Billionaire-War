@@ -63,11 +63,11 @@ export const HomeScreen = ({ onPlay, onGacha, onMining, onTrade, onShop, onDaily
         <Button variant="ghost" className="home-asset-button home-asset-button--trade" onClick={onTrade} aria-label="Trade">
           <AssetImg assetId={uiIds.tradeButton} alt="Trade" />
         </Button>
-        <Button variant="ghost" className="home-asset-button home-asset-button--shop" onClick={onShop} aria-label="Shop">
-          <AssetImg assetId={uiIds.shopButton} alt="Shop" />
-        </Button>
         <Button variant="ghost" className="home-asset-button home-asset-button--mining" onClick={onMining} aria-label="BWAR Mining">
           <AssetImg assetId={uiIds.bwarMiningButton} alt="BWAR Mining" />
+        </Button>
+        <Button variant="ghost" className="home-asset-button home-asset-button--shop" onClick={onShop} aria-label="Shop">
+          <AssetImg assetId={uiIds.shopButton} alt="Shop" />
         </Button>
         <Button variant="ghost" className="home-asset-button home-asset-button--daily" onClick={onDailyMission} aria-label="Daily Mission">
           <AssetImg assetId={uiIds.dailyMissionButton} alt="Daily Mission" />
