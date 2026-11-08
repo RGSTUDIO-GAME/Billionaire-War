@@ -65,18 +65,18 @@ export const totalXpForLevel = (level: number): number => {
 export const maxPlayerXp = (): number => totalXpForLevel(MAX_PLAYER_LEVEL);
 
 /**
- * Farm plots unlock by rows instead of one at a time. The first five rows
- * (25 plots) are available at Level 1, then one more row opens at Levels
- * 20, 40, 60, 80 and 100.
+ * Farm plots unlock in a light progression. The first five plots are
+ * available at Level 1, then the remaining 45 plots are spread evenly until
+ * the final plot opens exactly at Level 100.
  */
 export const unlockedPlotCount = (level: number): number => {
   const safeLevel = Math.max(1, Math.min(MAX_PLAYER_LEVEL, Math.floor(level)));
-  return Math.min(50, (5 + Math.floor(safeLevel / 20)) * 5);
+  return 5 + Math.floor(((safeLevel - 1) * 45) / (MAX_PLAYER_LEVEL - 1));
 };
 
 export const farmPlotUnlockLevel = (plotIndex: number): number => {
-  if (plotIndex < 25) return 1;
-  return Math.min(MAX_PLAYER_LEVEL, Math.ceil((plotIndex - 24) / 5) * 20);
+  if (plotIndex < 5) return 1;
+  return Math.min(MAX_PLAYER_LEVEL, 1 + Math.ceil(((plotIndex - 4) * 99) / 45));
 };
 
 export type PlayerProgression = {
