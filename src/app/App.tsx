@@ -36,6 +36,7 @@ export const App = () => {
   const music = useSettingsStore((state) => state.music);
   const [profileOpen, setProfileOpen] = useState(false);
   const [bwarActionsOpen, setBwarActionsOpen] = useState(false);
+  const [comingSoonFeature, setComingSoonFeature] = useState<string | null>(null);
 
   useEffect(() => {
     initTelegram();
@@ -103,12 +104,24 @@ export const App = () => {
           description="$BWAR token exchange and withdrawal will be available in a future update."
         />
       </Modal>
+      <Modal
+        open={comingSoonFeature !== null}
+        title={comingSoonFeature ?? 'Coming Soon'}
+        onClose={() => setComingSoonFeature(null)}
+      >
+        <ComingSoon
+          title={comingSoonFeature ?? 'Coming Soon'}
+          description={`${comingSoonFeature ?? 'This feature'} will be available in a future update.`}
+        />
+      </Modal>
       {entry.screen === 'home' ? (
         <HomeScreen
           onPlay={() => navigate('war-entry')}
           onGacha={() => navigate('gacha')}
           onMining={() => goTo('mining-select')}
           onTrade={() => navigate('trade')}
+          onShop={() => setComingSoonFeature('Shop')}
+          onDailyMission={() => setComingSoonFeature('Daily Mission')}
         />
       ) : null}
       {entry.screen === 'gacha' ? <GachaScreen onBack={back} /> : null}

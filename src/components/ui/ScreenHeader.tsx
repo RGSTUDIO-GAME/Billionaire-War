@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { haptic } from '../../services/telegram';
 import { Icon } from './Icon';
-import { iconIds } from '../../assets/manifest';
+import { uiIds } from '../../assets/manifest';
 
 type ScreenHeaderProps = {
   title: string;
@@ -15,14 +15,14 @@ export const ScreenHeader = ({ title, subtitle, onBack, action }: ScreenHeaderPr
     {onBack ? (
       <button
         type="button"
-        className="icon-btn"
+        className="icon-btn screen-head__back-btn"
         aria-label="Back"
         onClick={() => {
           haptic.select();
           onBack();
         }}
       >
-        <Icon assetId={iconIds.back} alt="" />
+        <Icon assetId={uiIds.backButton} alt="" />
       </button>
     ) : null}
     <div className="grow" style={{ minWidth: 0 }}>

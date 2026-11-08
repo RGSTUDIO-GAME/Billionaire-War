@@ -199,6 +199,19 @@
   margin-bottom: var(--s-4);
 }
 
+.screen-head__back-btn {
+  width: 68px;
+  height: 32px;
+  flex: 0 0 68px;
+  border-radius: 10px;
+}
+
+.screen-head__back-btn img {
+  width: 62px;
+  height: 28px;
+  object-fit: contain;
+}
+
 .screen-head__title {
   font-size: 22px;
   text-transform: uppercase;

@@ -221,6 +221,9 @@ export const uiIds = {
   gachaButton: register('ui', 'gacha_button', 'gacha-button.png', 'ui', 'Gacha button'),
   tradeButton: register('ui', 'trade_button', 'trade-button.png', 'ui', 'Trade button'),
   bwarMiningButton: register('ui', 'bwar_mining_button', 'bwar-mining-button.png', 'ui', 'BWAR Mining button'),
+  shopButton: register('ui', 'shop_button', 'shop.png', 'ui', 'Shop button'),
+  dailyMissionButton: register('ui', 'daily_mission_button', 'daily-mission.png', 'ui', 'Daily Mission button'),
+  backButton: register('ui', 'back_button', 'back-button.png', 'ui', 'Back button'),
   farmPlot: register('ui', 'farm_plot', 'farm-plot.png', 'ui', 'Farm plot'),
 } satisfies Record<string, AssetId>;
 
