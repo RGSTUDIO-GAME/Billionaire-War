@@ -24,6 +24,7 @@ import type { Screen } from '../state/uiStore';
 import { ProfileModal } from '../components/player/ProfileModal';
 import { Modal } from '../components/ui/Modal';
 import { ComingSoon } from '../components/ui/ComingSoon';
+import { Button } from '../components/ui/Button';
 
 export const App = () => {
   const stack = useUiStore((state) => state.stack);
@@ -34,6 +35,7 @@ export const App = () => {
   const sfx = useSettingsStore((state) => state.sfx);
   const music = useSettingsStore((state) => state.music);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [bwarActionsOpen, setBwarActionsOpen] = useState(false);
   const [comingSoonFeature, setComingSoonFeature] = useState<string | null>(null);
 
   useEffect(() => {
@@ -83,9 +85,25 @@ export const App = () => {
       onNavigate={goTo}
       onLeaderboard={() => goTo('leaderboard')}
       onProfile={() => setProfileOpen(true)}
-      onBwarPress={openMining}
+      onBwarPress={() => setBwarActionsOpen(true)}
     >
       <ProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} />
+      <Modal
+        open={bwarActionsOpen}
+        title="$BWAR Token"
+        onClose={() => setBwarActionsOpen(false)}
+        footer={(
+          <div className="row" style={{ marginTop: 'var(--s-4)' }}>
+            <Button variant="ghost" disabled style={{ flex: 1 }}>Swap</Button>
+            <Button variant="ghost" disabled style={{ flex: 1 }}>Withdraw</Button>
+          </div>
+        )}
+      >
+        <ComingSoon
+          title="Swap & Withdraw"
+          description="$BWAR token exchange and withdrawal will be available in a future update."
+        />
+      </Modal>
       <Modal
         open={comingSoonFeature !== null}
         title={comingSoonFeature ?? 'Coming Soon'}
