@@ -93,9 +93,21 @@ export const App = () => {
         title="$BWAR Token"
         onClose={() => setBwarActionsOpen(false)}
         footer={(
-          <div className="row" style={{ marginTop: 'var(--s-4)' }}>
-            <Button variant="ghost" disabled style={{ flex: 1 }}>Swap</Button>
-            <Button variant="ghost" disabled style={{ flex: 1 }}>Withdraw</Button>
+          <div className="stack" style={{ marginTop: 'var(--s-4)' }}>
+            <Button
+              variant="gold"
+              block
+              onClick={() => {
+                setBwarActionsOpen(false);
+                openMining();
+              }}
+            >
+              BWAR Mining
+            </Button>
+            <div className="row">
+              <Button variant="ghost" disabled style={{ flex: 1 }}>Swap</Button>
+              <Button variant="ghost" disabled style={{ flex: 1 }}>Withdraw</Button>
+            </div>
           </div>
         )}
       >
