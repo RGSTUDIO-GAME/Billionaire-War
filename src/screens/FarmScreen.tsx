@@ -3,7 +3,7 @@ import { Card } from '../components/ui/Card';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { FARM_SEEDS, farmSeed, type FarmPlot, type FarmSeed, type FarmTier } from '../data/farming';
 import { usePlayerStore } from '../state/playerStore';
-import { playerProgression, unlockedPlotCount } from '../data/progression';
+import { farmPlotUnlockLevel, playerProgression, unlockedPlotCount } from '../data/progression';
 import { backgroundIds, farmItemIds, farmPlantIds, uiIds } from '../assets/manifest';
 import { getAssetUrl } from '../assets/resolve';
 import { AssetImg } from '../assets/AssetImg';
@@ -108,7 +108,7 @@ export const FarmScreen = ({ onBack }: { onBack: () => void }) => {
             return (
               <button key={index} type="button" disabled={isLocked} className={`farm-plot${seed ? ' is-planted' : ''}${isReady ? ' is-ready' : ''}${isLocked ? ' is-locked' : ''}`} onClick={() => seed ? harvest(index, seed) : plant(index)} aria-label={isLocked ? `Plot ${index + 1} locked` : seed ? `${seed.label} plot` : `Empty plot ${index + 1}`}>
                 <AssetImg assetId={uiIds.farmPlot} alt="" className="farm-plot-art" />
-                {isLocked ? <><span className="farm-lock">🔒</span><span className="farm-plot-label">LV {Math.ceil(1 + (index * 99) / 49)}</span></> : seed && stage ? <><AssetImg assetId={farmPlantIds[seed.tier][stage]} alt={`${seed.label} ${stage}`} className="farm-crop-art" /><span className="farm-plot-label">{isReady ? 'HARVEST' : remainingLabel(remaining)}</span></> : <span className="farm-plot-empty">+</span>}
+                {isLocked ? <><span className="farm-lock">🔒</span><span className="farm-plot-label">LV {farmPlotUnlockLevel(index)}</span></> : seed && stage ? <><AssetImg assetId={farmPlantIds[seed.tier][stage]} alt={`${seed.label} ${stage}`} className="farm-crop-art" /><span className="farm-plot-label">{isReady ? 'HARVEST' : remainingLabel(remaining)}</span></> : <span className="farm-plot-empty">+</span>}
                 {harvestFx.filter((effect) => effect.index === index).map((effect) => (
                   <span
                     key={effect.id}
