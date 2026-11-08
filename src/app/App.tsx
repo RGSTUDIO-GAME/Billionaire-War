@@ -122,6 +122,7 @@ export const App = () => {
           onTrade={() => navigate('trade')}
           onShop={() => setComingSoonFeature('Shop')}
           onDailyMission={() => setComingSoonFeature('Daily Mission')}
+          onCrafting={() => setComingSoonFeature('Crafting')}
         />
       ) : null}
       {entry.screen === 'gacha' ? <GachaScreen onBack={back} /> : null}

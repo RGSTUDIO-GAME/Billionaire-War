@@ -16,9 +16,10 @@ type HomeScreenProps = {
   onTrade: () => void;
   onShop: () => void;
   onDailyMission: () => void;
+  onCrafting: () => void;
 };
 
-export const HomeScreen = ({ onPlay, onGacha, onMining, onTrade, onShop, onDailyMission }: HomeScreenProps) => {
+export const HomeScreen = ({ onPlay, onGacha, onMining, onTrade, onShop, onDailyMission, onCrafting }: HomeScreenProps) => {
   const equippedHeroId = usePlayerStore((state) => state.equippedHeroId);
   const hero = getHeroById(equippedHeroId);
 
@@ -53,10 +54,12 @@ export const HomeScreen = ({ onPlay, onGacha, onMining, onTrade, onShop, onDaily
         </p>
       </SceneCard>
 
-      <div className="home-menu-grid">
+      <div className="home-play-menu">
         <Button variant="ghost" className="home-asset-button home-asset-button--play" onClick={onPlay} aria-label="Play">
           <AssetImg assetId={uiIds.playButton} alt="Play" />
         </Button>
+      </div>
+      <div className="home-menu-grid">
         <Button variant="ghost" className="home-asset-button home-asset-button--gacha" onClick={onGacha} aria-label="Gacha">
           <AssetImg assetId={uiIds.gachaButton} alt="Gacha" />
         </Button>
@@ -71,6 +74,9 @@ export const HomeScreen = ({ onPlay, onGacha, onMining, onTrade, onShop, onDaily
         </Button>
         <Button variant="ghost" className="home-asset-button home-asset-button--daily" onClick={onDailyMission} aria-label="Daily Mission">
           <AssetImg assetId={uiIds.dailyMissionButton} alt="Daily Mission" />
+        </Button>
+        <Button variant="ghost" className="home-asset-button home-asset-button--crafting" onClick={onCrafting} aria-label="Crafting">
+          <AssetImg assetId={uiIds.craftingButton} alt="Crafting" />
         </Button>
       </div>
 
