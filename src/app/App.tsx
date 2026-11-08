@@ -118,7 +118,7 @@ export const App = () => {
         <HomeScreen
           onPlay={() => navigate('war-entry')}
           onGacha={() => navigate('gacha')}
-          onMining={() => goTo('mining-select')}
+          onMining={openMining}
           onTrade={() => navigate('trade')}
           onShop={() => setComingSoonFeature('Shop')}
           onDailyMission={() => setComingSoonFeature('Daily Mission')}
