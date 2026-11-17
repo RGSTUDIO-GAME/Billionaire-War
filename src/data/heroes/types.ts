@@ -29,6 +29,8 @@ export type Hero = {
   skills: HeroSkill[];
   /** Render scale for the fighter sprite. 1 (or omitted) = same box as everyone. */
   spriteScale?: number;
+  /** Optional override for the shared victory-pose scale bonus. */
+  victoryScale?: number;
   /** Idle frame interval in ms. Omitted = the shared animation tempo. */
   idleIntervalMs?: number;
   assets: {

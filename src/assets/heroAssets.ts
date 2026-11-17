@@ -89,7 +89,9 @@ const POSE_SCALE: Partial<Record<HeroVisual['type'], number>> = {
 };
 
 export const heroSpriteScale = (hero: Hero, visual: HeroVisual): number =>
-  (hero.spriteScale ?? 1) * (POSE_SCALE[visual.type] ?? 1);
+  (hero.spriteScale ?? 1) * (visual.type === 'victory' && hero.victoryScale !== undefined
+    ? hero.victoryScale
+    : (POSE_SCALE[visual.type] ?? 1));
 
 /** Warms the browser cache for every frame of a hero. Call on battle entry. */
 export const prefetchHeroFrames = (hero: Hero): void => {

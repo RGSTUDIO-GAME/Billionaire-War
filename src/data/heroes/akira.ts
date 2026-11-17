@@ -12,6 +12,7 @@ export const AKIRA: Hero = {
   priceInGold: null,
   skills: [],
   spriteScale: 1,
+  victoryScale: 1,
   idleIntervalMs: 180,
   assets: akiraAssetIds,
 };
