@@ -1140,6 +1140,17 @@
   animation: pop-in 0.25s ease-out both;
 }
 
+.modal__header {
+  position: relative;
+}
+
+.modal__title--center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
 /* ---------------------------------------------------------- filter tabs */
 
 .tabs {

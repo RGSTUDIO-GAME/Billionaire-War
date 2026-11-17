@@ -9,9 +9,10 @@ type ModalProps = {
   onClose: () => void;
   children: ReactNode;
   footer?: ReactNode;
+  centerTitle?: boolean;
 };
 
-export const Modal = ({ open, title, onClose, children, footer }: ModalProps) => {
+export const Modal = ({ open, title, onClose, children, footer, centerTitle = false }: ModalProps) => {
   useEffect(() => {
     if (!open) return undefined;
     const onKey = (event: KeyboardEvent) => {
@@ -32,8 +33,8 @@ export const Modal = ({ open, title, onClose, children, footer }: ModalProps) =>
       onClick={onClose}
     >
       <div className="modal" onClick={(event) => event.stopPropagation()}>
-        <div className="row-between" style={{ marginBottom: 'var(--s-4)' }}>
-          <h3 className="screen-head__title" style={{ fontSize: 18 }}>
+        <div className="row-between modal__header" style={{ marginBottom: 'var(--s-4)' }}>
+          <h3 className={`screen-head__title${centerTitle ? ' modal__title--center' : ''}`} style={{ fontSize: 18 }}>
             {title}
           </h3>
           <button type="button" className="icon-btn" onClick={onClose} aria-label="Close">

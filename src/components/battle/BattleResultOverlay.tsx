@@ -53,7 +53,7 @@ export const BattleResultOverlay = ({
   const pose = key === 'A' ? 'victory' : key === 'B' ? 'defeat' : 'idle';
 
   return (
-    <Modal open title="Battle Result" onClose={onExit}>
+    <Modal open title="Battle Result" centerTitle onClose={onExit}>
       <div className="center stack">
         <div
           className="battle-result__sprite"
