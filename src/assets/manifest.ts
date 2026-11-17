@@ -99,6 +99,8 @@ export const durovFreedomAssetIds = registerHeroAssets('durov-freedom', 4);
 
 export const pociManGoldAssetIds = registerHeroAssets('poci-man-gold', 4);
 
+export const akiraAssetIds = registerHeroAssets('akira', 4);
+
 /* ------------------------------------------------------- animation frames */
 
 const heroFrameFolder: Record<HeroAssetKey, string | null> = {
@@ -146,6 +148,7 @@ export const heroFrames: Record<string, Record<HeroAssetKey, AssetId[]>> = {
   aurelion: registerHeroFrames('aurelion', 4, { idle: 5, defeat: 6 }),
   'durov-freedom': registerHeroFrames('durov-freedom', 4),
   'poci-man-gold': registerHeroFrames('poci-man-gold', 4),
+  akira: registerHeroFrames('akira', 4),
 };
 
 /* ------------------------------------------------------- attack fx frames */
@@ -194,9 +197,9 @@ export const heroFxFrames: Record<string, Record<HeroFxKind, AssetId[]>> = {
     projectile: registerHeroFx('durov-freedom', 'projectile', 5),
     explosion: registerHeroFx('durov-freedom', 'explosion', 3),
   },
-  'poci-man-gold': {
-    projectile: registerHeroFx('poci-man-gold', 'projectile', 4),
-    explosion: registerHeroFx('poci-man-gold', 'explosion', 4),
+  akira: {
+    projectile: registerHeroFx('akira', 'projectile', 4),
+    explosion: registerHeroFx('akira', 'explosion', 4),
   },
 };
 
@@ -208,6 +211,7 @@ export const heroPortraitIds: Record<string, AssetId> = {
   aurelion: register('heroes', 'aurelion_portrait', 'aurelion/portrait.jpg', 'hero', 'Aurelion portrait'),
   'durov-freedom': register('heroes', 'durov_freedom_portrait', 'durov-freedom/portrait.jpg', 'hero', 'Durov Freedom portrait'),
   'poci-man-gold': register('heroes', 'poci_man_gold_portrait', 'poci-man-gold/portrait.jpg', 'hero', 'Poci Man Gold portrait'),
+  akira: register('heroes', 'akira_portrait', 'akira/portrait.jpg', 'hero', 'Akira portrait'),
 };
 
 /* ------------------------------------------------------------ backgrounds */
