@@ -3,6 +3,7 @@ import { ELONMUSK } from './elonmusk';
 import { GRACYCHEN } from './gracychen';
 import { AURELION } from './aurelion';
 import { DUROV_FREEDOM } from './durovFreedom';
+import { POCI_MAN_GOLD } from './pociManGold';
 import type { Hero, HeroOwnership } from './types';
 
 /**
@@ -14,7 +15,7 @@ import type { Hero, HeroOwnership } from './types';
  *   3. add a data file in src/data/heroes/<hero_id>.ts and list it below
  * The Battle Engine does not change.
  */
-export const HEROES: readonly Hero[] = [DUROV, ELONMUSK, GRACYCHEN, AURELION, DUROV_FREEDOM];
+export const HEROES: readonly Hero[] = [DUROV, ELONMUSK, GRACYCHEN, AURELION, DUROV_FREEDOM, POCI_MAN_GOLD];
 
 export const getHeroById = (id: string): Hero | undefined =>
   HEROES.find((hero) => hero.id === id);

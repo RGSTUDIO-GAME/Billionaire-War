@@ -463,10 +463,9 @@ export const parseProfile = (
   const { now, rebuildGold } = options;
   const playerId = typeof raw.playerId === 'string' && PLAYER_ID_PATTERN.test(raw.playerId) ? raw.playerId : null;
   const storedOwnedHeroes = knownHeroIds(raw.ownedHeroes);
-  const ownedHeroes =
-    Array.isArray(raw.ownedHeroes) && storedOwnedHeroes.length > 0
-      ? storedOwnedHeroes
-      : withFreeHeroes([]);
+  const ownedHeroes = withFreeHeroes(
+    Array.isArray(raw.ownedHeroes) && storedOwnedHeroes.length > 0 ? storedOwnedHeroes : [],
+  );
 
   const equipped = typeof raw.equippedHeroId === 'string' ? raw.equippedHeroId : '';
   const equippedHeroId =
