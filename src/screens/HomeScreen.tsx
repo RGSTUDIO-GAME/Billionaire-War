@@ -28,7 +28,7 @@ export const HomeScreen = ({ onPlay, onGacha, onMining, onTrade, onShop, onDaily
   return (
     <div className="home-screen anim-fade">
       <SceneCard background={backgroundIds.home}>
-        <div className="row" style={{ alignItems: 'flex-start' }}>
+        <div className="row" style={{ alignItems: 'center' }}>
           <div className="home-portrait">
             <AssetImg assetId={heroPortraitIds[hero.id] ?? heroPortraitIds.durov} alt={hero.name} />
           </div>
