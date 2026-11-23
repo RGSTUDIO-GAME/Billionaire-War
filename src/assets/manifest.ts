@@ -101,6 +101,16 @@ export const pociManGoldAssetIds = registerHeroAssets('poci-man-gold', 4);
 
 export const akiraAssetIds = registerHeroAssets('akira', 4);
 
+export const xinwaAssetIds = registerHeroAssets('xinwa', 4);
+export const kuntilanakAssetIds = registerHeroAssets('kuntilanak', 4);
+export const piggManAssetIds = registerHeroAssets('pigg-man', 4);
+export const nindiaMermaidAssetIds = registerHeroAssets('nindia-mermaid', 4);
+export const lightBlueIvAssetIds = registerHeroAssets('light-blue-iv', 4);
+export const roosterManAssetIds = registerHeroAssets('rooster-man', 4);
+export const hanamiAssetIds = registerHeroAssets('hanami', 4);
+export const quenAdvokatAssetIds = registerHeroAssets('quen-advokat', 4);
+export const mrGBoxingAssetIds = registerHeroAssets('mr-g-boxing', 4);
+
 /* ------------------------------------------------------- animation frames */
 
 const heroFrameFolder: Record<HeroAssetKey, string | null> = {
@@ -149,6 +159,15 @@ export const heroFrames: Record<string, Record<HeroAssetKey, AssetId[]>> = {
   'durov-freedom': registerHeroFrames('durov-freedom', 4),
   'poci-man-gold': registerHeroFrames('poci-man-gold', 4),
   akira: registerHeroFrames('akira', 4),
+  xinwa: registerHeroFrames('xinwa', 4),
+  kuntilanak: registerHeroFrames('kuntilanak', 4),
+  'pigg-man': registerHeroFrames('pigg-man', 4),
+  'nindia-mermaid': registerHeroFrames('nindia-mermaid', 4),
+  'light-blue-iv': registerHeroFrames('light-blue-iv', 4),
+  'rooster-man': registerHeroFrames('rooster-man', 4),
+  hanami: registerHeroFrames('hanami', 4),
+  'quen-advokat': registerHeroFrames('quen-advokat', 4),
+  'mr-g-boxing': registerHeroFrames('mr-g-boxing', 4),
 };
 
 /* ------------------------------------------------------- attack fx frames */
@@ -212,6 +231,15 @@ export const heroPortraitIds: Record<string, AssetId> = {
   'durov-freedom': register('heroes', 'durov_freedom_portrait', 'durov-freedom/portrait.jpg', 'hero', 'Durov Freedom portrait'),
   'poci-man-gold': register('heroes', 'poci_man_gold_portrait', 'poci-man-gold/portrait.jpg', 'hero', 'Poci Man Gold portrait'),
   akira: register('heroes', 'akira_portrait', 'akira/portrait.jpg', 'hero', 'Akira portrait'),
+  xinwa: register('heroes', 'xinwa_portrait', 'xinwa/portrait.jpg', 'hero', 'Xinwa portrait'),
+  kuntilanak: register('heroes', 'kuntilanak_portrait', 'kuntilanak/portrait.jpg', 'hero', 'Kuntilanak portrait'),
+  'pigg-man': register('heroes', 'pigg_man_portrait', 'pigg-man/portrait.jpg', 'hero', 'Pigg Man portrait'),
+  'nindia-mermaid': register('heroes', 'nindia_mermaid_portrait', 'nindia-mermaid/portrait.jpg', 'hero', 'Nindia Mermaid portrait'),
+  'light-blue-iv': register('heroes', 'light_blue_iv_portrait', 'light-blue-iv/portrait.jpg', 'hero', 'Light Blue IV portrait'),
+  'rooster-man': register('heroes', 'rooster_man_portrait', 'rooster-man/portrait.jpg', 'hero', 'Rooster Man portrait'),
+  hanami: register('heroes', 'hanami_portrait', 'hanami/portrait.jpg', 'hero', 'Hanami portrait'),
+  'quen-advokat': register('heroes', 'quen_advokat_portrait', 'quen-advokat/portrait.jpg', 'hero', 'Quen Advokat portrait'),
+  'mr-g-boxing': register('heroes', 'mr_g_boxing_portrait', 'mr-g-boxing/portrait.jpg', 'hero', 'Mr. G Boxing portrait'),
 };
 
 /* ------------------------------------------------------------ backgrounds */
