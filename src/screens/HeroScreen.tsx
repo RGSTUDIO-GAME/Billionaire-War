@@ -288,11 +288,9 @@ export const HeroScreen = ({ onBack, onMining }: HeroScreenProps) => {
   const [tab, setTab] = useState<HeroRarity>(
     () => RARITY_ORDER.find((rarity) => HEROES.some((hero) => hero.rarity === rarity)) ?? 'common',
   );
-  const [selectedId, setSelectedId] = useState<string>(
-    () => equippedHeroId || ownedHeroIds[0] || HEROES[0].id,
-  );
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const selectedHero = HEROES.find((hero) => hero.id === selectedId) ?? HEROES[0];
+  const selectedHero = selectedId === null ? null : HEROES.find((hero) => hero.id === selectedId) ?? null;
 
   const pickTab = (next: HeroRarity) => {
     if (next === tab) return;
@@ -353,8 +351,8 @@ export const HeroScreen = ({ onBack, onMining }: HeroScreenProps) => {
                     <button
                       key={hero.id}
                       type="button"
-                      className={`hero-portrait-btn${hero.id === selectedHero.id ? ' is-selected' : ''}`}
-                      aria-pressed={hero.id === selectedHero.id}
+                      className={`hero-portrait-btn${hero.id === selectedHero?.id ? ' is-selected' : ''}`}
+                      aria-pressed={hero.id === selectedHero?.id}
                       aria-label={`${hero.name}, ${RARITY_LABEL[hero.rarity]} hero, ${OWNERSHIP_LABEL[ownership]}`}
                       onClick={() => pickHero(hero)}
                     >
@@ -372,15 +370,17 @@ export const HeroScreen = ({ onBack, onMining }: HeroScreenProps) => {
         })}
       </div>
 
-      <div style={{ marginTop: 'var(--s-4)' }}>
-        <HeroRow
-          key={selectedHero.id}
-          hero={selectedHero}
-          ownership={getOwnedState(selectedHero, ownedHeroIds, equippedHeroId)}
-          onFuse={setFusionTarget}
-          onMining={onMining}
-        />
-      </div>
+      {selectedHero ? (
+        <div style={{ marginTop: 'var(--s-4)' }}>
+          <HeroRow
+            key={selectedHero.id}
+            hero={selectedHero}
+            ownership={getOwnedState(selectedHero, ownedHeroIds, equippedHeroId)}
+            onFuse={setFusionTarget}
+            onMining={onMining}
+          />
+        </div>
+      ) : null}
 
       {fusionTarget ? <FusionModal hero={fusionTarget} onClose={() => setFusionTarget(null)} /> : null}
 

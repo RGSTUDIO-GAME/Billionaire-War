@@ -1448,8 +1448,8 @@
 
 .hero-portrait-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--s-2);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
 }
 
 .hero-portrait-btn {
@@ -1464,12 +1464,12 @@
 .hero-portrait-btn .home-portrait {
   width: 100%;
   height: auto;
-  aspect-ratio: 132 / 168;
+  aspect-ratio: 4 / 5;
 }
 
 .hero-portrait-btn .hero-portrait-caption {
   margin-top: 4px;
-  font-size: 11px;
+  font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
