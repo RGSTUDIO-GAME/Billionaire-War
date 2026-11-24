@@ -54,6 +54,7 @@ export const FighterSprite = ({ fighter, hero, beatKey = '' }: FighterSpriteProp
       data-impact-state={fighter.reactionDelayMs === null ? undefined : impactLanded ? 'landed' : 'waiting'}
       className={[
         'sprite',
+        `sprite--hero-${hero.id}`,
         fighter.id === 'A' ? 'sprite--left' : 'sprite--right',
         cue.motion === 'attack' ? 'is-attacking' : '',
         isHit ? 'is-hit' : '',

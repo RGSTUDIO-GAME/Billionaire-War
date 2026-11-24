@@ -361,6 +361,14 @@
   filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.6));
 }
 
+/* Light Blue IV's attack frames include a beam that expands far beyond the
+   character. Scale by height so the fighter stays consistent; the overflow
+   beam is intentionally cropped at the arena sprite boundary. */
+.sprite--hero-light-blue-iv img {
+  object-fit: cover;
+  object-position: left center;
+}
+
 /* Ground shadow at the fighter's feet, so they stand on the hall floor
    instead of floating over it. */
 .sprite::after {
